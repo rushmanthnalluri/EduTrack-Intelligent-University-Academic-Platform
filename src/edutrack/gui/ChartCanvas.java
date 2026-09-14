@@ -111,6 +111,8 @@ public class ChartCanvas extends JPanel {
         g2.setFont(GuiTheme.BODY);
         FontMetrics fm = g2.getFontMetrics();
         Font labelFont = GuiTheme.BODY;
+        Font valueFont = GuiTheme.BODY;
+        Font valueFontSmall = new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 10);
         if (n <= 20) {
             int maxLabelWidth = 0;
             for (String label : labels) {
@@ -119,6 +121,9 @@ public class ChartCanvas extends JPanel {
             if (maxLabelWidth > slot - 4 && slot >= 26) {
                 labelFont = new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 10);
             }
+        }
+        if (slot < 48) {
+            valueFont = valueFontSmall;
         }
         g2.setColor(GuiTheme.CARD_BORDER);
         g2.drawLine(left, bottom, right, bottom);
@@ -131,8 +136,10 @@ public class ChartCanvas extends JPanel {
             g2.fill(new Rectangle2D.Double(x, y, barW, barH));
 
             g2.setColor(GuiTheme.TEXT);
-            String value = format(values[i]);
-            g2.drawString(value, x + (barW - fm.stringWidth(value)) / 2, y - 4);
+            g2.setFont(valueFont);
+            FontMetrics vfm = g2.getFontMetrics();
+            String value = fitValue(values[i], vfm, slot - 2);
+            g2.drawString(value, x + (barW - vfm.stringWidth(value)) / 2, y - 4);
 
             if (n <= 20) {
                 g2.setColor(GuiTheme.MUTED);
@@ -144,6 +151,24 @@ public class ChartCanvas extends JPanel {
             }
         }
         drawTarget(g2, left, right, bottom, plotH, max, false);
+    }
+
+    private static String fitValue(double v, FontMetrics fm, int maxWidth) {
+        String plain = format(v);
+        if (fm.stringWidth(plain) <= maxWidth) {
+            return plain;
+        }
+        if (Math.abs(v) >= 1000) {
+            String kOne = String.format("%.1fK", v / 1000.0);
+            if (fm.stringWidth(kOne) <= maxWidth) {
+                return kOne;
+            }
+            String kRound = String.format("%,dK", Math.round(v / 1000.0));
+            if (fm.stringWidth(kRound) <= maxWidth) {
+                return kRound;
+            }
+        }
+        return plain;
     }
 
     private void paintHorizontal(Graphics2D g2, int w, int top, int bottom, double max) {
