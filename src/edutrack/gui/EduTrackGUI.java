@@ -45,6 +45,7 @@ public class EduTrackGUI extends JFrame {
         setMinimumSize(new Dimension(1100, 720));
         setSize(1300, 820);
         setLocationRelativeTo(null);
+        setIconImage(createAppIcon());
 
         cards.setBackground(GuiTheme.BG);
         DashboardPanel dashboard = new DashboardPanel(dataStore, this::showCard);
@@ -205,6 +206,23 @@ public class EduTrackGUI extends JFrame {
         status.add(left, BorderLayout.WEST);
         status.add(right, BorderLayout.EAST);
         return status;
+    }
+
+    private static java.awt.Image createAppIcon() {
+        int size = 64;
+        java.awt.image.BufferedImage icon = new java.awt.image.BufferedImage(
+                size, size, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g = icon.createGraphics();
+        g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setColor(GuiTheme.ACCENT);
+        g.fillRoundRect(0, 0, size, size, 18, 18);
+        g.setColor(java.awt.Color.WHITE);
+        g.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 38));
+        java.awt.FontMetrics fm = g.getFontMetrics();
+        g.drawString("E", (size - fm.stringWidth("E")) / 2, (size + fm.getAscent() - fm.getDescent()) / 2);
+        g.dispose();
+        return icon;
     }
 
     public static void main(String[] args) {

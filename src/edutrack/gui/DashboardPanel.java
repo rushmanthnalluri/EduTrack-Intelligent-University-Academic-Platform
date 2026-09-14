@@ -45,7 +45,7 @@ public class DashboardPanel extends ModulePanel {
         title.setFont(GuiTheme.TITLE_FONT);
         title.setForeground(GuiTheme.TEXT);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel subtitle = new JLabel("Six DSA modules over a live academic dataset. Pick a module below or from the sidebar.");
+        JLabel subtitle = new JLabel("Records, exams, analytics, reports and a REST API over a live academic dataset — plus six DSA modules.");
         subtitle.setFont(GuiTheme.BODY);
         subtitle.setForeground(GuiTheme.MUTED);
         subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
