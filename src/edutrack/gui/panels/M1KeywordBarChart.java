@@ -48,6 +48,10 @@ public class M1KeywordBarChart extends JComponent {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        // JComponent subclasses have no UI delegate, so the background is never
+        // filled automatically — fill it explicitly or stale pixels bleed through.
+        g2.setColor(getBackground());
+        g2.fillRect(0, 0, getWidth(), getHeight());
         int width = getWidth();
         int height = getHeight();
         g2.setColor(GuiTheme.CARD_BG);

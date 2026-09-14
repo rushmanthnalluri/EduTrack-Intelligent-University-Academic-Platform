@@ -53,32 +53,64 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 ## 🖥️ Screenshots
 
 <details open>
-<summary><b>Platform</b></summary>
+<summary><b>Platform screens</b></summary>
 
-| Records | Manage (CRUD) | Exams & Grades |
-|---|---|---|
-| ![Records](docs/screenshots/records.png) | ![Manage](docs/screenshots/manage.png) | ![Exams](docs/screenshots/exams.png) |
+**Dashboard** — home screen: live dataset statistics (200 students · 12 faculty · 20 courses · 40 assignments · 981 exam records · 100,000 activity events), one card per feature and DSA module, and the interactive **REST API Server** card (port + start/stop).
 
-| Activity Analytics | Reports & Export | Smart Search |
-|---|---|---|
-| ![Analytics](docs/screenshots/analytics.png) | ![Reports](docs/screenshots/reports.png) | ![Search](docs/screenshots/search.png) |
+![Dashboard](docs/screenshots/dashboard.png)
+
+**Records Browser** — sortable, KMP-filterable tables for students, faculty and courses; double-click any row for a detail view with enrolled courses, marks, weighted GPA, CGPA rank and recent activity pulled from the 100k-event stream.
+
+![Records](docs/screenshots/records.png)
+
+**Manage Records** — the CRUD console: add/remove students, faculty and courses (cascading deletes show live impact counts), enroll/drop courses, and enter marks with a live grade preview. The amber dirty indicator, *Save to CSV files* and *Reset to generated data* drive persistence.
+
+![Manage](docs/screenshots/manage.png)
+
+**Exams & Grades** — per-course exam statistics (students, average, min, max, pass %) next to the overall grade-distribution chart, computed from 981 midsem+endsem records. Other tabs rank GPA toppers, flag at-risk students and print report cards.
+
+![Exams](docs/screenshots/exams.png)
+
+**Activity Analytics** — one pass over the 100,000-event activity stream: summary stat cards (37 active days, 2,702.7 events/day, 13:00 UTC peak, 72.8% course-related), the hourly rhythm chart, per-action totals, and the top-10 courses and students.
+
+![Analytics](docs/screenshots/analytics.png)
+
+**Reports & Export** — an official-style transcript preview (per-course marks, credits attempted/earned, weighted GPA, stored CGPA, class rank) ready to save as text; grade sheets, department summaries and at-risk lists export as CSV.
+
+![Reports](docs/screenshots/reports.png)
+
+**Smart Search** — the query `data` ranked across resources, courses and assignments in 26 ms: exact-code and prefix matches outrank plain substring hits, and a typo'd query falls back to Levenshtein *did-you-mean* suggestions.
+
+![Search](docs/screenshots/search.png)
 
 </details>
 
 <details>
-<summary><b>DSA Modules (M1–M6)</b></summary>
+<summary><b>DSA module screens (M1–M6)</b></summary>
 
-| M1 · String Algorithms | M2 · Suffix Structures |
-|---|---|
-| ![M1](docs/screenshots/m1-strings.png) | ![M2](docs/screenshots/m2-suffix.png) |
+**M1 · KMP keyword search** — searching `data` across all course codes/names and student names returns CS201 and CS301 with exact match positions in 1 ms. The other tabs run Z-Function repeated-phrase detection on assignment texts, Rabin-Karp rolling-hash code lookup, and an Aho-Corasick automaton that scans the whole assignment corpus (or the 1 MB Wikipedia document) for 10 academic keywords at once.
 
-| M3 · Advanced DP | M4 · Network Flow |
-|---|---|
-| ![M3](docs/screenshots/m3-dp.png) | ![M4](docs/screenshots/m4-flow.png) |
+![M1](docs/screenshots/m1-strings.png)
 
-| M5 · Exam Scheduling | M6 · Randomized & Parallel |
-|---|---|
-| ![M5](docs/screenshots/m5-scheduling.png) | ![M6](docs/screenshots/m6-randomized.png) |
+**M2 · Suffix-array indexing with match highlighting** — the suffix array of an assignment is built twice for comparison: prefix-doubling (4.4 ms) vs **SA-IS linear-time construction (1.7 ms)**, verified identical. Searching `deadline` locates the occurrence in 0.056 ms and highlights it inside the document view. Other tabs report repeated phrases (Kasai LCP), cross-submission similarity and suffix-automaton statistics.
+
+![M2](docs/screenshots/m2-suffix.png)
+
+**M3 · Optimal Binary Search Tree** — the minimum-expected-cost search tree over the 12 most-accessed course codes, with real access frequencies counted from the activity stream. Node color marks the root, and the expected search cost (163,233) is compared against a balanced BST (185,753) — 12.1% lower. The other tabs cover Levenshtein/Damerau query correction, matrix-chain optimization and the bitmask-DP course explorer.
+
+![M3](docs/screenshots/m3-dp.png)
+
+**M4 · Bipartite matching + König cover** — Hopcroft-Karp matches all 12 faculty to eligible courses (bold blue edges over gray eligibility edges); the amber nodes are the **minimum vertex cover** reconstructed via König's theorem, with |cover| = |matching| = 12 verified. The right side runs Ford-Fulkerson/Edmonds-Karp room-slot allocation (27/27 sections) and the Dinic scaled benchmark.
+
+![M4](docs/screenshots/m4-flow.png)
+
+**M5 · DPLL exam scheduling + timetable** — the course-conflict graph (131 edges, department-colored) feeds a SAT encoding solved by DPLL: 5 slots suffice for 10 courses (clique bound 5, 265 clauses, 14 ms, schedule verified). Slot tags (S1–S5) appear on the graph nodes and the generated exam timetable renders as a MON–FRI grid below.
+
+![M5](docs/screenshots/m5-scheduling.png)
+
+**M6 · Randomized quicksort + benchmarks** — 200 students ranked by CGPA (1,834 comparisons, 1 ms); below, the 1,000,000-element benchmark charts compare randomized quicksort vs `Arrays.sort` vs a deterministic pivot, and the adversarial chart shows the deterministic variant's O(n²) comparison blow-up on sorted input (50M → 200M → 800M as n doubles).
+
+![M6](docs/screenshots/m6-randomized.png)
 
 </details>
 

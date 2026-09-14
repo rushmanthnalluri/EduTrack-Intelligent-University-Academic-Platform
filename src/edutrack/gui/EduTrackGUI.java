@@ -83,6 +83,8 @@ public class EduTrackGUI extends JFrame {
     public void showCard(String key) {
         currentCard = key;
         ((CardLayout) cards.getLayout()).show(cards, key);
+        cards.revalidate();
+        cards.repaint();
         refreshNavSelection();
     }
 
