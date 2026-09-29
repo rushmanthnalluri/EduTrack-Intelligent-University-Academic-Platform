@@ -9,7 +9,7 @@
 [![CI](https://img.shields.io/badge/CI-Java_21-0E9F6E)](#-testing)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![GUI](https://img.shields.io/badge/GUI-Swing_%2B_Java2D-6B46C1)](#-screenshots)
-[![API](https://img.shields.io/badge/REST_API-8_endpoints-D97706)](#-rest-api)
+[![API](https://img.shields.io/badge/REST_API-7_endpoints-D97706)](#-rest-api)
 
 ![EduTrack Dashboard](docs/screenshots/dashboard.png)
 
@@ -36,7 +36,7 @@ Every answer is computed with a **hand-implemented DSA algorithm** (JDK only), e
 | 📊 **Exam Analytics** | Per-course statistics, GPA toppers, at-risk detection, report cards |
 | 📈 **Activity Analytics** | activity event stream: actions, hourly rhythm, top courses/students |
 | 🧾 **Reports & Export** | Official-style transcripts, grade sheets, department summaries, at-risk lists |
-| 🌐 **REST API** | 8 JSON endpoints over JDK's built-in HTTP server — start/stop from the dashboard |
+| 🌐 **REST API** | 7 JSON endpoints over JDK's built-in HTTP server — start/stop from the dashboard |
 | 🧮 **Algorithm Workbench** | String search, suffix structures, dynamic programming, network flow, scheduling, ranking and streaming algorithms implemented from scratch |
 
 ## 🧠 Algorithm Coverage
