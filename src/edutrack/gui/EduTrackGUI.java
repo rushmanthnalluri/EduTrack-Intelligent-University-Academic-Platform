@@ -49,6 +49,7 @@ public class EduTrackGUI extends JFrame {
     private DashboardPanel dashboard;
     private RecordsPanel recordsPanel;
     private JLabel statusCounts;
+    private JLabel statusMessage;
 
     public EduTrackGUI(DataStore dataStore) {
         super("EduTrack — Intelligent University Academic Platform");
@@ -274,21 +275,24 @@ public class EduTrackGUI extends JFrame {
                 BorderFactory.createMatteBorder(1, 0, 0, 0, GuiTheme.CARD_BORDER),
                 BorderFactory.createEmptyBorder(7, 18, 7, 18)));
 
-        JLabel left = new JLabel("Ready  •  " + currentCard.replace('-', ' '));
-        left.setFont(GuiTheme.SMALL_BOLD);
-        left.setForeground(GuiTheme.MUTED);
+        statusMessage = new JLabel("Ready  •  " + currentCard.replace('-', ' '));
+        statusMessage.setFont(GuiTheme.SMALL_BOLD);
+        statusMessage.setForeground(GuiTheme.MUTED);
 
         statusCounts = new JLabel();
         statusCounts.setFont(GuiTheme.SMALL);
         statusCounts.setForeground(GuiTheme.MUTED);
 
-        status.add(left, BorderLayout.WEST);
+        status.add(statusMessage, BorderLayout.WEST);
         status.add(statusCounts, BorderLayout.EAST);
         refreshStatusBar();
         return status;
     }
 
     private void refreshStatusBar() {
+        if (statusMessage != null) {
+            statusMessage.setText("Ready  •  " + currentCard.replace('-', ' '));
+        }
         if (statusCounts == null) {
             return;
         }
