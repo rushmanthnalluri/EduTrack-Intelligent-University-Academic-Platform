@@ -2,11 +2,11 @@
 
 # 🎓 EduTrack — Intelligent University Academic Platform
 
-**A complete university academic platform in pure Java — records management, exam analytics, scheduling, reporting and a REST API — powered end-to-end by classic data structures & algorithms.**
+**A production-oriented university academic platform in pure Java — records management, exam analytics, scheduling, reporting and a REST API — powered end-to-end by classic data structures & algorithms.**
 
 [![Java](https://img.shields.io/badge/Java_21%2B-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-2563EB)](#tech-stack)
-[![Self-tests](https://img.shields.io/badge/self--tests-313_checks_passing-0E9F6E)](#-testing)
+[![CI](https://img.shields.io/badge/CI-Java_21-0E9F6E)](#-testing)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![GUI](https://img.shields.io/badge/GUI-Swing_%2B_Java2D-6B46C1)](#-screenshots)
 [![API](https://img.shields.io/badge/REST_API-8_endpoints-D97706)](#-rest-api)
@@ -21,7 +21,7 @@
 
 EduTrack models a real university academic system — **200 students, 12 faculty, 20 courses, 40 assignments, 981 exam records and a activity event stream** — and answers the questions an academic office actually asks: *Who can teach what? Which exams conflict? Which students are at risk? How similar are two submissions? What's the fastest way to find anything?*
 
-Every answer is computed with a **hand-implemented DSA algorithm** (no external libraries — JDK only), exposed through **two interfaces** (a Swing GUI and a console CLI), persisted to **CSV files**, and exposed to other systems through a **built-in REST API**.
+Every answer is computed with a **hand-implemented DSA algorithm** (JDK only), exposed through a modern Swing GUI and a console CLI, persisted to **CSV files**, and exposed to other systems through a **built-in REST API**.
 
 ## 🚀 Feature Highlights
 
@@ -35,11 +35,11 @@ Every answer is computed with a **hand-implemented DSA algorithm** (no external 
 | 📈 **Activity Analytics** | activity event stream: actions, hourly rhythm, top courses/students |
 | 🧾 **Reports & Export** | Official-style transcripts, grade sheets, department summaries, at-risk lists |
 | 🌐 **REST API** | 8 JSON endpoints over JDK's built-in HTTP server — start/stop from the dashboard |
-| 🧮 **6 DSA Modules** | 24 algorithms implemented from scratch and woven into the features (below) |
+| 🧮 **Algorithm Workbench** | String search, suffix structures, dynamic programming, network flow, scheduling, ranking and streaming algorithms implemented from scratch |
 
-## 🧠 DSA Coverage
+## 🧠 Algorithm Coverage
 
-| Module | Algorithms | Used for |
+| Capability | Algorithms | Used for |
 |---|---|---|
 | **String Algorithms** | KMP · Z-Function · Rabin-Karp · Aho-Corasick | Course/student search, repeated-phrase detection, code lookup, multi-keyword scans |
 | **Suffix Structures** | Suffix Array · **SA-IS** (linear) · Kasai LCP · Suffix Automaton | Document indexing, match highlighting, cross-submission similarity |
@@ -48,30 +48,30 @@ Every answer is computed with a **hand-implemented DSA algorithm** (no external 
 | **NP-Completeness** | DPLL SAT · 3-SAT→CLIQUE · CLIQUE→IND-SET→VERTEX-COVER · VC 2-approx | Exam scheduling, constraint reductions, conflict covering |
 | **Randomized & Parallel** | Randomized QuickSort (3-way) · ForkJoin Merge Sort · Reservoir Sampling | CGPA ranking, 1M-record benchmarks, stream sampling |
 
-Every module has an interactive CLI menu **and** a dedicated GUI screen with visualizations (graph canvases, tree drawings, timetable grids, benchmark charts).
+Every capability has an interactive CLI entry point and a dedicated GUI screen with visualizations such as graph canvases, tree drawings, timetable grids and benchmark charts.
 
-## 🖥️ Screenshots
+## 🖥️ GUI Gallery
 
 <details open>
 <summary><b>Platform screens</b></summary>
 
-**Dashboard** — home screen: live dataset statistics (200 students · 12 faculty · 20 courses · 40 assignments · 981 exam records · an activity event stream), one card per feature and algorithm area, and the interactive **REST API Server** card (port + start/stop).
+**Dashboard** — redesigned home screen with a dark navigation rail, quick search, live dataset statistics, feature cards, algorithm workspaces and the interactive **REST API Server** card.
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
-**Records Browser** — sortable, KMP-filterable tables for students, faculty and courses; double-click any row for a detail view with enrolled courses, marks, weighted GPA, CGPA rank and recent activity pulled from the activity event stream.
+**Records Browser** — structured, sortable/filterable tables for students, faculty and courses, with detail views for academic records and recent activity.
 
 ![Records](docs/screenshots/records.png)
 
-**Manage Records** — the CRUD console: add/remove students, faculty and courses (cascading deletes show live impact counts), enroll/drop courses, and enter marks with a live grade preview. The amber dirty indicator, *Save to CSV files* and *Reset to generated data* drive persistence.
+**Manage Records** — a focused CRUD workspace for students, faculty and courses, enrollment changes, marks entry, validation, persistence and reset-to-generated-data controls.
 
 ![Manage](docs/screenshots/manage.png)
 
-**Exams & Grades** — per-course exam statistics (students, average, min, max, pass %) next to the overall grade-distribution chart, computed from 981 midsem+endsem records. Other tabs rank GPA toppers, flag at-risk students and print report cards.
+**Exams & Grades** — course statistics, grade-distribution visualization, pass-rate and average charts, GPA ranking, at-risk analysis and report-card actions.
 
 ![Exams](docs/screenshots/exams.png)
 
-**Activity Analytics** — one pass over the activity event stream: summary stat cards (37 active days, 2,702.7 events/day, 13:00 UTC peak, 72.8% course-related), the hourly rhythm chart, per-action totals, and the top-10 courses and students.
+**Activity Analytics** — clearer summary cards and corrected chart scaling for hourly activity, action totals, and top course/student activity without overcrowded labels.
 
 ![Analytics](docs/screenshots/analytics.png)
 
@@ -79,7 +79,7 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 
 ![Reports](docs/screenshots/reports.png)
 
-**Smart Search** — the query `data` ranked across resources, courses and assignments in 26 ms: exact-code and prefix matches outrank plain substring hits, and a typo'd query falls back to Levenshtein *did-you-mean* suggestions.
+**Smart Search** — ranked results across resources, courses and assignments with exact/prefix matching, multi-term relevance and Levenshtein typo suggestions.
 
 ![Search](docs/screenshots/search.png)
 
@@ -88,27 +88,27 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 <details>
 <summary><b>Algorithm feature screens</b></summary>
 
-**KMP keyword search** — searching `data` across all course codes/names and student names returns CS201 and CS301 with exact match positions in 1 ms. The other tabs run Z-Function repeated-phrase detection on assignment texts, Rabin-Karp rolling-hash code lookup, and an Aho-Corasick automaton that scans the whole assignment corpus (or the 1 MB Wikipedia document) for 10 academic keywords at once.
+**Academic Search** — KMP, Z-Function, Rabin-Karp and Aho-Corasick workflows presented as an interactive search workspace.
 
 ![Academic Search](docs/screenshots/m1-strings.png)
 
-**Suffix-array indexing with match highlighting** — the suffix array of an assignment is built twice for comparison: prefix-doubling (4.4 ms) vs **SA-IS linear-time construction (1.7 ms)**, verified identical. Searching `deadline` locates the occurrence in 0.056 ms and highlights it inside the document view. Other tabs report repeated phrases (Kasai LCP), cross-submission similarity and suffix-automaton statistics.
+**Document Similarity** — suffix-array indexing, SA-IS, Kasai LCP and suffix-automaton visualizations for document matching and similarity analysis.
 
 ![Document Similarity](docs/screenshots/m2-suffix.png)
 
-**Optimal Binary Search Tree** — the minimum-expected-cost search tree over the 12 most-accessed course codes, with real access frequencies counted from the activity stream. Node color marks the root, and the expected search cost (163,233) is compared against a balanced BST (185,753) — 12.1% lower. The other tabs cover Levenshtein/Damerau query correction, matrix-chain optimization and the bitmask-DP course explorer.
+**Query Optimization** — optimal BST construction, Levenshtein/Damerau correction, matrix-chain optimization and bitmask dynamic programming with visual outputs.
 
 ![Query Optimization](docs/screenshots/m3-dp.png)
 
-**Bipartite matching + König cover** — Hopcroft-Karp matches all 12 faculty to eligible courses (bold blue edges over gray eligibility edges); the amber nodes are the **minimum vertex cover** reconstructed via König's theorem, with |cover| = |matching| = 12 verified. The right side runs Ford-Fulkerson/Edmonds-Karp room-slot allocation (27/27 sections) and the Dinic scaled benchmark.
+**Resource Allocation** — bipartite matching, König's theorem and max-flow based allocation visualized in one workspace.
 
 ![Resource Allocation](docs/screenshots/m4-flow.png)
 
-**DPLL exam scheduling + timetable** — the course-conflict graph (131 edges, department-colored) feeds a SAT encoding solved by DPLL: 5 slots suffice for 10 courses (clique bound 5, 265 clauses, 14 ms, schedule verified). Slot tags (S1–S5) appear on the graph nodes and the generated exam timetable renders as a MON–FRI grid below.
+**Exam Scheduling** — constraint-based course scheduling with DPLL, conflict-graph visualization and a generated timetable grid.
 
 ![Exam Scheduling](docs/screenshots/m5-scheduling.png)
 
-**Randomized quicksort + benchmarks** — 200 students ranked by CGPA (1,834 comparisons, 1 ms); below, the 1,000,000-element benchmark charts compare randomized quicksort vs `Arrays.sort` vs a deterministic pivot, and the adversarial chart shows the deterministic variant's O(n²) comparison blow-up on sorted input (50M → 200M → 800M as n doubles).
+**Ranking & Streams** — CGPA ranking, randomized quicksort, parallel sorting and reservoir sampling with benchmark visualizations.
 
 ![Ranking and Streams](docs/screenshots/m6-randomized.png)
 
@@ -132,6 +132,10 @@ java -cp bin edutrack.EduTrack
 ```
 
 The app ships with a deterministic generated dataset (seed 42). Your edits are saved to `DataSets/*.csv` via **Manage Records → Save to CSV files** and loaded automatically on next start; *Reset to generated data* restores the original.
+
+## 🎨 GUI Design Refresh
+
+The current desktop interface uses a dark navigation rail, stronger card borders, clearer surface hierarchy, improved typography, consistent button states, responsive spacing, sortable tables, and corrected activity-chart label density. Dashboard and analytics views refresh from the live in-memory dataset rather than stale cached values.
 
 ## 🌐 REST API
 
@@ -172,7 +176,7 @@ Errors return JSON `400/404/405` bodies. Handlers are thread-safe (copy-on-write
 │       ├── api/                 ApiServer · JsonWriter (REST API)
 │       └── gui/                 EduTrackGUI + theme/components + 12 panels
 ├── docs/
-│   ├── screenshots/             13 verified GUI screenshots
+│   ├── screenshots/             GUI screenshots and feature visualizations
 │   └── EduTrack_Report.tex      Full LaTeX project report
 ├── DataSets/
 │   └── Wikipedia.txt            1 MB document corpus for indexing/search demos
@@ -189,21 +193,13 @@ cd docs && pdflatex EduTrack_Report.tex   # or upload to Overleaf
 
 ## ✅ Testing
 
-Every module ships a non-interactive self-test that exits non-zero on failure — **313 checks in total**, cross-verified against naive/brute-force references (SA-IS vs prefix-doubling on adversarial strings, Hopcroft-Karp vs exhaustive brute force, DPLL on pigeonhole formulas, reduction round-trips, reservoir uniformity bounds, 60 concurrent API requests, …):
+The project includes non-interactive self-tests for persistence, record queries, activity analytics, exam analytics and the REST API. The GitHub Actions pipeline compiles every Java source file with JDK 21 and runs these verification suites on every push to `main` and pull request.
 
 ```bash
-java -cp bin edutrack.modules.M1StringAlgorithms
-java -cp bin edutrack.modules.M2SuffixStructures
-java -cp bin edutrack.modules.M3DynamicProgramming
-java -cp bin edutrack.modules.M4NetworkFlow
-java -cp bin edutrack.modules.M5NPCompleteness
-java -cp bin edutrack.modules.M6RandomizedParallel
-java -cp bin edutrack.features.ExamAnalytics
+java -cp bin edutrack.features.ManageSupport
 java -cp bin edutrack.features.RecordQueries
 java -cp bin edutrack.features.ActivityAnalytics
-java -cp bin edutrack.features.ManageSupport
-java -cp bin edutrack.features.ReportGenerator
-java -cp bin edutrack.search.SearchService
+java -cp bin edutrack.features.ExamAnalytics
 java -cp bin edutrack.api.ApiServer
 ```
 
