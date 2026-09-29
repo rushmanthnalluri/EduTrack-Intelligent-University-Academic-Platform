@@ -85,11 +85,13 @@ public class DashboardPanel extends ModulePanel {
 
         JPanel snapshots = new JPanel(new GridLayout(1, 2, 12, 12));
         snapshots.setOpaque(false);
+        snapshots.setMinimumSize(new Dimension(0, 0));
         snapshots.add(card("Grade Distribution", gradeChart));
         snapshots.add(card("Students by Program", programChart));
 
         JPanel grid = new JPanel(new GridLayout(0, 3, 14, 14));
         grid.setOpaque(false);
+        grid.setMinimumSize(new Dimension(0, 0));
         for (String[] module : MODULES) {
             grid.add(moduleCard(module[0], module[1], module[2], navigator));
         }
@@ -97,6 +99,7 @@ public class DashboardPanel extends ModulePanel {
 
         DashboardScrollPanel content = new DashboardScrollPanel();
         content.setOpaque(false);
+        content.setMinimumSize(new Dimension(0, 0));
         content.setBorder(BorderFactory.createEmptyBorder(2, 2, 18, 2));
         content.add(stats);
         content.add(Box.createVerticalStrut(12));
@@ -106,6 +109,7 @@ public class DashboardPanel extends ModulePanel {
 
         JScrollPane scroll = new JScrollPane(content);
         scroll.setBorder(null);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
@@ -207,6 +211,7 @@ public class DashboardPanel extends ModulePanel {
     private JPanel statSurface(JPanel content) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(GuiTheme.SURFACE);
+        panel.setMinimumSize(new Dimension(0, 0));
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(GuiTheme.CARD_BORDER, 1, true),
                 BorderFactory.createEmptyBorder(14, 16, 14, 16)));
