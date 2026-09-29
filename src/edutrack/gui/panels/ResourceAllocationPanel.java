@@ -107,7 +107,7 @@ public class ResourceAllocationPanel extends ModulePanel {
         columns.add(buildMatchingCard(), BorderLayout.CENTER);
         JPanel rightColumn = new JPanel(new GridLayout(2, 1, 12, 12));
         rightColumn.setOpaque(false);
-        rightColumn.setPreferredSize(new Dimension(470, 0));
+        rightColumn.setPreferredSize(new Dimension(430, 0));
         rightColumn.add(buildAllocationCard());
         rightColumn.add(buildBenchmarkCard());
         columns.add(rightColumn, BorderLayout.EAST);
@@ -192,7 +192,7 @@ public class ResourceAllocationPanel extends ModulePanel {
         body.add(stats, BorderLayout.NORTH);
         body.add(scroll, BorderLayout.CENTER);
         body.add(buttons, BorderLayout.SOUTH);
-        return card("Classroom allocation — Ford-Fulkerson vs Edmonds-Karp", body);
+        return card("<html>Classroom allocation — Ford-Fulkerson vs<br>Edmonds-Karp</html>", body);
     }
 
     private JPanel buildBenchmarkCard() {
@@ -211,7 +211,7 @@ public class ResourceAllocationPanel extends ModulePanel {
         body.add(stats, BorderLayout.NORTH);
         body.add(benchmarkCanvas, BorderLayout.CENTER);
         body.add(buttons, BorderLayout.SOUTH);
-        return card("Dinic benchmark — scaled network vs Edmonds-Karp", body);
+        return card("<html>Dinic benchmark — scaled network<br>vs Edmonds-Karp</html>", body);
     }
 
     // ------------------------------------------------------------------
