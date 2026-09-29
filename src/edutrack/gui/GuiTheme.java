@@ -74,7 +74,7 @@ public final class GuiTheme {
 
         UIManager.put("defaultFont", BODY);
         UIManager.put("Panel.background", BG);
-        UIManager.put("Label.foreground", TEXT);
+        UIManager.put("Label.foreground", TEXT);\n        UIManager.put("Button.font", BODY);\n        UIManager.put("Button.background", SURFACE);\n        UIManager.put("Button.foreground", TEXT);\n        UIManager.put("Button.focus", ACCENT_SOFT);\n        UIManager.put("Table.background", SURFACE);\n        UIManager.put("Table.foreground", TEXT);\n        UIManager.put("Table.selectionBackground", ACCENT_SOFT);\n        UIManager.put("Table.selectionForeground", TEXT);\n        UIManager.put("TextField.background", SURFACE);\n        UIManager.put("TextField.foreground", TEXT);\n        UIManager.put("ComboBox.background", SURFACE);\n        UIManager.put("ComboBox.foreground", TEXT);\n        UIManager.put("Spinner.background", SURFACE);\n        UIManager.put("Spinner.foreground", TEXT);
         UIManager.put("Table.font", BODY);
         UIManager.put("TableHeader.font", SMALL_BOLD);
         UIManager.put("Table.rowHeight", 32);
