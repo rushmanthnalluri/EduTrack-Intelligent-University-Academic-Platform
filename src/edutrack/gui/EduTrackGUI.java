@@ -7,6 +7,7 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.LinkedHashMap;
@@ -57,8 +58,13 @@ public class EduTrackGUI extends JFrame {
         this.dataStore = dataStore;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1160, 760));
-        setSize(1380, 860);
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        int minWidth = Math.min(960, Math.max(720, screen.width - 40));
+        int minHeight = Math.min(640, Math.max(560, screen.height - 80));
+        int width = Math.min(1380, Math.max(minWidth, screen.width - 80));
+        int height = Math.min(860, Math.max(minHeight, screen.height - 120));
+        setMinimumSize(new Dimension(minWidth, minHeight));
+        setSize(width, height);
         setLocationRelativeTo(null);
         setIconImage(createAppIcon());
 
@@ -114,12 +120,12 @@ public class EduTrackGUI extends JFrame {
         refreshStatusBar();
     }
 
-    private JPanel buildSidebar(SearchPanel searchPanel) {
+    private JScrollPane buildSidebar(SearchPanel searchPanel) {
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(GuiTheme.SIDEBAR_BG);
         sidebar.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-        sidebar.setPreferredSize(new Dimension(254, 0));
+        sidebar.setPreferredSize(new Dimension(254, 720));
 
         JPanel brand = new JPanel();
         brand.setLayout(new BoxLayout(brand, BoxLayout.Y_AXIS));
@@ -203,7 +209,14 @@ public class EduTrackGUI extends JFrame {
         hint.setAlignmentX(Component.LEFT_ALIGNMENT);
         sidebar.add(hint);
 
-        return sidebar;
+        JScrollPane scroll = new JScrollPane(sidebar);
+        scroll.setBorder(null);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll.setPreferredSize(new Dimension(254, 0));
+        scroll.getViewport().setBackground(GuiTheme.SIDEBAR_BG);
+        scroll.getVerticalScrollBar().setUnitIncrement(14);
+        return scroll;
     }
 
     private void addSectionLabel(JPanel sidebar, String text) {
@@ -297,9 +310,6 @@ public class EduTrackGUI extends JFrame {
         }
         if (statusCounts == null) {
             return;
-        }
-        if (statusLeft != null) {
-            statusLeft.setText("Ready  •  " + currentCard.replace('-', ' '));
         }
         statusCounts.setText(String.format(
                 "%,d students   •   %,d faculty   •   %,d courses   •   %,d assignments   •   %,d exams   •   %,d events",
