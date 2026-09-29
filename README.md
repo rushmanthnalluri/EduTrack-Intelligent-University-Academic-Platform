@@ -13,6 +13,8 @@
 
 ![EduTrack Dashboard](docs/screenshots/dashboard.png)
 
+> **Live GUI screenshots:** the images in this gallery are captured from the actual Swing application in a virtual display using the same Java 21 build used by CI. No mock browser renders are used.
+
 </div>
 
 ---
@@ -90,27 +92,27 @@ Every capability has an interactive CLI entry point and a dedicated GUI screen w
 
 **Academic Search** — KMP, Z-Function, Rabin-Karp and Aho-Corasick workflows presented as an interactive search workspace.
 
-![Academic Search GUI](docs/screenshots/m1-strings.png)
+![Academic Search GUI](docs/screenshots/academic-search.png)
 
 **Document Similarity** — suffix-array indexing, SA-IS, Kasai LCP and suffix-automaton visualizations for document matching and similarity analysis.
 
-![Document Similarity GUI](docs/screenshots/m2-suffix.png)
+![Document Similarity GUI](docs/screenshots/document-similarity.png)
 
 **Query Optimization** — optimal BST construction, Levenshtein/Damerau correction, matrix-chain optimization and bitmask dynamic programming with visual outputs.
 
-![Query Optimization GUI](docs/screenshots/m3-dp.png)
+![Query Optimization GUI](docs/screenshots/query-optimization.png)
 
 **Resource Allocation** — bipartite matching, König's theorem and max-flow based allocation visualized in one workspace.
 
-![Resource Allocation GUI](docs/screenshots/m4-flow.png)
+![Resource Allocation GUI](docs/screenshots/resource-allocation.png)
 
 **Exam Scheduling** — constraint-based course scheduling with DPLL, conflict-graph visualization and a generated timetable grid.
 
-![Exam Scheduling GUI](docs/screenshots/m5-scheduling.png)
+![Exam Scheduling GUI](docs/screenshots/exam-scheduling.png)
 
 **Ranking & Streams** — CGPA ranking, randomized quicksort, parallel sorting and reservoir sampling with benchmark visualizations.
 
-![Ranking and Streams GUI](docs/screenshots/m6-randomized.png)
+![Ranking and Streams GUI](docs/screenshots/ranking-streams.png)
 
 </details>
 
