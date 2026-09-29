@@ -90,27 +90,27 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 
 **KMP keyword search** — searching `data` across all course codes/names and student names returns CS201 and CS301 with exact match positions in 1 ms. The other tabs run Z-Function repeated-phrase detection on assignment texts, Rabin-Karp rolling-hash code lookup, and an Aho-Corasick automaton that scans the whole assignment corpus (or the 1 MB Wikipedia document) for 10 academic keywords at once.
 
-![M1](docs/screenshots/m1-strings.png)
+![Academic Search](docs/screenshots/m1-strings.png)
 
 **Suffix-array indexing with match highlighting** — the suffix array of an assignment is built twice for comparison: prefix-doubling (4.4 ms) vs **SA-IS linear-time construction (1.7 ms)**, verified identical. Searching `deadline` locates the occurrence in 0.056 ms and highlights it inside the document view. Other tabs report repeated phrases (Kasai LCP), cross-submission similarity and suffix-automaton statistics.
 
-![M2](docs/screenshots/m2-suffix.png)
+![Document Similarity](docs/screenshots/m2-suffix.png)
 
 **Optimal Binary Search Tree** — the minimum-expected-cost search tree over the 12 most-accessed course codes, with real access frequencies counted from the activity stream. Node color marks the root, and the expected search cost (163,233) is compared against a balanced BST (185,753) — 12.1% lower. The other tabs cover Levenshtein/Damerau query correction, matrix-chain optimization and the bitmask-DP course explorer.
 
-![M3](docs/screenshots/m3-dp.png)
+![Query Optimization](docs/screenshots/m3-dp.png)
 
 **Bipartite matching + König cover** — Hopcroft-Karp matches all 12 faculty to eligible courses (bold blue edges over gray eligibility edges); the amber nodes are the **minimum vertex cover** reconstructed via König's theorem, with |cover| = |matching| = 12 verified. The right side runs Ford-Fulkerson/Edmonds-Karp room-slot allocation (27/27 sections) and the Dinic scaled benchmark.
 
-![M4](docs/screenshots/m4-flow.png)
+![Resource Allocation](docs/screenshots/m4-flow.png)
 
 **DPLL exam scheduling + timetable** — the course-conflict graph (131 edges, department-colored) feeds a SAT encoding solved by DPLL: 5 slots suffice for 10 courses (clique bound 5, 265 clauses, 14 ms, schedule verified). Slot tags (S1–S5) appear on the graph nodes and the generated exam timetable renders as a MON–FRI grid below.
 
-![M5](docs/screenshots/m5-scheduling.png)
+![Exam Scheduling](docs/screenshots/m5-scheduling.png)
 
 **Randomized quicksort + benchmarks** — 200 students ranked by CGPA (1,834 comparisons, 1 ms); below, the 1,000,000-element benchmark charts compare randomized quicksort vs `Arrays.sort` vs a deterministic pivot, and the adversarial chart shows the deterministic variant's O(n²) comparison blow-up on sorted input (50M → 200M → 800M as n doubles).
 
-![M6](docs/screenshots/m6-randomized.png)
+![Ranking and Streams](docs/screenshots/m6-randomized.png)
 
 </details>
 
