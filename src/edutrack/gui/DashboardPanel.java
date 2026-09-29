@@ -89,7 +89,7 @@ public class DashboardPanel extends ModulePanel {
         snapshots.add(card("Grade Distribution", gradeChart));
         snapshots.add(card("Students by Program", programChart));
 
-        JPanel grid = new JPanel(new GridLayout(0, 3, 14, 14));
+        JPanel grid = new JPanel(new GridLayout(0, 2, 14, 14));
         grid.setOpaque(false);
         grid.setMinimumSize(new Dimension(0, 0));
         for (String[] module : MODULES) {
