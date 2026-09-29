@@ -1,0 +1,111 @@
+name: Capture GUI Screenshots
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install virtual display and image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb imagemagick
+
+      - name: Compile application
+        run: |
+          mkdir -p bin
+          javac -encoding UTF-8 -d bin $(find src -name "*.java")
+
+      - name: Capture current GUI
+        run: |
+          cat > /tmp/GuiScreenshotRunner.java <<'EOF'
+          import edutrack.data.DataStore;
+          import edutrack.gui.EduTrackGUI;
+          import java.awt.AWTException;
+          import java.awt.Rectangle;
+          import java.awt.Robot;
+          import java.awt.Toolkit;
+          import java.awt.image.BufferedImage;
+          import java.io.File;
+          import javax.imageio.ImageIO;
+          import javax.swing.SwingUtilities;
+
+          public class GuiScreenshotRunner {
+              private static EduTrackGUI app;
+
+              private static void capture(Robot robot, String card, String file) throws Exception {
+                  SwingUtilities.invokeAndWait(() -> app.showCard(card));
+                  Thread.sleep(1800);
+                  Rectangle bounds = app.getBounds();
+                  BufferedImage image = robot.createScreenCapture(bounds);
+                  File output = new File("docs/screenshots/" + file);
+                  output.getParentFile().mkdirs();
+                  ImageIO.write(image, "png", output);
+              }
+
+              public static void main(String[] args) throws Exception {
+                  System.setProperty("java.awt.headless", "false");
+                  SwingUtilities.invokeAndWait(() -> {
+                      GuiScreenshotRunner.app = new EduTrackGUI(new DataStore());
+                      app.setVisible(true);
+                  });
+
+                  Robot robot = new Robot();
+                  robot.setAutoDelay(80);
+                  Thread.sleep(2200);
+
+                  capture(robot, "dashboard", "dashboard.png");
+                  capture(robot, "records", "records.png");
+                  capture(robot, "manage", "manage.png");
+                  capture(robot, "exams", "exams.png");
+                  capture(robot, "analytics", "analytics.png");
+                  capture(robot, "reports", "reports.png");
+                  capture(robot, "search", "search.png");
+                  capture(robot, "academic-search", "academic-search.png");
+                  capture(robot, "document-similarity", "document-similarity.png");
+                  capture(robot, "query-optimization", "query-optimization.png");
+                  capture(robot, "resource-allocation", "resource-allocation.png");
+                  capture(robot, "exam-scheduling", "exam-scheduling.png");
+                  capture(robot, "ranking-streams", "ranking-streams.png");
+
+                  SwingUtilities.invokeAndWait(() -> app.dispose());
+              }
+          }
+          EOF
+
+          javac -encoding UTF-8 -cp bin -d bin /tmp/GuiScreenshotRunner.java
+          xvfb-run -a -s "-screen 0 1600x1000x24" java -cp bin GuiScreenshotRunner
+
+      - name: Normalize screenshot size and metadata
+        run: |
+          for file in docs/screenshots/*.png; do
+            convert "$file" -strip "$file"
+          done
+
+      - name: Commit refreshed GUI screenshots
+        run: |
+          git config user.name "Rushmanth Nalluri"
+          git config user.email "2500030215@kluniversity.in"
+          git add docs/screenshots/*.png
+          if git diff --cached --quiet; then
+            echo "No screenshot changes detected."
+            exit 0
+          fi
+          git commit -m "Refresh GUI screenshots"
+          git push origin main
