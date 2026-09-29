@@ -49,6 +49,7 @@ public class EduTrackGUI extends JFrame {
     private DashboardPanel dashboard;
     private RecordsPanel recordsPanel;
     private JLabel statusCounts;
+    private JLabel statusLeft;
     private JLabel statusMessage;
 
     public EduTrackGUI(DataStore dataStore) {
@@ -141,6 +142,7 @@ public class EduTrackGUI extends JFrame {
         sidebar.add(brand);
 
         JTextField searchField = new JTextField();
+        searchField.setMinimumSize(new Dimension(0, 38));
         searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         searchField.setAlignmentX(Component.LEFT_ALIGNMENT);
         searchField.setFont(GuiTheme.BODY);
@@ -295,6 +297,9 @@ public class EduTrackGUI extends JFrame {
         }
         if (statusCounts == null) {
             return;
+        }
+        if (statusLeft != null) {
+            statusLeft.setText("Ready  •  " + currentCard.replace('-', ' '));
         }
         statusCounts.setText(String.format(
                 "%,d students   •   %,d faculty   •   %,d courses   •   %,d assignments   •   %,d exams   •   %,d events",
