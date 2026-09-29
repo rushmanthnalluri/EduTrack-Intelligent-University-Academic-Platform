@@ -114,6 +114,17 @@ jobs:
             exit 0
           fi
           git commit -m "Refresh GUI screenshots"
-          git fetch origin main
-          git rebase origin/main
-          git push origin HEAD:main
+
+          # The capture can overlap with another main-branch writer.
+          # Rebase and retry so a transient non-fast-forward cannot fail CI.
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Unable to publish screenshots after 3 attempts."
+          exit 1
