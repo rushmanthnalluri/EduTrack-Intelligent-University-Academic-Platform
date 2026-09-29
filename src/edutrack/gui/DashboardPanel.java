@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -15,6 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.Scrollable;
 import javax.swing.JSpinner;
 
 import edutrack.data.DataStore;
@@ -67,7 +69,7 @@ public class DashboardPanel extends ModulePanel {
         header.add(Box.createVerticalStrut(4));
         header.add(subtitle);
 
-        JPanel stats = new JPanel(new GridLayout(2, 4, 14, 14));
+        JPanel stats = new JPanel(new GridLayout(0, 4, 14, 14));
         stats.setOpaque(false);
         stats.add(statCard("students", "Students", dataStore.students().size()));
         stats.add(statCard("faculty", "Faculty", dataStore.faculty().size()));
@@ -77,8 +79,8 @@ public class DashboardPanel extends ModulePanel {
         stats.add(statCard("examRecords", "Exam Records", dataStore.examRecords().size()));
         stats.add(statCard("activityEvents", "Activity Events", dataStore.activityStream().size()));
 
-        gradeChart.setPreferredSize(new Dimension(460, 220));
-        programChart.setPreferredSize(new Dimension(460, 220));
+        gradeChart.setPreferredSize(new Dimension(380, 220));
+        programChart.setPreferredSize(new Dimension(380, 220));
         programChart.setHorizontal(true);
 
         JPanel snapshots = new JPanel(new GridLayout(1, 2, 12, 12));
@@ -93,8 +95,7 @@ public class DashboardPanel extends ModulePanel {
         }
         grid.add(apiCard());
 
-        JPanel content = new JPanel();
-        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        DashboardScrollPanel content = new DashboardScrollPanel();
         content.setOpaque(false);
         content.setBorder(BorderFactory.createEmptyBorder(2, 2, 18, 2));
         content.add(stats);
@@ -112,6 +113,38 @@ public class DashboardPanel extends ModulePanel {
         add(header, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
         refresh();
+    }
+
+    private static final class DashboardScrollPanel extends JPanel implements Scrollable {
+        DashboardScrollPanel() {
+            super();
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        }
+
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 16;
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return Math.max(80, orientation == javax.swing.SwingConstants.VERTICAL ? visibleRect.height - 32 : visibleRect.width - 32);
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
     }
 
     public void refresh() {
@@ -189,7 +222,7 @@ public class DashboardPanel extends ModulePanel {
         title.setFont(GuiTheme.H2);
         title.setForeground(GuiTheme.TEXT);
 
-        JLabel desc = new JLabel("<html>" + description + "</html>");
+        JLabel desc = new JLabel("<html><div style='width:250px'>" + description + "</div></html>");
         desc.setFont(GuiTheme.BODY);
         desc.setForeground(GuiTheme.MUTED);
 
@@ -215,7 +248,7 @@ public class DashboardPanel extends ModulePanel {
         title.setForeground(GuiTheme.TEXT);
 
         JLabel desc = new JLabel(
-                "<html>Expose records, grades, search and analytics to external academic systems over HTTP/JSON.</html>");
+                "<html><div style='width:250px'>Expose records, grades, search and analytics to external academic systems over HTTP/JSON.</div></html>");
         desc.setFont(GuiTheme.BODY);
         desc.setForeground(GuiTheme.MUTED);
 
