@@ -1,7 +1,10 @@
 package edutrack.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -11,6 +14,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingWorker;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.LineBorder;
 
 import edutrack.data.DataStore;
 
@@ -19,26 +24,64 @@ public abstract class ModulePanel extends JPanel {
     protected final DataStore dataStore;
 
     protected ModulePanel(DataStore dataStore) {
+        super(new BorderLayout(16, 16));
         this.dataStore = dataStore;
-        setLayout(new BorderLayout(16, 16));
         setBackground(GuiTheme.BG);
-        setBorder(BorderFactory.createEmptyBorder(22, 24, 20, 24));
+        setBorder(BorderFactory.createEmptyBorder(24, 26, 22, 26));
     }
 
     protected JPanel card(String title, Component content) {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        JPanel panel = new JPanel(new BorderLayout(12, 12));
         panel.setBackground(GuiTheme.CARD_BG);
-        panel.setBorder(GuiTheme.cardBorder());
 
         if (title != null && !title.isEmpty()) {
             JLabel heading = new JLabel(title);
             heading.setFont(GuiTheme.H2);
             heading.setForeground(GuiTheme.TEXT);
-            heading.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
+            heading.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 1, 0, GuiTheme.DIVIDER),
+                    BorderFactory.createEmptyBorder(0, 0, 10, 0)));
             panel.add(heading, BorderLayout.NORTH);
         }
+
         panel.add(content, BorderLayout.CENTER);
+        panel.setBorder(new CompoundBorder(
+                new LineBorder(GuiTheme.CARD_BORDER, 1, true),
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)));
         return panel;
+    }
+
+    protected JPanel sectionHeader(String title, String subtitle) {
+        JPanel header = new JPanel(new BorderLayout(8, 2));
+        header.setOpaque(false);
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(GuiTheme.H1);
+        titleLabel.setForeground(GuiTheme.TEXT);
+
+        JLabel subtitleLabel = new JLabel(subtitle);
+        subtitleLabel.setFont(GuiTheme.BODY);
+        subtitleLabel.setForeground(GuiTheme.MUTED);
+
+        JPanel text = new JPanel();
+        text.setOpaque(false);
+        text.setLayout(new javax.swing.BoxLayout(text, javax.swing.BoxLayout.Y_AXIS));
+        text.add(titleLabel);
+        if (subtitle != null && !subtitle.isBlank()) {
+            text.add(subtitleLabel);
+        }
+        header.add(text, BorderLayout.WEST);
+        return header;
+    }
+
+    protected JPanel toolbar(Component... components) {
+        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        bar.setOpaque(false);
+        for (Component component : components) {
+            bar.add(component);
+        }
+        bar.setPreferredSize(new Dimension(0, 40));
+        return bar;
     }
 
     protected <T> void runAsync(Callable<T> work, Consumer<T> onDone) {
