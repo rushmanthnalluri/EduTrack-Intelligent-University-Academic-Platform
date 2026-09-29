@@ -67,7 +67,7 @@ public class DashboardPanel extends ModulePanel {
         header.add(Box.createVerticalStrut(4));
         header.add(subtitle);
 
-        JPanel stats = new JPanel(new GridLayout(1, 7, 12, 12));
+        JPanel stats = new JPanel(new GridLayout(2, 4, 14, 14));
         stats.setOpaque(false);
         stats.add(statCard("students", "Students", dataStore.students().size()));
         stats.add(statCard("faculty", "Faculty", dataStore.faculty().size()));
@@ -77,8 +77,8 @@ public class DashboardPanel extends ModulePanel {
         stats.add(statCard("examRecords", "Exam Records", dataStore.examRecords().size()));
         stats.add(statCard("activityEvents", "Activity Events", dataStore.activityStream().size()));
 
-        gradeChart.setPreferredSize(new Dimension(430, 190));
-        programChart.setPreferredSize(new Dimension(430, 190));
+        gradeChart.setPreferredSize(new Dimension(460, 220));
+        programChart.setPreferredSize(new Dimension(460, 220));
         programChart.setHorizontal(true);
 
         JPanel snapshots = new JPanel(new GridLayout(1, 2, 12, 12));
@@ -86,7 +86,7 @@ public class DashboardPanel extends ModulePanel {
         snapshots.add(card("Grade Distribution", gradeChart));
         snapshots.add(card("Students by Program", programChart));
 
-        JPanel grid = new JPanel(new GridLayout(4, 3, 12, 12));
+        JPanel grid = new JPanel(new GridLayout(0, 3, 14, 14));
         grid.setOpaque(false);
         for (String[] module : MODULES) {
             grid.add(moduleCard(module[0], module[1], module[2], navigator));
@@ -96,7 +96,7 @@ public class DashboardPanel extends ModulePanel {
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
-        content.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
+        content.setBorder(BorderFactory.createEmptyBorder(2, 2, 18, 2));
         content.add(stats);
         content.add(Box.createVerticalStrut(12));
         content.add(snapshots);
@@ -168,7 +168,17 @@ public class DashboardPanel extends ModulePanel {
         inner.add(number);
         inner.add(Box.createVerticalStrut(2));
         inner.add(name);
-        return card(null, inner);
+        return statSurface(inner);
+    }
+
+    private JPanel statSurface(JPanel content) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(GuiTheme.SURFACE);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GuiTheme.CARD_BORDER, 1, true),
+                BorderFactory.createEmptyBorder(14, 16, 14, 16)));
+        panel.add(content, BorderLayout.CENTER);
+        return panel;
     }
 
     private JPanel moduleCard(String key, String name, String description, Consumer<String> navigator) {
