@@ -195,7 +195,7 @@ cd docs && pdflatex EduTrack_Report.tex   # or upload to Overleaf
 
 ## ✅ Testing
 
-The project includes non-interactive self-tests for persistence, record queries, activity analytics, exam analytics and the REST API. The GitHub Actions pipeline compiles every Java source file with JDK 21 and runs these verification suites on every push to `main` and pull request.
+The project includes non-interactive self-tests for persistence, record queries, activity analytics, exam analytics, reporting, smart search, the REST API, and every DSA workbench module. The GitHub Actions pipeline compiles every Java source file with JDK 21 and runs the full verification suite on every push to `main` and pull request. The GUI is also exercised in CI from the real Swing application under a virtual display; the screenshot workflow visits all 13 user-facing screens.
 
 ```bash
 java -cp bin edutrack.features.ManageSupport
