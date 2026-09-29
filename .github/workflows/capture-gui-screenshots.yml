@@ -7,6 +7,12 @@ on:
 permissions:
   contents: write
 
+# Only one screenshot refresh may publish for a branch at a time.
+# The rebase below also handles commits that land while the GUI is being captured.
+concurrency:
+  group: gui-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   capture:
     runs-on: ubuntu-latest
@@ -108,4 +114,6 @@ jobs:
             exit 0
           fi
           git commit -m "Refresh GUI screenshots"
-          git push origin main
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
