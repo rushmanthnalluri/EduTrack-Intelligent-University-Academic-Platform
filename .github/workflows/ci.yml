@@ -27,7 +27,6 @@ jobs:
           java -cp bin edutrack.features.RecordQueries
           java -cp bin edutrack.features.ActivityAnalytics
           java -cp bin edutrack.features.ExamAnalytics
-          java -cp bin edutrack.features.ActivityAnalytics
           java -cp bin edutrack.features.ReportGenerator
           java -cp bin edutrack.search.SearchService
           java -cp bin edutrack.modules.M1StringAlgorithms
