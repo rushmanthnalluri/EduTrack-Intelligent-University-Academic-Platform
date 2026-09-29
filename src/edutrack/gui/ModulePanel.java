@@ -20,19 +20,21 @@ public abstract class ModulePanel extends JPanel {
 
     protected ModulePanel(DataStore dataStore) {
         this.dataStore = dataStore;
-        setLayout(new BorderLayout(12, 12));
+        setLayout(new BorderLayout(16, 16));
         setBackground(GuiTheme.BG);
-        setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
+        setBorder(BorderFactory.createEmptyBorder(22, 24, 20, 24));
     }
 
     protected JPanel card(String title, Component content) {
-        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(GuiTheme.CARD_BG);
         panel.setBorder(GuiTheme.cardBorder());
+
         if (title != null && !title.isEmpty()) {
             JLabel heading = new JLabel(title);
             heading.setFont(GuiTheme.H2);
             heading.setForeground(GuiTheme.TEXT);
+            heading.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
             panel.add(heading, BorderLayout.NORTH);
         }
         panel.add(content, BorderLayout.CENTER);
