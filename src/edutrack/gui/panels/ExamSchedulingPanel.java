@@ -190,8 +190,8 @@ public class ExamSchedulingPanel extends ModulePanel {
     }
 
     private Component buildBody() {
-        JLabel legend = new JLabel("Node colour = department · amber ring = vertex-cover nodes · "
-                + "after a SAT solve, colour = assigned exam slot (hover nodes for details)");
+        JLabel legend = new JLabel("<html><div style='width: 610px'>Node colour = department · amber ring = vertex-cover nodes · "
+                + "after a SAT solve, colour = assigned exam slot (hover nodes for details)</div></html>");
         legend.setFont(GuiTheme.BODY);
         legend.setForeground(GuiTheme.MUTED);
         legend.setBorder(BorderFactory.createEmptyBorder(8, 2, 0, 2));
