@@ -40,7 +40,7 @@ import edutrack.modules.M1StringAlgorithms;
  * multi-keyword scanning. All algorithm work runs via runAsync on SwingWorker
  * background threads; the constructor only builds the UI.
  */
-public class M1Panel extends ModulePanel {
+public class AcademicSearchPanel extends ModulePanel {
 
     private static final String[] SCAN_TARGETS = {
         "Assignment texts", "Wikipedia document", "Both"
@@ -48,13 +48,13 @@ public class M1Panel extends ModulePanel {
     private static final int POSITION_DISPLAY_LIMIT = 12;
     private static final int PHRASE_DISPLAY_LENGTH = 80;
 
-    public M1Panel(DataStore dataStore) {
+    public AcademicSearchPanel(DataStore dataStore) {
         super(dataStore);
 
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setOpaque(false);
-        JLabel title = new JLabel("M1 · Academic String Algorithms");
+        JLabel title = new JLabel("Academic String Algorithms");
         title.setFont(GuiTheme.H1);
         title.setForeground(GuiTheme.TEXT);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);

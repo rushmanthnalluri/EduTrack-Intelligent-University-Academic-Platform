@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,14 +41,15 @@ import edutrack.model.Student;
  * Records Browser: three tabs (Students / Faculty / Courses) with a live KMP
  * substring filter, sortable non-editable tables, CSV export and themed detail
  * dialogs backed by {@link RecordQueries}. The constructor only builds the UI;
- * detail bundles (the student one scans the 100k-event activity stream) load
+ * detail bundles load
  * via runAsync with the triggering button disabled meanwhile.
  */
 public class RecordsPanel extends ModulePanel {
 
     private static final int ACTIVITY_TAIL = 25;
 
-    private final Map<String, Integer> enrollmentByCourse;
+    private Map<String, Integer> enrollmentByCourse;
+    private final List<Runnable> refreshActions = new ArrayList<>();
 
     public RecordsPanel(DataStore dataStore) {
         super(dataStore);
@@ -135,6 +137,7 @@ public class RecordsPanel extends ModulePanel {
         };
         applyFilter.run();
         wireFilter(filterField, filterButton, clearButton, applyFilter);
+        refreshActions.add(applyFilter);
         exportButton.addActionListener(e -> CsvExporter.exportTable(this, table, "students.csv"));
 
         Runnable openDetails = () -> {
@@ -145,7 +148,7 @@ public class RecordsPanel extends ModulePanel {
             }
             int id = (Integer) model.getValueAt(table.convertRowIndexToModel(view), 0);
             detailsButton.setEnabled(false);
-            countLabel.setText("Loading details for student " + id + " (scanning activity stream) …");
+            countLabel.setText("Loading details for student " + id + " …");
             runAsync(() -> RecordQueries.studentDetail(dataStore, id, ACTIVITY_TAIL), detail -> {
                 detailsButton.setEnabled(true);
                 applyFilter.run();
@@ -206,6 +209,7 @@ public class RecordsPanel extends ModulePanel {
         };
         applyFilter.run();
         wireFilter(filterField, filterButton, clearButton, applyFilter);
+        refreshActions.add(applyFilter);
         exportButton.addActionListener(e -> CsvExporter.exportTable(this, table, "faculty.csv"));
 
         Runnable openDetails = () -> {
@@ -279,6 +283,7 @@ public class RecordsPanel extends ModulePanel {
         };
         applyFilter.run();
         wireFilter(filterField, filterButton, clearButton, applyFilter);
+        refreshActions.add(applyFilter);
         exportButton.addActionListener(e -> CsvExporter.exportTable(this, table, "courses.csv"));
 
         Runnable openDetails = () -> {
@@ -303,6 +308,14 @@ public class RecordsPanel extends ModulePanel {
         detailsButton.addActionListener(e -> openDetails.run());
         onDoubleClick(table, openDetails);
         return tab;
+    }
+
+    /** Refreshes derived enrollment data and all record tables after CRUD changes. */
+    public void refresh() {
+        enrollmentByCourse = computeEnrollments(dataStore);
+        for (Runnable action : new ArrayList<>(refreshActions)) {
+            action.run();
+        }
     }
 
     // ------------------------------------------------------------------

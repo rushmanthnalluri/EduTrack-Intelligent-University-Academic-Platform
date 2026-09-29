@@ -32,7 +32,7 @@ import edutrack.gui.ModulePanel;
 import edutrack.model.Student;
 
 /**
- * Activity analytics dashboard over the 100k-event stream. The constructor
+ * Activity analytics dashboard over the activity event stream. The constructor
  * only builds the UI; every scan runs via runAsync on a SwingWorker while
  * the compute button stays disabled. Results land in a stat strip, three
  * ChartCanvas bar charts, a top-10 students table and a dark console log.
@@ -62,7 +62,7 @@ public class AnalyticsPanel extends ModulePanel {
         computeButton = GuiTheme.primaryButton("Compute analytics");
         exportButton = GuiTheme.secondaryButton("CSV export");
         exportButton.setEnabled(false);
-        statusLabel = new JLabel("Press 'Compute analytics' to scan the 100,000-event stream.");
+        statusLabel = new JLabel("Press 'Compute analytics' to scan the activity event stream.");
         statusLabel.setFont(GuiTheme.BODY_BOLD);
         statusLabel.setForeground(GuiTheme.ACCENT_DARK);
 
@@ -71,7 +71,7 @@ public class AnalyticsPanel extends ModulePanel {
         title.setForeground(GuiTheme.TEXT);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel subtitle = new JLabel(
-                "Large-scale analytics over the 100,000-event activity stream · actions, hours, days, courses, students");
+                "Activity analytics · action mix, hourly rhythm, courses and students");
         subtitle.setFont(GuiTheme.BODY);
         subtitle.setForeground(GuiTheme.MUTED);
         subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -112,8 +112,10 @@ public class AnalyticsPanel extends ModulePanel {
         stats.add(statCard("Course-related", coursePctValue));
 
         actionChart = new ChartCanvas();
+        actionChart.setHorizontal(true);
         hourChart = new ChartCanvas();
-        hourChart.setPreferredSize(new Dimension(900, 135));
+        hourChart.setPreferredSize(new Dimension(900, 165));
+        hourChart.setLabelStep(2);
         coursesChart = new ChartCanvas();
 
         studentsModel = tableModel("Rank", "Student ID", "Name", "Program", "Events");
@@ -208,7 +210,7 @@ public class AnalyticsPanel extends ModulePanel {
         for (int i = 0; i < ActivityAnalytics.KNOWN_ACTIONS.length; i++) {
             String action = ActivityAnalytics.KNOWN_ACTIONS[i];
             actionValues[i] = result.actionCounts.get(action);
-            actionLabels[i] = action.contains("_") ? action.substring(0, action.indexOf('_')) : action;
+            actionLabels[i] = action.replace('_', ' ');
         }
         actionChart.setData("", actionLabels, actionValues);
 

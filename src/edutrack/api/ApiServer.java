@@ -64,7 +64,6 @@ public final class ApiServer {
     private final HttpServer server;
     private final ExecutorService executor;
     private volatile boolean running;
-    private volatile String analyticsJson;
 
     private ApiServer(DataStore ds, HttpServer server, ExecutorService executor) {
         this.ds = ds;
@@ -371,28 +370,23 @@ public final class ApiServer {
     }
 
     private String analytics() {
-        String cached = analyticsJson;
-        if (cached == null) {
-            List<edutrack.model.ActivityEvent> events = ds.activityStream();
-            LinkedHashMap<String, Integer> actions = ActivityAnalytics.countByAction(events);
-            ActivityAnalytics.Summary s = ActivityAnalytics.summarize(events);
-            JsonWriter actionsJson = JsonWriter.object();
-            for (Map.Entry<String, Integer> e : actions.entrySet()) {
-                actionsJson.put(e.getKey(), e.getValue());
-            }
-            cached = JsonWriter.object()
-                    .put("total", s.totalEvents)
-                    .put("days", s.distinctDays)
-                    .put("avgPerDay", round2(s.avgEventsPerDay))
-                    .put("peakHour", s.peakHour)
-                    .put("peakHourCount", s.peakHourCount)
-                    .put("courseRelatedEvents", s.courseRelatedEvents)
-                    .put("courseRelatedPercent", round2(s.courseRelatedPercent))
-                    .put("actions", actionsJson)
-                    .toString();
-            analyticsJson = cached;
+        List<edutrack.model.ActivityEvent> events = ds.activityStream();
+        LinkedHashMap<String, Integer> actions = ActivityAnalytics.countByAction(events);
+        ActivityAnalytics.Summary s = ActivityAnalytics.summarize(events);
+        JsonWriter actionsJson = JsonWriter.object();
+        for (Map.Entry<String, Integer> e : actions.entrySet()) {
+            actionsJson.put(e.getKey(), e.getValue());
         }
-        return cached;
+        return JsonWriter.object()
+                .put("total", s.totalEvents)
+                .put("days", s.distinctDays)
+                .put("avgPerDay", round2(s.avgEventsPerDay))
+                .put("peakHour", s.peakHour)
+                .put("peakHourCount", s.peakHourCount)
+                .put("courseRelatedEvents", s.courseRelatedEvents)
+                .put("courseRelatedPercent", round2(s.courseRelatedPercent))
+                .put("actions", actionsJson)
+                .toString();
     }
 
     private static int parseInt(String raw, String param) throws ApiError {

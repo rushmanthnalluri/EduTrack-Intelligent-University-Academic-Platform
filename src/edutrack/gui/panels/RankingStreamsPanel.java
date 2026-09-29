@@ -37,7 +37,7 @@ import edutrack.modules.M6RandomizedQuickSort;
 import edutrack.modules.M6ReservoirSampler;
 import edutrack.modules.M6ReservoirSampler.SampleResult;
 
-public class M6Panel extends ModulePanel {
+public class RankingStreamsPanel extends ModulePanel {
 
     private static final int BENCHMARK_SIZE = 1_000_000;
 
@@ -63,7 +63,7 @@ public class M6Panel extends ModulePanel {
     private final JLabel sampleStats = new JLabel(" ");
     private final M6BarChart uniformityChart = new M6BarChart();
 
-    public M6Panel(DataStore dataStore) {
+    public RankingStreamsPanel(DataStore dataStore) {
         super(dataStore);
 
         topNSpinner = new JSpinner(new SpinnerNumberModel(10, 1, dataStore.students().size(), 1));
@@ -95,7 +95,7 @@ public class M6Panel extends ModulePanel {
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setOpaque(false);
-        JLabel title = new JLabel("M6 · Ranking & Streams — Randomized & Parallel Algorithms");
+        JLabel title = new JLabel("Ranking & Streams — Randomized & Parallel Algorithms");
         title.setFont(GuiTheme.H1);
         title.setForeground(GuiTheme.TEXT);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);

@@ -36,7 +36,7 @@ import edutrack.modules.M4NetworkFlow;
  * All algorithm runs happen in SwingWorker threads via runAsync; the EDT only
  * touches Swing components.
  */
-public class M4Panel extends ModulePanel {
+public class ResourceAllocationPanel extends ModulePanel {
 
     private final List<Faculty> faculty;
     private final List<Course> courses;
@@ -73,7 +73,7 @@ public class M4Panel extends ModulePanel {
 
     private final ConsoleArea console = new ConsoleArea(3);
 
-    public M4Panel(DataStore dataStore) {
+    public ResourceAllocationPanel(DataStore dataStore) {
         super(dataStore);
         faculty = dataStore.faculty();
         courses = dataStore.courses();
@@ -128,7 +128,7 @@ public class M4Panel extends ModulePanel {
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setOpaque(false);
-        JLabel title = new JLabel("M4 · Network Flow — Resource Allocation");
+        JLabel title = new JLabel("Network Flow — Resource Allocation");
         title.setFont(GuiTheme.H1);
         title.setForeground(GuiTheme.TEXT);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);

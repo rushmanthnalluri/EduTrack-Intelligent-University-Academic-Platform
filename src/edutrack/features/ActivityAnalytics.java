@@ -16,7 +16,7 @@ import edutrack.data.DataStore;
 import edutrack.model.ActivityEvent;
 
 /**
- * Large-scale, read-only analytics over the 100k-event activity stream:
+ * Large-scale, read-only analytics over the activity event activity stream:
  * per-action counts, hour-of-day and per-day buckets (UTC, deterministic),
  * top-K courses and students, and a headline summary. Every computation is
  * a pure function of the event list. The non-interactive main() self-test

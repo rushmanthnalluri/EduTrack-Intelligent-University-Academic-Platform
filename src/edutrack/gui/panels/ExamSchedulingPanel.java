@@ -37,7 +37,7 @@ import edutrack.modules.M5NPCompleteness;
 import edutrack.modules.M5Reductions;
 import edutrack.modules.M5VertexCoverApprox;
 
-public class M5Panel extends ModulePanel {
+public class ExamSchedulingPanel extends ModulePanel {
 
     private static final int CONTROL_COLUMN_WIDTH = 330;
     private static final int CONSOLE_COLUMNS = 34;
@@ -63,7 +63,7 @@ public class M5Panel extends ModulePanel {
     private final JButton vcExactButton;
     private final ConsoleArea vcConsole;
 
-    public M5Panel(DataStore dataStore) {
+    public ExamSchedulingPanel(DataStore dataStore) {
         super(dataStore);
 
         graph = M5Graph.courseConflictGraph(dataStore);
@@ -82,7 +82,7 @@ public class M5Panel extends ModulePanel {
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setOpaque(false);
-        JLabel title = new JLabel("M5 · Exam Scheduling — NP-Completeness & Approximation");
+        JLabel title = new JLabel("Exam Scheduling — NP-Completeness & Approximation");
         title.setFont(GuiTheme.H1);
         title.setForeground(GuiTheme.TEXT);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);

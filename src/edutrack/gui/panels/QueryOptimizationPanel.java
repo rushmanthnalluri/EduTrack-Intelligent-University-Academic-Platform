@@ -38,7 +38,7 @@ import edutrack.model.Course;
 import edutrack.modules.M3DynamicProgramming;
 import edutrack.modules.M3DynamicProgramming.Candidate;
 
-public class M3Panel extends ModulePanel {
+public class QueryOptimizationPanel extends ModulePanel {
 
     private static final int TOP_MATCHES = 5;
     private static final int OBST_KEY_COUNT = 12;
@@ -77,7 +77,7 @@ public class M3Panel extends ModulePanel {
     private CostBars costBars;
     private ConsoleArea obstPreorder;
 
-    public M3Panel(DataStore dataStore) {
+    public QueryOptimizationPanel(DataStore dataStore) {
         super(dataStore);
 
         add(buildHeader(), BorderLayout.NORTH);
@@ -95,7 +95,7 @@ public class M3Panel extends ModulePanel {
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setOpaque(false);
-        JLabel title = new JLabel("M3 · Query Correction & Optimization");
+        JLabel title = new JLabel("Query Correction & Optimization");
         title.setFont(GuiTheme.H1);
         title.setForeground(GuiTheme.TEXT);
         title.setAlignmentX(LEFT_ALIGNMENT);

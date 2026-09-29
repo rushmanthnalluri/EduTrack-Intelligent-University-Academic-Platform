@@ -19,7 +19,7 @@
 
 ## ✨ What is EduTrack?
 
-EduTrack models a real university academic system — **200 students, 12 faculty, 20 courses, 40 assignments, 981 exam records and a 100,000-event activity stream** — and answers the questions an academic office actually asks: *Who can teach what? Which exams conflict? Which students are at risk? How similar are two submissions? What's the fastest way to find anything?*
+EduTrack models a real university academic system — **200 students, 12 faculty, 20 courses, 40 assignments, 981 exam records and a activity event stream** — and answers the questions an academic office actually asks: *Who can teach what? Which exams conflict? Which students are at risk? How similar are two submissions? What's the fastest way to find anything?*
 
 Every answer is computed with a **hand-implemented DSA algorithm** (no external libraries — JDK only), exposed through **two interfaces** (a Swing GUI and a console CLI), persisted to **CSV files**, and exposed to other systems through a **built-in REST API**.
 
@@ -32,7 +32,7 @@ Every answer is computed with a **hand-implemented DSA algorithm** (no external 
 | 💾 **CSV Persistence** | Save/load `students.csv`, `faculty.csv`, `courses.csv`, `exams.csv` · one-click reset to generated data |
 | 🔎 **Smart Search** | One box searches everything — KMP exact matching, AND multi-term ranking, Levenshtein *did-you-mean* fallback |
 | 📊 **Exam Analytics** | Per-course statistics, GPA toppers, at-risk detection, report cards |
-| 📈 **Activity Analytics** | 100k-event stream: actions, hourly rhythm, top courses/students |
+| 📈 **Activity Analytics** | activity event stream: actions, hourly rhythm, top courses/students |
 | 🧾 **Reports & Export** | Official-style transcripts, grade sheets, department summaries, at-risk lists |
 | 🌐 **REST API** | 8 JSON endpoints over JDK's built-in HTTP server — start/stop from the dashboard |
 | 🧮 **6 DSA Modules** | 24 algorithms implemented from scratch and woven into the features (below) |
@@ -41,12 +41,12 @@ Every answer is computed with a **hand-implemented DSA algorithm** (no external 
 
 | Module | Algorithms | Used for |
 |---|---|---|
-| **M1 · String Algorithms** | KMP · Z-Function · Rabin-Karp · Aho-Corasick | Course/student search, repeated-phrase detection, code lookup, multi-keyword scans |
-| **M2 · Suffix Structures** | Suffix Array · **SA-IS** (linear) · Kasai LCP · Suffix Automaton | Document indexing, match highlighting, cross-submission similarity |
-| **M3 · Advanced DP** | Levenshtein · Damerau · Matrix-Chain · Bitmask DP · Optimal BST | Typo-tolerant queries, pipeline optimization, course selection, key organization |
-| **M4 · Network Flow** | Hopcroft-Karp · Ford-Fulkerson · Edmonds-Karp · Dinic · König | Faculty→course matching, classroom allocation, conflict analysis |
-| **M5 · NP-Completeness** | DPLL SAT · 3-SAT→CLIQUE · CLIQUE→IND-SET→VERTEX-COVER · VC 2-approx | Exam scheduling, constraint reductions, conflict covering |
-| **M6 · Randomized & Parallel** | Randomized QuickSort (3-way) · ForkJoin Merge Sort · Reservoir Sampling | CGPA ranking, 1M-record benchmarks, stream sampling |
+| **String Algorithms** | KMP · Z-Function · Rabin-Karp · Aho-Corasick | Course/student search, repeated-phrase detection, code lookup, multi-keyword scans |
+| **Suffix Structures** | Suffix Array · **SA-IS** (linear) · Kasai LCP · Suffix Automaton | Document indexing, match highlighting, cross-submission similarity |
+| **Advanced DP** | Levenshtein · Damerau · Matrix-Chain · Bitmask DP · Optimal BST | Typo-tolerant queries, pipeline optimization, course selection, key organization |
+| **Network Flow** | Hopcroft-Karp · Ford-Fulkerson · Edmonds-Karp · Dinic · König | Faculty→course matching, classroom allocation, conflict analysis |
+| **NP-Completeness** | DPLL SAT · 3-SAT→CLIQUE · CLIQUE→IND-SET→VERTEX-COVER · VC 2-approx | Exam scheduling, constraint reductions, conflict covering |
+| **Randomized & Parallel** | Randomized QuickSort (3-way) · ForkJoin Merge Sort · Reservoir Sampling | CGPA ranking, 1M-record benchmarks, stream sampling |
 
 Every module has an interactive CLI menu **and** a dedicated GUI screen with visualizations (graph canvases, tree drawings, timetable grids, benchmark charts).
 
@@ -59,7 +59,7 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
-**Records Browser** — sortable, KMP-filterable tables for students, faculty and courses; double-click any row for a detail view with enrolled courses, marks, weighted GPA, CGPA rank and recent activity pulled from the 100k-event stream.
+**Records Browser** — sortable, KMP-filterable tables for students, faculty and courses; double-click any row for a detail view with enrolled courses, marks, weighted GPA, CGPA rank and recent activity pulled from the activity event stream.
 
 ![Records](docs/screenshots/records.png)
 
@@ -71,7 +71,7 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 
 ![Exams](docs/screenshots/exams.png)
 
-**Activity Analytics** — one pass over the 100,000-event activity stream: summary stat cards (37 active days, 2,702.7 events/day, 13:00 UTC peak, 72.8% course-related), the hourly rhythm chart, per-action totals, and the top-10 courses and students.
+**Activity Analytics** — one pass over the activity event stream: summary stat cards (37 active days, 2,702.7 events/day, 13:00 UTC peak, 72.8% course-related), the hourly rhythm chart, per-action totals, and the top-10 courses and students.
 
 ![Analytics](docs/screenshots/analytics.png)
 
@@ -88,27 +88,27 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 <details>
 <summary><b>DSA module screens (M1–M6)</b></summary>
 
-**M1 · KMP keyword search** — searching `data` across all course codes/names and student names returns CS201 and CS301 with exact match positions in 1 ms. The other tabs run Z-Function repeated-phrase detection on assignment texts, Rabin-Karp rolling-hash code lookup, and an Aho-Corasick automaton that scans the whole assignment corpus (or the 1 MB Wikipedia document) for 10 academic keywords at once.
+**KMP keyword search** — searching `data` across all course codes/names and student names returns CS201 and CS301 with exact match positions in 1 ms. The other tabs run Z-Function repeated-phrase detection on assignment texts, Rabin-Karp rolling-hash code lookup, and an Aho-Corasick automaton that scans the whole assignment corpus (or the 1 MB Wikipedia document) for 10 academic keywords at once.
 
 ![M1](docs/screenshots/m1-strings.png)
 
-**M2 · Suffix-array indexing with match highlighting** — the suffix array of an assignment is built twice for comparison: prefix-doubling (4.4 ms) vs **SA-IS linear-time construction (1.7 ms)**, verified identical. Searching `deadline` locates the occurrence in 0.056 ms and highlights it inside the document view. Other tabs report repeated phrases (Kasai LCP), cross-submission similarity and suffix-automaton statistics.
+**Suffix-array indexing with match highlighting** — the suffix array of an assignment is built twice for comparison: prefix-doubling (4.4 ms) vs **SA-IS linear-time construction (1.7 ms)**, verified identical. Searching `deadline` locates the occurrence in 0.056 ms and highlights it inside the document view. Other tabs report repeated phrases (Kasai LCP), cross-submission similarity and suffix-automaton statistics.
 
 ![M2](docs/screenshots/m2-suffix.png)
 
-**M3 · Optimal Binary Search Tree** — the minimum-expected-cost search tree over the 12 most-accessed course codes, with real access frequencies counted from the activity stream. Node color marks the root, and the expected search cost (163,233) is compared against a balanced BST (185,753) — 12.1% lower. The other tabs cover Levenshtein/Damerau query correction, matrix-chain optimization and the bitmask-DP course explorer.
+**Optimal Binary Search Tree** — the minimum-expected-cost search tree over the 12 most-accessed course codes, with real access frequencies counted from the activity stream. Node color marks the root, and the expected search cost (163,233) is compared against a balanced BST (185,753) — 12.1% lower. The other tabs cover Levenshtein/Damerau query correction, matrix-chain optimization and the bitmask-DP course explorer.
 
 ![M3](docs/screenshots/m3-dp.png)
 
-**M4 · Bipartite matching + König cover** — Hopcroft-Karp matches all 12 faculty to eligible courses (bold blue edges over gray eligibility edges); the amber nodes are the **minimum vertex cover** reconstructed via König's theorem, with |cover| = |matching| = 12 verified. The right side runs Ford-Fulkerson/Edmonds-Karp room-slot allocation (27/27 sections) and the Dinic scaled benchmark.
+**Bipartite matching + König cover** — Hopcroft-Karp matches all 12 faculty to eligible courses (bold blue edges over gray eligibility edges); the amber nodes are the **minimum vertex cover** reconstructed via König's theorem, with |cover| = |matching| = 12 verified. The right side runs Ford-Fulkerson/Edmonds-Karp room-slot allocation (27/27 sections) and the Dinic scaled benchmark.
 
 ![M4](docs/screenshots/m4-flow.png)
 
-**M5 · DPLL exam scheduling + timetable** — the course-conflict graph (131 edges, department-colored) feeds a SAT encoding solved by DPLL: 5 slots suffice for 10 courses (clique bound 5, 265 clauses, 14 ms, schedule verified). Slot tags (S1–S5) appear on the graph nodes and the generated exam timetable renders as a MON–FRI grid below.
+**DPLL exam scheduling + timetable** — the course-conflict graph (131 edges, department-colored) feeds a SAT encoding solved by DPLL: 5 slots suffice for 10 courses (clique bound 5, 265 clauses, 14 ms, schedule verified). Slot tags (S1–S5) appear on the graph nodes and the generated exam timetable renders as a MON–FRI grid below.
 
 ![M5](docs/screenshots/m5-scheduling.png)
 
-**M6 · Randomized quicksort + benchmarks** — 200 students ranked by CGPA (1,834 comparisons, 1 ms); below, the 1,000,000-element benchmark charts compare randomized quicksort vs `Arrays.sort` vs a deterministic pivot, and the adversarial chart shows the deterministic variant's O(n²) comparison blow-up on sorted input (50M → 200M → 800M as n doubles).
+**Randomized quicksort + benchmarks** — 200 students ranked by CGPA (1,834 comparisons, 1 ms); below, the 1,000,000-element benchmark charts compare randomized quicksort vs `Arrays.sort` vs a deterministic pivot, and the adversarial chart shows the deterministic variant's O(n²) comparison blow-up on sorted input (50M → 200M → 800M as n doubles).
 
 ![M6](docs/screenshots/m6-randomized.png)
 

@@ -37,7 +37,7 @@ import edutrack.modules.M2SuffixArray;
 import edutrack.modules.M2SuffixAutomaton;
 import edutrack.modules.M2SuffixStructures;
 
-public class M2Panel extends ModulePanel {
+public class DocumentSimilarityPanel extends ModulePanel {
 
     private static final int WIKI_CAP = 200_000;
     private static final int DISPLAY_CAP = 20_000;
@@ -91,7 +91,7 @@ public class M2Panel extends ModulePanel {
     private int[] suffixArray;
     private M2SuffixAutomaton automaton;
 
-    public M2Panel(DataStore dataStore) {
+    public DocumentSimilarityPanel(DataStore dataStore) {
         super(dataStore);
 
         for (Assignment a : dataStore.assignments()) {
@@ -135,7 +135,7 @@ public class M2Panel extends ModulePanel {
     private Component buildHeader() {
         JPanel inner = new JPanel(new BorderLayout(6, 6));
         inner.setOpaque(false);
-        JLabel title = new JLabel("M2 · Document Indexing & Similarity — Suffix Structures");
+        JLabel title = new JLabel("Document Indexing & Similarity — Suffix Structures");
         title.setFont(GuiTheme.H1);
         title.setForeground(GuiTheme.TEXT);
         JLabel subtitle = new JLabel("Suffix Array (prefix-doubling) · SA-IS · Kasai LCP · Suffix Automaton");

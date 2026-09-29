@@ -21,6 +21,7 @@ public class ChartCanvas extends JPanel {
     private Double targetLine;
     private String targetLabel;
     private boolean horizontal;
+    private int labelStep;
     private String placeholder = "Run to see results";
 
     public ChartCanvas() {
@@ -43,6 +44,12 @@ public class ChartCanvas extends JPanel {
 
     public void setHorizontal(boolean horizontal) {
         this.horizontal = horizontal;
+        repaint();
+    }
+
+    /** Sets vertical label density; values <= 0 use automatic density. */
+    public void setLabelStep(int labelStep) {
+        this.labelStep = Math.max(0, labelStep);
         repaint();
     }
 
@@ -100,56 +107,61 @@ public class ChartCanvas extends JPanel {
     }
 
     private void paintVertical(Graphics2D g2, int w, int top, int bottom, double max) {
-        int n = values.length;
-        int left = 14;
+        int n = Math.min(values.length, labels.length);
+        if (n == 0) {
+            return;
+        }
+        int left = 42;
         int right = w - 14;
         int plotW = right - left;
         int plotH = bottom - top;
+        if (plotW <= 0 || plotH <= 0) {
+            return;
+        }
         int slot = Math.max(1, plotW / n);
         int barW = Math.max(4, Math.min(56, slot - 8));
+        int effectiveStep = labelStep > 0 ? labelStep : Math.max(1, (n + 9) / 10);
 
         g2.setFont(GuiTheme.BODY);
         FontMetrics fm = g2.getFontMetrics();
-        Font labelFont = GuiTheme.BODY;
-        Font valueFont = GuiTheme.BODY;
-        Font valueFontSmall = new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 10);
-        if (n <= 20) {
-            int maxLabelWidth = 0;
-            for (String label : labels) {
-                maxLabelWidth = Math.max(maxLabelWidth, fm.stringWidth(label));
-            }
-            if (maxLabelWidth > slot - 4 && slot >= 26) {
-                labelFont = new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 10);
+        g2.setStroke(new BasicStroke(1f));
+
+        for (int tick = 0; tick <= 4; tick++) {
+            double ratio = tick / 4.0;
+            int y = bottom - (int) Math.round(ratio * (plotH - 16));
+            g2.setColor(GuiTheme.CARD_BORDER);
+            g2.drawLine(left, y, right, y);
+            if (tick > 0) {
+                g2.setColor(GuiTheme.MUTED);
+                String scale = format(max * ratio);
+                g2.drawString(scale, 4, y + fm.getAscent() / 2 - 1);
             }
         }
-        if (slot < 48) {
-            valueFont = valueFontSmall;
-        }
-        g2.setColor(GuiTheme.CARD_BORDER);
-        g2.drawLine(left, bottom, right, bottom);
 
         for (int i = 0; i < n; i++) {
             int barH = (int) Math.round(values[i] / max * (plotH - 16));
             int x = left + i * slot + (slot - barW) / 2;
             int y = bottom - barH;
+
             g2.setColor(i == indexOfMax() ? GuiTheme.ACCENT_DARK : GuiTheme.ACCENT);
             g2.fill(new Rectangle2D.Double(x, y, barW, barH));
 
             g2.setColor(GuiTheme.TEXT);
-            g2.setFont(valueFont);
-            FontMetrics vfm = g2.getFontMetrics();
-            String value = fitValue(values[i], vfm, slot - 2);
-            g2.drawString(value, x + (barW - vfm.stringWidth(value)) / 2, y - 4);
+            g2.setFont(slot < 48 ? new Font("Segoe UI", Font.PLAIN, 10) : GuiTheme.BODY);
+            FontMetrics valueMetrics = g2.getFontMetrics();
+            String value = fitValue(values[i], valueMetrics, Math.max(slot - 2, 20));
+            int valueY = Math.max(top + valueMetrics.getAscent() + 2, y - 4);
+            g2.drawString(value, x + (barW - valueMetrics.stringWidth(value)) / 2, valueY);
 
-            if (n <= 20) {
+            if (i % effectiveStep == 0 || i == n - 1) {
                 g2.setColor(GuiTheme.MUTED);
-                g2.setFont(labelFont);
-                FontMetrics lfm = g2.getFontMetrics();
-                String label = truncate(lfm, labels[i], Math.max(slot - 2, 28));
-                g2.drawString(label, x + (barW - lfm.stringWidth(label)) / 2, bottom + 16);
-                g2.setFont(GuiTheme.BODY);
+                g2.setFont(fm.getFont());
+                FontMetrics labelMetrics = g2.getFontMetrics();
+                String label = truncate(labelMetrics, labels[i], Math.max(slot - 2, 28));
+                g2.drawString(label, x + (barW - labelMetrics.stringWidth(label)) / 2, bottom + 16);
             }
         }
+        g2.setFont(GuiTheme.BODY);
         drawTarget(g2, left, right, bottom, plotH, max, false);
     }
 
@@ -172,13 +184,16 @@ public class ChartCanvas extends JPanel {
     }
 
     private void paintHorizontal(Graphics2D g2, int w, int top, int bottom, double max) {
-        int n = values.length;
+        int n = Math.min(values.length, labels.length);
+        if (n == 0) {
+            return;
+        }
         g2.setFont(GuiTheme.BODY);
         FontMetrics fm = g2.getFontMetrics();
 
         int labelW = 60;
-        for (String label : labels) {
-            labelW = Math.max(labelW, Math.min(160, fm.stringWidth(label) + 8));
+        for (int i = 0; i < n; i++) {
+            labelW = Math.max(labelW, Math.min(180, fm.stringWidth(labels[i]) + 8));
         }
         int left = 14 + labelW;
         int right = w - 14;
@@ -186,18 +201,27 @@ public class ChartCanvas extends JPanel {
         int slot = Math.max(1, (bottom - top) / n);
         int barH = Math.max(4, Math.min(26, slot - 6));
 
+        g2.setStroke(new BasicStroke(1f));
+        for (int tick = 1; tick <= 4; tick++) {
+            int x = left + (int) Math.round((tick / 4.0) * Math.max(1, plotW - 44));
+            g2.setColor(GuiTheme.CARD_BORDER);
+            g2.drawLine(x, top, x, bottom);
+        }
+
         for (int i = 0; i < n; i++) {
-            int barW = (int) Math.round(values[i] / max * (plotW - 44));
+            int barW = (int) Math.round(values[i] / max * Math.max(1, plotW - 44));
             int y = top + i * slot + (slot - barH) / 2;
+
             g2.setColor(GuiTheme.MUTED);
             String label = truncate(fm, labels[i], labelW);
             g2.drawString(label, 14 + labelW - fm.stringWidth(label), y + barH / 2 + 4);
 
             g2.setColor(i == indexOfMax() ? GuiTheme.ACCENT_DARK : GuiTheme.ACCENT);
-            g2.fill(new Rectangle2D.Double(left, y, barW, barH));
+            g2.fill(new Rectangle2D.Double(left, y, Math.max(1, barW), barH));
 
             g2.setColor(GuiTheme.TEXT);
-            g2.drawString(format(values[i]), left + barW + 6, y + barH / 2 + 4);
+            String value = fitValue(values[i], fm, Math.max(42, plotW / 5));
+            g2.drawString(value, left + barW + 6, y + barH / 2 + 4);
         }
         drawTarget(g2, top, bottom, left, plotW, max, true);
     }

@@ -41,6 +41,8 @@ import edutrack.model.Student;
 public class ExamsPanel extends ModulePanel {
 
     private static final Color WORST_BG = new Color(0xFB, 0xE3, 0xE3);
+    private static final int AT_RISK_FAIL_THRESHOLD = 2;
+    private static final double AT_RISK_GPA_THRESHOLD = 5.0;
 
     private final ConsoleArea console = new ConsoleArea(6);
 
@@ -48,6 +50,8 @@ public class ExamsPanel extends ModulePanel {
     private final DefaultTableModel courseStatsModel;
     private final JLabel courseStatsStatus = new JLabel(" ");
     private final ChartCanvas gradeChart = new ChartCanvas();
+    private final ChartCanvas passRateChart = new ChartCanvas();
+    private final ChartCanvas averageChart = new ChartCanvas();
 
     private final JSpinner topNSpinner;
     private final JButton toppersButton;
@@ -58,6 +62,7 @@ public class ExamsPanel extends ModulePanel {
     private final JButton atRiskButton;
     private final DefaultTableModel atRiskModel;
     private final JLabel atRiskStatus = new JLabel(" ");
+    private final ChartCanvas riskChart = new ChartCanvas();
 
     private final JComboBox<String> studentCombo;
     private final JButton reportButton;
@@ -79,6 +84,10 @@ public class ExamsPanel extends ModulePanel {
         studentCombo = new JComboBox<>(studentItems(dataStore));
         reportButton = GuiTheme.primaryButton("Show report card");
         reportModel = tableModel("Course", "Name", "Midsem /30", "Endsem /70", "Total", "Grade", "Points");
+        passRateChart.setHorizontal(true);
+        averageChart.setHorizontal(true);
+        riskChart.setHorizontal(true);
+
 
         courseStatsButton.addActionListener(e -> runCourseStats());
         toppersButton.addActionListener(e -> runToppers());
@@ -121,14 +130,18 @@ public class ExamsPanel extends ModulePanel {
         controls.add(courseStatsButton);
         controls.add(courseStatsStatus);
 
-        JScrollPane tableScroll = new JScrollPane(new JTable(courseStatsModel));
+        JTabbedPane chartTabs = new JTabbedPane();
+        chartTabs.setFont(GuiTheme.BODY_BOLD);
+        chartTabs.addTab("Grade distribution", gradeChart);
+        chartTabs.addTab("Pass rate by course", passRateChart);
+        chartTabs.addTab("Average by course", averageChart);
 
-        JPanel chartCard = card(null, gradeChart);
-        chartCard.setPreferredSize(new Dimension(430, 0));
+        JPanel chartCard = card("Course analytics", chartTabs);
+        chartCard.setPreferredSize(new Dimension(470, 0));
 
         JPanel center = new JPanel(new BorderLayout(8, 8));
         center.setOpaque(false);
-        center.add(tableScroll, BorderLayout.CENTER);
+        center.add(new JScrollPane(new JTable(courseStatsModel)), BorderLayout.CENTER);
         center.add(chartCard, BorderLayout.EAST);
 
         JPanel tab = new JPanel(new BorderLayout(10, 10));
@@ -162,10 +175,18 @@ public class ExamsPanel extends ModulePanel {
         JTable table = new JTable(atRiskModel);
         table.setDefaultRenderer(Object.class, new AtRiskRenderer());
 
+        JPanel center = new JPanel(new BorderLayout(8, 8));
+        center.setOpaque(false);
+        center.add(new JScrollPane(table), BorderLayout.CENTER);
+
+        JPanel chartCard = card("Risk overview", riskChart);
+        chartCard.setPreferredSize(new Dimension(310, 0));
+        center.add(chartCard, BorderLayout.EAST);
+
         JPanel tab = new JPanel(new BorderLayout(10, 10));
         tab.setOpaque(false);
         tab.add(controls, BorderLayout.NORTH);
-        tab.add(new JScrollPane(table), BorderLayout.CENTER);
+        tab.add(center, BorderLayout.CENTER);
         return tab;
     }
 
@@ -203,7 +224,19 @@ public class ExamsPanel extends ModulePanel {
             for (int i = 0; i < values.length; i++) {
                 values[i] = result.overall[i];
             }
-            gradeChart.setData("Overall grade distribution — all exam records", ExamAnalytics.GRADES, values);
+            gradeChart.setData("Overall grade distribution", ExamAnalytics.GRADES, values);
+
+            String[] courseLabels = new String[result.stats.size()];
+            double[] passValues = new double[result.stats.size()];
+            double[] averageValues = new double[result.stats.size()];
+            for (int i = 0; i < result.stats.size(); i++) {
+                CourseStats cs = result.stats.get(i);
+                courseLabels[i] = cs.code;
+                passValues[i] = cs.passPercent;
+                averageValues[i] = cs.avgTotal;
+            }
+            passRateChart.setData("", courseLabels, passValues);
+            averageChart.setData("", courseLabels, averageValues);
             courseStatsStatus.setText(result.stats.size() + " courses · " + result.ms + " ms");
             console.appendLine(String.format("Course stats done: %d courses, overall distribution %s in %d ms.",
                     result.stats.size(), distributionText(result.overall), result.ms));
@@ -253,7 +286,11 @@ public class ExamsPanel extends ModulePanel {
                 atRiskModel.addRow(new Object[] { sg.student.id, sg.student.name, sg.student.program,
                         sg.failCount, sg.gpa, String.join(", ", sg.failingCourses) });
             }
-            atRiskStatus.setText(result.risky.size() + " at-risk of " + dataStore.students().size()
+            int atRiskCount = result.risky.size();
+            int safeCount = Math.max(0, dataStore.students().size() - atRiskCount);
+            riskChart.setData("", new String[] { "Safe", "At Risk" },
+                    new double[] { safeCount, atRiskCount });
+            atRiskStatus.setText(atRiskCount + " at-risk of " + dataStore.students().size()
                     + " students · " + result.ms + " ms");
             console.appendLine(String.format("At-risk done: %d students flagged in %d ms.",
                     result.risky.size(), result.ms));
@@ -346,7 +383,7 @@ public class ExamsPanel extends ModulePanel {
             Object gpaObj = table.getModel().getValueAt(modelRow, 4);
             int fails = failsObj instanceof Integer ? (Integer) failsObj : 0;
             double gpa = gpaObj instanceof Double ? (Double) gpaObj : 10.0;
-            boolean worst = fails >= 3 || gpa < 4.0;
+            boolean worst = fails >= AT_RISK_FAIL_THRESHOLD || gpa < AT_RISK_GPA_THRESHOLD;
             if (column == 4 && value instanceof Double) {
                 setText(String.format("%.2f", value));
             }

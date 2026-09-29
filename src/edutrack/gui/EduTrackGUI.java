@@ -18,17 +18,17 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import edutrack.data.DataStore;
+import edutrack.gui.panels.AcademicSearchPanel;
 import edutrack.gui.panels.AnalyticsPanel;
+import edutrack.gui.panels.DocumentSimilarityPanel;
+import edutrack.gui.panels.ExamSchedulingPanel;
 import edutrack.gui.panels.ExamsPanel;
-import edutrack.gui.panels.M1Panel;
-import edutrack.gui.panels.M2Panel;
-import edutrack.gui.panels.M3Panel;
-import edutrack.gui.panels.M4Panel;
-import edutrack.gui.panels.M5Panel;
-import edutrack.gui.panels.M6Panel;
 import edutrack.gui.panels.ManagePanel;
+import edutrack.gui.panels.QueryOptimizationPanel;
+import edutrack.gui.panels.RankingStreamsPanel;
 import edutrack.gui.panels.RecordsPanel;
 import edutrack.gui.panels.ReportsPanel;
+import edutrack.gui.panels.ResourceAllocationPanel;
 import edutrack.gui.panels.SearchPanel;
 
 public class EduTrackGUI extends JFrame {
@@ -37,6 +37,9 @@ public class EduTrackGUI extends JFrame {
     private final JPanel cards = new JPanel(new CardLayout());
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
     private String currentCard = "dashboard";
+    private DashboardPanel dashboard;
+    private RecordsPanel recordsPanel;
+    private JLabel statusCounts;
 
     public EduTrackGUI(DataStore dataStore) {
         super("EduTrack — Intelligent University Academic Platform");
@@ -48,27 +51,33 @@ public class EduTrackGUI extends JFrame {
         setIconImage(createAppIcon());
 
         cards.setBackground(GuiTheme.BG);
-        DashboardPanel dashboard = new DashboardPanel(dataStore, this::showCard);
+
+        dashboard = new DashboardPanel(dataStore, this::showCard);
         cards.add(dashboard, "dashboard");
+
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
                 dashboard.shutdown();
             }
         });
-        cards.add(new RecordsPanel(dataStore), "records");
+
+        recordsPanel = new RecordsPanel(dataStore);
+        cards.add(recordsPanel, "records");
         cards.add(new ManagePanel(dataStore), "manage");
         cards.add(new ExamsPanel(dataStore), "exams");
         cards.add(new AnalyticsPanel(dataStore), "analytics");
         cards.add(new ReportsPanel(dataStore), "reports");
+
         SearchPanel searchPanel = new SearchPanel(dataStore);
         cards.add(searchPanel, "search");
-        cards.add(new M1Panel(dataStore), "m1");
-        cards.add(new M2Panel(dataStore), "m2");
-        cards.add(new M3Panel(dataStore), "m3");
-        cards.add(new M4Panel(dataStore), "m4");
-        cards.add(new M5Panel(dataStore), "m5");
-        cards.add(new M6Panel(dataStore), "m6");
+
+        cards.add(new AcademicSearchPanel(dataStore), "academic-search");
+        cards.add(new DocumentSimilarityPanel(dataStore), "document-similarity");
+        cards.add(new QueryOptimizationPanel(dataStore), "query-optimization");
+        cards.add(new ResourceAllocationPanel(dataStore), "resource-allocation");
+        cards.add(new ExamSchedulingPanel(dataStore), "exam-scheduling");
+        cards.add(new RankingStreamsPanel(dataStore), "ranking-streams");
 
         JPanel sidebar = buildSidebar(searchPanel);
         JPanel statusBar = buildStatusBar();
@@ -82,11 +91,18 @@ public class EduTrackGUI extends JFrame {
     }
 
     public void showCard(String key) {
+        if ("dashboard".equals(key)) {
+            dashboard.refresh();
+        } else if ("records".equals(key)) {
+            recordsPanel.refresh();
+        }
+
         currentCard = key;
         ((CardLayout) cards.getLayout()).show(cards, key);
         cards.revalidate();
         cards.repaint();
         refreshNavSelection();
+        refreshStatusBar();
     }
 
     private JPanel buildSidebar(SearchPanel searchPanel) {
@@ -101,11 +117,13 @@ public class EduTrackGUI extends JFrame {
         brand.setForeground(java.awt.Color.WHITE);
         brand.setAlignmentX(Component.LEFT_ALIGNMENT);
         brand.setBorder(BorderFactory.createEmptyBorder(20, 18, 0, 12));
+
         JLabel tagline = new JLabel("University Academic Platform");
         tagline.setFont(GuiTheme.BODY);
         tagline.setForeground(GuiTheme.SIDEBAR_FG);
         tagline.setAlignmentX(Component.LEFT_ALIGNMENT);
         tagline.setBorder(BorderFactory.createEmptyBorder(2, 18, 8, 12));
+
         sidebar.add(brand);
         sidebar.add(tagline);
 
@@ -121,6 +139,7 @@ public class EduTrackGUI extends JFrame {
         searchField.setFont(GuiTheme.BODY);
         searchField.setToolTipText("Smart search: courses, students, faculty, assignments, resources");
         searchField.putClientProperty("JTextField.placeholderText", "Search everything…");
+
         JPanel searchWrap = new JPanel();
         searchWrap.setLayout(new BoxLayout(searchWrap, BoxLayout.Y_AXIS));
         searchWrap.setOpaque(false);
@@ -129,6 +148,7 @@ public class EduTrackGUI extends JFrame {
                 BorderFactory.createEmptyBorder(6, 12, 12, 12)));
         searchWrap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 74));
         searchWrap.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         JLabel searchLabel = new JLabel("SMART SEARCH");
         searchLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 10));
         searchLabel.setForeground(GuiTheme.MUTED);
@@ -137,6 +157,7 @@ public class EduTrackGUI extends JFrame {
         searchWrap.add(searchLabel);
         searchWrap.add(searchField);
         sidebar.add(searchWrap);
+
         searchField.addActionListener(e -> {
             String query = searchField.getText().trim();
             if (!query.isEmpty()) {
@@ -150,13 +171,13 @@ public class EduTrackGUI extends JFrame {
         addNavButton(sidebar, "manage", "Manage Records");
         addNavButton(sidebar, "exams", "Exams & Grades");
         addNavButton(sidebar, "analytics", "Activity Analytics");
-        addNavButton(sidebar, "reports", "Reports");
-        addNavButton(sidebar, "m1", "M1 · Academic Search");
-        addNavButton(sidebar, "m2", "M2 · Document Similarity");
-        addNavButton(sidebar, "m3", "M3 · Query Optimization");
-        addNavButton(sidebar, "m4", "M4 · Resource Allocation");
-        addNavButton(sidebar, "m5", "M5 · Exam Scheduling");
-        addNavButton(sidebar, "m6", "M6 · Ranking & Streams");
+        addNavButton(sidebar, "reports", "Reports & Transcripts");
+        addNavButton(sidebar, "academic-search", "Academic Search");
+        addNavButton(sidebar, "document-similarity", "Document Similarity");
+        addNavButton(sidebar, "query-optimization", "Query Optimization");
+        addNavButton(sidebar, "resource-allocation", "Resource Allocation");
+        addNavButton(sidebar, "exam-scheduling", "Exam Scheduling");
+        addNavButton(sidebar, "ranking-streams", "Ranking & Streams");
 
         sidebar.add(Box.createVerticalGlue());
         return sidebar;
@@ -194,34 +215,46 @@ public class EduTrackGUI extends JFrame {
         status.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 0, 0, 0, GuiTheme.CARD_BORDER),
                 BorderFactory.createEmptyBorder(6, 14, 6, 14)));
+
         JLabel left = new JLabel("Ready");
         left.setFont(GuiTheme.BODY);
         left.setForeground(GuiTheme.MUTED);
-        JLabel right = new JLabel(String.format(
+
+        statusCounts = new JLabel();
+        statusCounts.setFont(GuiTheme.BODY);
+        statusCounts.setForeground(GuiTheme.MUTED);
+
+        status.add(left, BorderLayout.WEST);
+        status.add(statusCounts, BorderLayout.EAST);
+        refreshStatusBar();
+        return status;
+    }
+
+    private void refreshStatusBar() {
+        if (statusCounts == null) {
+            return;
+        }
+        statusCounts.setText(String.format(
                 "%,d students · %,d faculty · %,d courses · %,d assignments · %,d exam records · %,d activity events",
                 dataStore.students().size(), dataStore.faculty().size(), dataStore.courses().size(),
                 dataStore.assignments().size(), dataStore.examRecords().size(), dataStore.activityStream().size()));
-        right.setFont(GuiTheme.BODY);
-        right.setForeground(GuiTheme.MUTED);
-        status.add(left, BorderLayout.WEST);
-        status.add(right, BorderLayout.EAST);
-        return status;
     }
 
     private static java.awt.Image createAppIcon() {
         int size = 64;
         java.awt.image.BufferedImage icon = new java.awt.image.BufferedImage(
                 size, size, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-        java.awt.Graphics2D g = icon.createGraphics();
-        g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+        java.awt.Graphics2D graphics = icon.createGraphics();
+        graphics.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
                 java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(GuiTheme.ACCENT);
-        g.fillRoundRect(0, 0, size, size, 18, 18);
-        g.setColor(java.awt.Color.WHITE);
-        g.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 38));
-        java.awt.FontMetrics fm = g.getFontMetrics();
-        g.drawString("E", (size - fm.stringWidth("E")) / 2, (size + fm.getAscent() - fm.getDescent()) / 2);
-        g.dispose();
+        graphics.setColor(GuiTheme.ACCENT);
+        graphics.fillRoundRect(0, 0, size, size, 18, 18);
+        graphics.setColor(java.awt.Color.WHITE);
+        graphics.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 38));
+        java.awt.FontMetrics fm = graphics.getFontMetrics();
+        graphics.drawString("E", (size - fm.stringWidth("E")) / 2,
+                (size + fm.getAscent() - fm.getDescent()) / 2);
+        graphics.dispose();
         return icon;
     }
 
