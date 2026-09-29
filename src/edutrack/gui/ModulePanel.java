@@ -33,6 +33,7 @@ public abstract class ModulePanel extends JPanel {
     protected JPanel card(String title, Component content) {
         JPanel panel = new JPanel(new BorderLayout(12, 12));
         panel.setBackground(GuiTheme.CARD_BG);
+        panel.setMinimumSize(new Dimension(0, 0));
 
         if (title != null && !title.isEmpty()) {
             JLabel heading = new JLabel(title);
