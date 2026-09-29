@@ -76,7 +76,7 @@ public final class ApiServer {
      * returns once it is accepting connections.
      */
     public static ApiServer start(DataStore ds, int port) throws IOException {
-        HttpServer http = HttpServer.create(new InetSocketAddress(port), 0);
+        HttpServer http = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
         ExecutorService pool = Executors.newFixedThreadPool(HANDLER_THREADS);
         http.setExecutor(pool);
         ApiServer api = new ApiServer(ds, http, pool);
@@ -118,7 +118,13 @@ public final class ApiServer {
                 return;
             }
             String path = exchange.getRequestURI().getPath();
-            Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
+            Map<String, String> query;
+            try {
+                query = parseQuery(exchange.getRequestURI().getRawQuery());
+            } catch (IllegalArgumentException e) {
+                send(exchange, 400, errorJson("invalid URL encoding in query parameters"));
+                return;
+            }
             try {
                 send(exchange, 200, route(path, query));
             } catch (ApiError e) {
