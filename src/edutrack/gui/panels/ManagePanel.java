@@ -60,7 +60,7 @@ import edutrack.model.Student;
 /**
  * Manage Records (CRUD): add/delete students, faculty and courses, manage
  * enrollments and exam marks, and persist or reset the CSV store. Header
- * follows the M1Panel style. All CRUD goes through DataStore's synchronized
+ * follows the platform's standard panel style. All CRUD goes through DataStore's synchronized
  * copy-on-write API; IllegalArgumentException is surfaced via showError. File
  * I/O (save / reset) runs via runAsync with the triggering button disabled.
  * Key components carry setName() identifiers so a UI harness can drive them.

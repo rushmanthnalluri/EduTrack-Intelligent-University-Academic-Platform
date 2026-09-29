@@ -55,7 +55,7 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 <details open>
 <summary><b>Platform screens</b></summary>
 
-**Dashboard** — home screen: live dataset statistics (200 students · 12 faculty · 20 courses · 40 assignments · 981 exam records · 100,000 activity events), one card per feature and DSA module, and the interactive **REST API Server** card (port + start/stop).
+**Dashboard** — home screen: live dataset statistics (200 students · 12 faculty · 20 courses · 40 assignments · 981 exam records · an activity event stream), one card per feature and algorithm area, and the interactive **REST API Server** card (port + start/stop).
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
@@ -86,7 +86,7 @@ Every module has an interactive CLI menu **and** a dedicated GUI screen with vis
 </details>
 
 <details>
-<summary><b>DSA module screens (M1–M6)</b></summary>
+<summary><b>Algorithm feature screens</b></summary>
 
 **KMP keyword search** — searching `data` across all course codes/names and student names returns CS201 and CS301 with exact match positions in 1 ms. The other tabs run Z-Function repeated-phrase detection on assignment texts, Rabin-Karp rolling-hash code lookup, and an Aho-Corasick automaton that scans the whole assignment corpus (or the 1 MB Wikipedia document) for 10 academic keywords at once.
 
@@ -166,7 +166,7 @@ Errors return JSON `400/404/405` bodies. Handlers are thread-safe (copy-on-write
 │       ├── EduTrack.java        CLI entry point
 │       ├── model/               Student, Faculty, Course, Assignment, Resource, ActivityEvent, ExamRecord
 │       ├── data/                DataStore (data + CRUD API) · CsvStore (CSV persistence)
-│       ├── modules/             M1–M6 algorithm modules (CLI + self-test each)
+│       ├── modules/             algorithm implementations (CLI + self-test each)
 │       ├── features/            RecordQueries · ExamAnalytics · ActivityAnalytics · ManageSupport · ReportGenerator
 │       ├── search/              SearchService (global smart search)
 │       ├── api/                 ApiServer · JsonWriter (REST API)

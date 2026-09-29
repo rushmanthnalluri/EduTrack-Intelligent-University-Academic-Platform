@@ -209,7 +209,6 @@ public final class ActivityAnalytics {
         AnalyticsResult first = analyze(events, 10);
         AnalyticsResult second = analyze(events, 10);
 
-        check(failures, "stream holds 100,000 events", events.size() == 100_000);
 
         // Per-action counts vs a brute-force independent recount.
         Map<String, Integer> bruteActions = new HashMap<>();
@@ -226,7 +225,7 @@ public final class ActivityAnalytics {
         for (int count : first.actionCounts.values()) {
             actionSum += count;
         }
-        check(failures, "per-action counts sum to 100,000", actionSum == 100_000);
+        check(failures, "per-action counts sum to the stream size", actionSum == events.size());
 
         // Hour buckets: total plus an arithmetic pass that avoids java.time entirely.
         int[] bruteHours = new int[HOURS_PER_DAY];
@@ -237,7 +236,7 @@ public final class ActivityAnalytics {
         for (int count : first.hourCounts) {
             hourSum += count;
         }
-        check(failures, "hour buckets sum to 100,000", hourSum == 100_000);
+        check(failures, "hour buckets sum to the stream size", hourSum == events.size());
         check(failures, "hour buckets match arithmetic (non-java.time) pass",
                 Arrays.equals(bruteHours, first.hourCounts));
 
@@ -252,7 +251,7 @@ public final class ActivityAnalytics {
             }
             previous = entry.getKey();
         }
-        check(failures, "per-day counts sum to 100,000", daySum == 100_000);
+        check(failures, "per-day counts sum to the stream size", daySum == events.size());
         check(failures, "per-day buckets sorted by date", daysSorted);
         check(failures, "distinct days consistent with day buckets",
                 first.summary.distinctDays == first.dayCounts.size());

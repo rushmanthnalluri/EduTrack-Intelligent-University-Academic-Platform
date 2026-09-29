@@ -29,7 +29,7 @@ import edutrack.modules.M4MaxFlow;
 import edutrack.modules.M4NetworkFlow;
 
 /**
- * GUI panel for Module M4 - Network Flow for Resource Allocation.
+ * GUI panel for network-flow-based resource allocation.
  * (a) bipartite faculty-course canvas with Hopcroft-Karp matching and Konig cover,
  * (b) classroom allocation via Ford-Fulkerson / Edmonds-Karp with a JTable,
  * (c) Dinic vs Edmonds-Karp scaled benchmark with a bar chart.
@@ -115,7 +115,7 @@ public class ResourceAllocationPanel extends ModulePanel {
 
         add(card("Log", console), BorderLayout.SOUTH);
 
-        console.appendLine("[M4] Panel ready: " + faculty.size() + " faculty, " + courses.size()
+        console.appendLine("Panel ready: " + faculty.size() + " faculty, " + courses.size()
                 + " courses, " + edgeCount() + " eligibility edges.");
         runMatching();
         runAllocation();
@@ -228,7 +228,7 @@ public class ResourceAllocationPanel extends ModulePanel {
         matchingButton.setEnabled(false);
         matchingButton.setText("running…");
         konigButton.setEnabled(false);
-        console.appendLine("[M4] Hopcroft-Karp: computing maximum matching…");
+        console.appendLine("Hopcroft-Karp: computing maximum matching…");
         final boolean recomputeCover = coverShown;
         runAsync(() -> {
             MatchingOutcome out = new MatchingOutcome();
@@ -287,7 +287,7 @@ public class ResourceAllocationPanel extends ModulePanel {
         }
         matchingButton.setEnabled(true);
         matchingButton.setText("Run Hopcroft-Karp");
-        console.appendLine("[M4] Hopcroft-Karp: matching size " + out.result.size + " in "
+        console.appendLine("Hopcroft-Karp: matching size " + out.result.size + " in "
                 + fmtMs(out.ms) + ".");
     }
 
@@ -323,7 +323,7 @@ public class ResourceAllocationPanel extends ModulePanel {
             konigStats.setText(konigLine(cover, out.ms));
             konigButton.setEnabled(true);
             konigButton.setText("Hide König cover");
-            console.appendLine("[M4] König cover: " + cover.size + " vertices (faculty "
+            console.appendLine("König cover: " + cover.size + " vertices (faculty "
                     + cover.leftSize + " + courses " + cover.rightSize + "); |cover| = |matching|.");
         });
     }
@@ -349,7 +349,7 @@ public class ResourceAllocationPanel extends ModulePanel {
     private void runAllocation() {
         allocationButton.setEnabled(false);
         allocationButton.setText("running…");
-        console.appendLine("[M4] Allocation: running Ford-Fulkerson + Edmonds-Karp…");
+        console.appendLine("Allocation: running Ford-Fulkerson + Edmonds-Karp…");
         runAsync(() -> {
             AllocationOutcome out = new AllocationOutcome();
             List<String> rooms = dataStore.rooms();
@@ -399,7 +399,7 @@ public class ResourceAllocationPanel extends ModulePanel {
         }
         allocationButton.setEnabled(true);
         allocationButton.setText("Run FF + Edmonds-Karp");
-        console.appendLine("[M4] Allocation: " + out.rows.size() + " section(s) assigned to rooms, max flow "
+        console.appendLine("Allocation: " + out.rows.size() + " section(s) assigned to rooms, max flow "
                 + out.ff.maxFlow + ".");
     }
 
@@ -420,7 +420,7 @@ public class ResourceAllocationPanel extends ModulePanel {
         benchmarkButton.setText("running…");
         dinicStats.setText("Dinic: running on scaled network…");
         ekScaledStats.setText("Edmonds-Karp (scaled): queued…");
-        console.appendLine("[M4] Scaled benchmark: cloning courses/rooms x"
+        console.appendLine("Scaled benchmark: cloning courses/rooms x"
                 + M4NetworkFlow.SCALE_CLONE_FACTOR + ", running Dinic then Edmonds-Karp…");
         runAsync(() -> {
             BenchmarkOutcome out = new BenchmarkOutcome();
@@ -451,7 +451,7 @@ public class ResourceAllocationPanel extends ModulePanel {
         String verdict = out.dinic.maxFlow == out.ek.maxFlow
                 ? "agree on max flow " + out.dinic.maxFlow
                 : "MISMATCH (" + out.dinic.maxFlow + " vs " + out.ek.maxFlow + ")";
-        console.appendLine("[M4] Benchmark: Dinic " + fmtMs(out.dinicMs) + " vs Edmonds-Karp "
+        console.appendLine("Benchmark: Dinic " + fmtMs(out.dinicMs) + " vs Edmonds-Karp "
                 + fmtMs(out.ekMs) + " — both " + verdict + ".");
         benchmarkButton.setEnabled(true);
         benchmarkButton.setText("Run scaled benchmark (~2 s)");

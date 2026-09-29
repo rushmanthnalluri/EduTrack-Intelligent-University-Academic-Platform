@@ -35,8 +35,8 @@ import edutrack.modules.M1AhoCorasick;
 import edutrack.modules.M1StringAlgorithms;
 
 /**
- * GUI panel for module M1 (String Algorithms): KMP keyword search, Z-function
- * repeated-phrase detection, Rabin-Karp code search and Aho-Corasick
+ * GUI panel for academic string search and matching: KMP keyword search,
+ * Z-function repeated-phrase detection, Rabin-Karp code search and Aho-Corasick
  * multi-keyword scanning. All algorithm work runs via runAsync on SwingWorker
  * background threads; the constructor only builds the UI.
  */

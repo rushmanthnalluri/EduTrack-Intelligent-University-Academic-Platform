@@ -173,7 +173,7 @@ public class AnalyticsPanel extends ModulePanel {
     private void runAnalytics() {
         computeButton.setEnabled(false);
         exportButton.setEnabled(false);
-        statusLabel.setText("Running analytics over 100,000 events ...");
+        statusLabel.setText(String.format("Running analytics over %,d events ...", dataStore.activityStream().size()));
         console.appendLine(String.format("Scanning %,d events (action mix, hourly/daily buckets, "
                 + "top courses, top students) ...", dataStore.activityStream().size()));
         runAsync(() -> {
