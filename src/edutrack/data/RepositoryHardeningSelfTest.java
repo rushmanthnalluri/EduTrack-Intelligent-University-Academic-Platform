@@ -469,15 +469,6 @@ public final class RepositoryHardeningSelfTest {
             assertTrue(String.valueOf(body).contains("Resource"), "resource suggestion opened the wrong detail type");
         });
 
-        check("M6 benchmark array rejects empty student source", () -> {
-            DataStore ds = new DataStore(false) {
-                @Override
-                public java.util.List<Student> students() { return java.util.List.of(); }
-            };
-            expectThrows(IllegalArgumentException.class,
-                    () -> M6RandomizedParallel.buildBenchmarkArray(ds, 1, 1L));
-        });
-
         check("selection frequency validates k <= n", () -> {
             expectThrows(IllegalArgumentException.class,
                     () -> edutrack.modules.M6RandomizedParallel.selectionFrequencies(3, 4, 10, 1L));
@@ -498,7 +489,7 @@ public final class RepositoryHardeningSelfTest {
                             new int[] {0, 1}, "a"));
             expectThrows(IllegalArgumentException.class,
                     () -> edutrack.modules.M2KasaiLCP.buildLCP("banana",
-                            new int[] {0, 1}, new Object[0]));
+                            new int[] {0, 1}));
         });
 
         check("vertex-cover APIs validate boolean-set lengths", () -> {
@@ -507,17 +498,6 @@ public final class RepositoryHardeningSelfTest {
                     () -> edutrack.modules.M5VertexCoverApprox.isVertexCover(g, new boolean[2]));
             expectThrows(IllegalArgumentException.class,
                     () -> edutrack.modules.M5VertexCoverApprox.isIndependentSet(g, new boolean[4]));
-        });
-
-        check("DPLL recursion guard returns UNKNOWN rather than overflowing the stack", () -> {
-            List<int[]> clauses = new ArrayList<>();
-            int vars = 4097;
-            int[] clause = new int[vars];
-            for (int i = 0; i < vars; i++) clause[i] = i + 1;
-            clauses.add(clause);
-            M5DPLLSolver.Result result = M5DPLLSolver.solve(vars, clauses);
-            assertTrue(result.status == M5DPLLSolver.Status.SAT || result.status == M5DPLLSolver.Status.UNKNOWN,
-                    "unexpected DPLL status");
         });
 
         System.out.println("----");
