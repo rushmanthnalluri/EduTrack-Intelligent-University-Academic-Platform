@@ -167,7 +167,7 @@ public class AcademicSearchPanel extends ModulePanel {
                         match.recordType, match.idOrCode, match.displayName,
                         match.codePositions.isEmpty() ? "—" : formatPositions(match.codePositions),
                         match.namePositions.isEmpty() ? "—" : formatPositions(match.namePositions)
-                    }, searchButton);
+                    });
                     if (match.recordType.equals("Course")) {
                         courses++;
                         courseOcc += match.occurrenceCount();
@@ -186,7 +186,7 @@ public class AcademicSearchPanel extends ModulePanel {
                 searchButton.setEnabled(true);
                 console.appendLine("Error: " + error.getMessage());
                 showError(error);
-            }, scanButton);
+            }, searchButton);
         });
         return tab;
     }
