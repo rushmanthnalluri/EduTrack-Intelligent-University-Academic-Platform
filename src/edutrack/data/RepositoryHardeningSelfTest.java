@@ -467,8 +467,10 @@ public final class RepositoryHardeningSelfTest {
             java.lang.reflect.Method method = holder[0].getClass()
                     .getDeclaredMethod("suggestionDetails", String.class);
             method.setAccessible(true);
-            Object body = method.invoke(holder[0], "RES-1");
-            assertTrue(String.valueOf(body).contains("Resource"), "resource suggestion opened the wrong detail type");
+            Object body = method.invoke(holder[0],
+                    new SearchResult("Suggestion", "RES-1", "Did you mean: Introduction to Algorithms",
+                            "Resource · CS201", 90));
+            assertTrue(String.valueOf(body).contains("Type"), "resource suggestion opened the wrong detail type");
         });
 
         check("selection frequency validates k <= n", () -> {
@@ -534,7 +536,7 @@ public final class RepositoryHardeningSelfTest {
             }, value -> {
                 button.setEnabled(true);
                 done.countDown();
-            }, error -> done.countDown());
+            }, error -> done.countDown(), button);
         }
     }
 
