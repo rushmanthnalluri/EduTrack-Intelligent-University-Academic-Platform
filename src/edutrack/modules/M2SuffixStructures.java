@@ -439,8 +439,6 @@ public class M2SuffixStructures {
             return new ArrayList<>();
         }
         List<int[]> result = new ArrayList<>();
-            return result;
-        }
         Integer[] order = new Integer[lcp.length];
         for (int i = 0; i < lcp.length; i++) {
             order[i] = i;
