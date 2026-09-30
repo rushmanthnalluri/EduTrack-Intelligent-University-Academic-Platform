@@ -213,7 +213,7 @@ public class M4NetworkFlow {
         List<AllocationRow> rows = new ArrayList<>();
         int[] sectionNo = new int[courses.size()];
         for (M4FlowNetwork.Edge srcEdge : an.net.edgesFrom(an.source)) {
-            if (srcEdge.flow <= 0) {
+            if (srcEdge.flow() <= 0) {
                 continue;
             }
             int courseNode = srcEdge.to;
@@ -221,7 +221,7 @@ public class M4NetworkFlow {
             if (ci < 0 || ci >= courses.size()) {
                 continue;
             }
-            for (int unit = 0; unit < srcEdge.flow; unit++) {
+            for (int unit = 0; unit < srcEdge.flow(); unit++) {
                 int roomNode = -1;
                 for (M4FlowNetwork.Edge e : an.net.edgesFrom(courseNode)) {
                     if (e.to >= an.roomBase && e.to < an.slotBase && e.flow > 0) {
