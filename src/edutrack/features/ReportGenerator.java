@@ -576,14 +576,33 @@ public final class ReportGenerator {
             enrolledSum += Integer.parseInt(deptRows.get(i)[2]);
             courseSum += Integer.parseInt(deptRows.get(i)[1]);
         }
-        int totalEnrollments = 0;
+        java.util.Set<Integer> studentsWithEnrollment = new java.util.HashSet<>();
         for (Student s : ds.students()) {
-            totalEnrollments += s.enrolledCourses.size();
+            if (!s.enrolledCourses.isEmpty()) {
+                studentsWithEnrollment.add(s.id);
+            }
+        }
+        // Each department row counts distinct students enrolled in at least one course
+        // from that department, so department sums may intentionally exceed the cohort size.
+        Map<String, java.util.Set<Integer>> expectedEnrolledByDept = new LinkedHashMap<>();
+        for (Course c : ds.courses()) {
+            expectedEnrolledByDept.putIfAbsent(c.department, new java.util.HashSet<>());
+        }
+        for (Student s : ds.students()) {
+            for (String code : s.enrolledCourses) {
+                Course c = ds.coursesByCode().get(code);
+                if (c != null) expectedEnrolledByDept.get(c.department).add(s.id);
+            }
+        }
+        boolean distinctEnrollmentCounts = true;
+        for (int i = 1; i < deptRows.size(); i++) {
+            String dept = deptRows.get(i)[0];
+            distinctEnrollmentCounts &= Integer.parseInt(deptRows.get(i)[2])
+                    == expectedEnrolledByDept.get(dept).size();
         }
         failures += check("department summary covers all " + expectedDepts.size() + " departments, "
-                + "student sums == total enrollments (" + totalEnrollments + "), course sum == "
-                + ds.courses().size(),
-                deptMatch && enrolledSum == totalEnrollments && courseSum == ds.courses().size());
+                + "distinct-student counts match, course sum == " + ds.courses().size(),
+                deptMatch && distinctEnrollmentCounts && courseSum == ds.courses().size());
 
         // Spot-check one department against brute force.
         String spot = "Computer Science";
