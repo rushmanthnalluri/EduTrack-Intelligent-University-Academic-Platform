@@ -14,6 +14,15 @@ public final class Course {
         this.code = requireText(code, "code");
         this.name = requireText(name, "name");
         this.department = requireText(department, "department");
+        if (!this.code.matches("[A-Za-z0-9]+")) {
+            throw new IllegalArgumentException("code must contain only letters and digits");
+        }
+        if (credits < 1 || credits > 6) {
+            throw new IllegalArgumentException("credits must be 1..6");
+        }
+        if (semester < 1 || semester > 8) {
+            throw new IllegalArgumentException("semester must be 1..8");
+        }
         this.credits = credits;
         this.semester = semester;
     }
