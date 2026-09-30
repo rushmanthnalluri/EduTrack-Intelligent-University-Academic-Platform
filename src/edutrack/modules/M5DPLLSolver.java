@@ -137,10 +137,11 @@ public class M5DPLLSolver {
     }
 
     public static boolean satisfies(List<int[]> clauses, boolean[] assignment) {
-        if (assignment == null) {
-            throw new IllegalArgumentException("assignment must not be null");
+        if (clauses == null || assignment == null) {
+            throw new IllegalArgumentException("clauses and assignment must not be null");
         }
         for (int[] clause : clauses) {
+            if (clause == null) throw new IllegalArgumentException("clause must not be null");
             for (int lit : clause) {
                 long magnitude = Math.abs((long) lit);
                 if (lit == 0 || magnitude >= assignment.length) {
