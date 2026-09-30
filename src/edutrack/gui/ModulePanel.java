@@ -95,9 +95,21 @@ public abstract class ModulePanel extends JPanel {
     }
 
     protected <T> void runAsync(Callable<T> work, Consumer<T> onDone, Consumer<Throwable> onError) {
+        runAsync(work, onDone, onError, new AbstractButton[0]);
+    }
+
+    protected <T> void runAsync(Callable<T> work, Consumer<T> onDone,
+            Consumer<Throwable> onError, AbstractButton... busyButtons) {
         final long submittedRevision = dataStore.revision();
-        final Map<AbstractButton, Boolean> buttonStates = captureButtonStates(ModulePanel.this);
         new SwingWorker<T, Void>() {
+            private void restoreBusyButtons() {
+                for (AbstractButton button : busyButtons) {
+                    if (button != null) {
+                        button.setEnabled(true);
+                    }
+                }
+            }
+
             @Override
             protected T doInBackground() throws Exception {
                 return work.call();
@@ -110,17 +122,17 @@ public abstract class ModulePanel extends JPanel {
                     if (dataStore.revision() == submittedRevision) {
                         onDone.accept(result);
                     } else {
-                        restoreButtonStates(buttonStates);
+                        restoreBusyButtons();
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    restoreButtonStates(buttonStates);
+                    restoreBusyButtons();
                     onError.accept(e);
                 } catch (CancellationException e) {
-                    restoreButtonStates(buttonStates);
+                    restoreBusyButtons();
                     onError.accept(e);
                 } catch (ExecutionException e) {
-                    restoreButtonStates(buttonStates);
+                    restoreBusyButtons();
                     Throwable cause = e.getCause() == null ? e : e.getCause();
                     onError.accept(cause);
                 }
@@ -129,29 +141,6 @@ public abstract class ModulePanel extends JPanel {
     }
 
     /** Captures every button's state so stale workers can restore, rather than guess, UI state. */
-    private static Map<AbstractButton, Boolean> captureButtonStates(Container root) {
-        Map<AbstractButton, Boolean> states = new IdentityHashMap<>();
-        collectButtonStates(root, states);
-        return states;
-    }
-
-    private static void collectButtonStates(Container root, Map<AbstractButton, Boolean> states) {
-        for (Component component : root.getComponents()) {
-            if (component instanceof AbstractButton button) {
-                states.put(button, button.isEnabled());
-            }
-            if (component instanceof Container child) {
-                collectButtonStates(child, states);
-            }
-        }
-    }
-
-    private static void restoreButtonStates(Map<AbstractButton, Boolean> states) {
-        for (Map.Entry<AbstractButton, Boolean> entry : states.entrySet()) {
-            entry.getKey().setEnabled(entry.getValue());
-        }
-    }
-
     protected void showError(Throwable t) {
         t.printStackTrace();
         JOptionPane.showMessageDialog(this,
