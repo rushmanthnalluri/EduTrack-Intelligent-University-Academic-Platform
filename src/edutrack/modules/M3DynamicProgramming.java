@@ -23,7 +23,8 @@ public class M3DynamicProgramming {
     private static final int TOP_MATCHES = 5;
     private static final int OBST_KEY_COUNT = 12;
     private static final int MCM_MATRIX_COUNT = 8;
-    private static final int MAX_BITMASK_ITEMS = 30;
+    /** Practical cap: two primitive arrays at 2^22 entries stay within a manageable heap budget. */
+    private static final int MAX_BITMASK_ITEMS = 22;
 
     public static void run(Scanner sc, DataStore ds) {
         int choice;
@@ -304,6 +305,12 @@ public class M3DynamicProgramming {
     }
 
     public static long[] bitmaskBestSubset(int[] credits, long[] values, int budget) {
+        if (credits == null || values == null || credits.length != values.length) {
+            throw new IllegalArgumentException("credits and values must be non-null and have equal length");
+        }
+        if (budget < 0) {
+            throw new IllegalArgumentException("budget must be non-negative");
+        }
         int n = credits.length;
         if (n > MAX_BITMASK_ITEMS) {
             throw new IllegalArgumentException(
@@ -332,6 +339,12 @@ public class M3DynamicProgramming {
     }
 
     static long bruteForceBestValue(int[] credits, long[] values, int budget) {
+        if (credits == null || values == null || credits.length != values.length) {
+            throw new IllegalArgumentException("credits and values must be non-null and have equal length");
+        }
+        if (budget < 0) {
+            throw new IllegalArgumentException("budget must be non-negative");
+        }
         int n = credits.length;
         if (n > MAX_BITMASK_ITEMS) {
             throw new IllegalArgumentException(
