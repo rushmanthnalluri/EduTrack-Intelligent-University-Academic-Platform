@@ -259,11 +259,17 @@ public class DataStore {
     // ------------------------------------------------------------------
 
     public synchronized void addStudent(Student student) {
+        if (student == null) {
+            throw new IllegalArgumentException("Student must not be null");
+        }
         if (studentsById.containsKey(student.id)) {
             throw new IllegalArgumentException("Student id already exists: " + student.id);
         }
         if (student.name == null || student.name.isBlank()) {
             throw new IllegalArgumentException("Student name must not be empty");
+        }
+        if (student.program.isBlank()) {
+            throw new IllegalArgumentException("Student program must not be blank");
         }
         if (student.semester < 1 || student.semester > 8) {
             throw new IllegalArgumentException("Semester must be 1..8");
@@ -300,12 +306,18 @@ public class DataStore {
     }
 
     public synchronized void addFaculty(Faculty member) {
+        if (member == null) {
+            throw new IllegalArgumentException("Faculty must not be null");
+        }
         boolean idTaken = faculty.stream().anyMatch(f -> f.id == member.id);
         if (idTaken) {
             throw new IllegalArgumentException("Faculty id already exists: " + member.id);
         }
         if (member.name == null || member.name.isBlank()) {
             throw new IllegalArgumentException("Faculty name must not be empty");
+        }
+        if (member.department.isBlank()) {
+            throw new IllegalArgumentException("Faculty department must not be blank");
         }
         for (String code : member.expertise) {
             requireCourse(code);
@@ -329,11 +341,17 @@ public class DataStore {
     }
 
     public synchronized void addCourse(Course course) {
+        if (course == null) {
+            throw new IllegalArgumentException("Course must not be null");
+        }
         if (coursesByCode.containsKey(course.code)) {
             throw new IllegalArgumentException("Course code already exists: " + course.code);
         }
         if (course.name == null || course.name.isBlank()) {
             throw new IllegalArgumentException("Course name must not be empty");
+        }
+        if (course.department.isBlank()) {
+            throw new IllegalArgumentException("Course department must not be blank");
         }
         if (course.credits <= 0 || course.semester < 1 || course.semester > 8) {
             throw new IllegalArgumentException("Credits must be > 0 and semester 1..8");
@@ -459,8 +477,12 @@ public class DataStore {
     /**
      * Deletes the saved CSV files; generated data returns on the next application start.
      */
-    public synchronized boolean resetToGenerated() {
-        return CsvStore.deleteCoreFiles(CsvStore.resolveDir());
+    public synchronized boolean resetToGenerated() throws IOException {
+        boolean reset = CsvStore.deleteCoreFiles(CsvStore.resolveDir());
+        if (reset) {
+            dirty = false;
+        }
+        return reset;
     }
 
     private Student requireStudent(int id) {
