@@ -338,6 +338,52 @@ public final class RepositoryHardeningSelfTest {
             }
         });
 
+        check("graph API rejects invalid vertices and duplicate induced vertices", () -> {
+            expectThrows(IllegalArgumentException.class, () -> new M5Graph(-1));
+            M5Graph graph = new M5Graph(3);
+            expectThrows(IllegalArgumentException.class, () -> graph.addEdge(-1, 1));
+            expectThrows(IllegalArgumentException.class, () -> graph.degree(3));
+            expectThrows(IllegalArgumentException.class, () -> graph.inducedSubgraph(new int[] { 0, 0 }));
+        });
+
+        check("flow network rejects invalid flow mutations and exposes read-only adjacency", () -> {
+            M4FlowNetwork net = new M4FlowNetwork(2);
+            net.addEdge(0, 1, 2);
+            M4FlowNetwork.Edge edge = net.edgesFrom(0).get(0);
+            expectThrows(IllegalArgumentException.class, () -> net.augment(edge, 3));
+            net.augment(edge, 2);
+            expectThrows(IllegalArgumentException.class, () -> net.augment(edge, 1));
+            expectThrows(UnsupportedOperationException.class, () -> net.edgesFrom(0).clear());
+        });
+
+        check("3-SAT reduction rejects malformed clauses and invalid clique vertices", () -> {
+            expectThrows(IllegalArgumentException.class,
+                    () -> M5Reductions.threeSatToClique(List.of(new int[] { 1, 2 }), 2));
+            M5Reductions.GadgetReduction reduction =
+                    M5Reductions.threeSatToClique(List.of(new int[] { 1, -2, 3 }), 3);
+            expectThrows(IllegalArgumentException.class,
+                    () -> M5Reductions.cliqueToAssignment(reduction, new int[] { 99 }));
+            expectThrows(IllegalArgumentException.class,
+                    () -> M5Reductions.cliqueToAssignment(reduction, new int[] { 0, 1 }));
+        });
+
+        check("parallel merge sort rejects invalid API arguments and sorts special doubles", () -> {
+            expectThrows(IllegalArgumentException.class, () -> M6ParallelMergeSort.sequentialSort(null));
+            expectThrows(IllegalArgumentException.class, () ->
+                    M6ParallelMergeSort.parallelSort(new double[0], 0));
+            double[] values = { Double.NaN, 3.0, -0.0, 0.0, -5.0, Double.POSITIVE_INFINITY };
+            M6ParallelMergeSort.parallelSort(values, 2);
+            for (int i = 1; i < values.length; i++) {
+                assertTrue(Double.compare(values[i - 1], values[i]) <= 0,
+                        "parallel sort violated Double.compare ordering");
+            }
+        });
+
+        check("DPLL satisfies rejects null clauses", () -> {
+            expectThrows(IllegalArgumentException.class,
+                    () -> M5DPLLSolver.satisfies(List.of((int[]) null), new boolean[2]));
+        });
+
         System.out.println("----");
         System.out.println("Repository hardening checks: " + (checks - failures) + "/" + checks + " passed.");
         if (failures > 0) {
