@@ -32,6 +32,7 @@ import edutrack.gui.GuiTheme;
 import edutrack.gui.ModulePanel;
 import edutrack.model.Assignment;
 import edutrack.modules.M1AhoCorasick;
+import edutrack.modules.M1BittuAlgorithm;
 import edutrack.modules.M1StringAlgorithms;
 
 /**
@@ -76,6 +77,7 @@ public class AcademicSearchPanel extends ModulePanel {
         tabs.addTab("Z-Function Repeats", buildZTab());
         tabs.addTab("Rabin-Karp", buildRabinKarpTab());
         tabs.addTab("Aho-Corasick", buildAhoCorasickTab());
+        tabs.addTab("Bittu Matcher", buildBittuTab());
 
         add(header, BorderLayout.NORTH);
         add(tabs, BorderLayout.CENTER);
@@ -560,6 +562,57 @@ public class AcademicSearchPanel extends ModulePanel {
                 console.appendLine("Error: " + error.getMessage());
                 showError(error);
             });
+        });
+        return tab;
+    }
+
+    private JComponent buildBittuTab() {
+        JTextField textField = new JTextField("student academic algorithms student academic algorithms", 34);
+        JTextField patternField = new JTextField("academic algorithms", 20);
+        JButton searchButton = GuiTheme.primaryButton("Search (Bittu)");
+        JLabel summary = summaryLabel("Rolling bigram-vector filter with exact verification.");
+        ConsoleArea console = new ConsoleArea(5);
+
+        DefaultTableModel model = tableModel("Metric", "Value");
+        JTable table = styledTable(model);
+
+        JPanel controls = controlRow();
+        controls.add(fieldLabel("Text:"));
+        controls.add(textField);
+        controls.add(fieldLabel("Pattern:"));
+        controls.add(patternField);
+        controls.add(searchButton);
+
+        JPanel tab = tabPanel();
+        tab.add(card("Rolling bigram-vector matcher", controls), BorderLayout.NORTH);
+        tab.add(card("Telemetry", new JScrollPane(table)), BorderLayout.CENTER);
+        tab.add(card("Log", console), BorderLayout.SOUTH);
+
+        searchButton.addActionListener(e -> {
+            String text = textField.getText();
+            String pattern = patternField.getText();
+            if (text.isEmpty() || pattern.isEmpty()) {
+                console.appendLine("Text and pattern are required.");
+                return;
+            }
+            searchButton.setEnabled(false);
+            runAsync(() -> M1BittuAlgorithm.searchWithTelemetry(text, pattern), result -> {
+                searchButton.setEnabled(true);
+                model.setRowCount(0);
+                model.addRow(new Object[] {"Matches", result.matchPositions});
+                model.addRow(new Object[] {"Candidate windows", result.totalWindowsExamined});
+                model.addRow(new Object[] {"Cosine-screened windows", result.screenedInWindows});
+                model.addRow(new Object[] {"Pattern vector magnitude", String.format("%.4f", result.patternMagnitude)});
+                model.addRow(new Object[] {"Execution", String.format("%.2f µs", result.executionNanos / 1000.0)});
+                summary.setText(String.format("%d match(es) · %d/%d windows screened · O(N+M) average candidate scan",
+                        result.matchPositions.size(), result.screenedInWindows, result.totalWindowsExamined));
+                console.appendLine("Exact match positions: " + result.matchPositions);
+                console.appendLine("Bittu uses a flat 65,536-entry bigram vector and O(1) rolling updates.");
+            }, error -> {
+                searchButton.setEnabled(true);
+                console.appendLine("Error: " + error.getMessage());
+                showError(error);
+            }, searchButton);
         });
         return tab;
     }

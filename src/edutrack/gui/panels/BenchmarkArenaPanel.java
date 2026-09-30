@@ -29,6 +29,7 @@ import edutrack.data.DataStore;
 import edutrack.gui.GuiTheme;
 import edutrack.gui.ModulePanel;
 import edutrack.modules.M1AhoCorasick;
+import edutrack.modules.M1BittuAlgorithm;
 import edutrack.modules.M2KasaiLCP;
 import edutrack.modules.M2SAIS;
 import edutrack.modules.M2SuffixArray;
@@ -51,7 +52,7 @@ public final class BenchmarkArenaPanel extends ModulePanel {
 
     private final BenchmarkCanvas chart = new BenchmarkCanvas();
     private final DefaultTableModel tableModel = new DefaultTableModel(
-            new Object[] { "Arena", "Algorithm", "Median (µs)", "Runs", "Workload" }, 0) {
+            new Object[] { "Arena", "Algorithm", "Time", "Space", "Median (µs)", "Runs", "Workload" }, 0) {
         @Override public boolean isCellEditable(int row, int column) { return false; }
     };
     private final JLabel status = new JLabel("Ready — press Run Arena.");
@@ -96,8 +97,8 @@ public final class BenchmarkArenaPanel extends ModulePanel {
         runAsync(() -> BenchmarkSuite.runAll(), results -> {
             for (BenchmarkResult r : results) {
                 tableModel.addRow(new Object[] {
-                        r.arena, r.algorithm, String.format("%.2f", r.medianMicros),
-                        MEASURED, r.workload
+                        r.arena, r.algorithm, r.timeComplexity, r.spaceComplexity,
+                        String.format("%.2f", r.medianMicros), MEASURED, r.workload
                 });
             }
             chart.setResults(results);
@@ -129,30 +130,32 @@ public final class BenchmarkArenaPanel extends ModulePanel {
             ac.build();
 
             List<BenchmarkResult> out = new ArrayList<>();
-            out.add(measure("String search", "KMP", "120k-char text / one pattern",
+            out.add(measure("String search", "KMP", "O(N+M)", "O(M)", "120k-char text / one pattern",
                     () -> KMPSearch.search(text, pattern)));
-            out.add(measure("String search", "Z-Algorithm", "120k-char text / one pattern",
+            out.add(measure("String search", "Z-Algorithm", "O(N+M)", "O(N+M)", "120k-char text / one pattern",
                     () -> ZFunctionSearch.search(text, pattern)));
-            out.add(measure("String search", "Rabin-Karp", "120k-char text / one pattern",
+            out.add(measure("String search", "Rabin-Karp", "O(N+M) avg", "O(1)", "120k-char text / one pattern",
                     () -> RabinKarpSearch.search(text, pattern)));
-            out.add(measure("String search", "Aho-Corasick", "120k-char text / five patterns",
+            out.add(measure("String search", "Aho-Corasick", "O(N+ΣM+Z)", "O(ΣM)", "120k-char text / five patterns",
                     () -> ac.search(text)));
+            out.add(measure("String search", "Bittu Bigram Vector", "O(N+M) avg", "O(65,536)", "120k-char text / one pattern",
+                    () -> M1BittuAlgorithm.search(text, pattern)));
             return out;
         }
 
         private static List<BenchmarkResult> suffixArena() {
             String text = workloadText(20_000);
             List<BenchmarkResult> out = new ArrayList<>();
-            out.add(measure("Suffix structures", "Suffix Array", "20k-char document / build",
+            out.add(measure("Suffix structures", "Suffix Array", "O(N log²N)", "O(N)", "20k-char document / build",
                     () -> M2SuffixArray.buildSuffixArray(text)));
-            out.add(measure("Suffix structures", "SA-IS", "20k-char document / build",
+            out.add(measure("Suffix structures", "SA-IS", "O(N)", "O(N)", "20k-char document / build",
                     () -> M2SAIS.buildSuffixArray(text)));
-            out.add(measure("Suffix structures", "Kasai LCP", "20k-char document / SA + LCP",
+            out.add(measure("Suffix structures", "Kasai LCP", "O(N)", "O(N)", "20k-char document / SA + LCP",
                     () -> {
                         int[] sa = M2SuffixArray.buildSuffixArray(text);
                         return M2KasaiLCP.buildLCP(text, sa);
                     }));
-            out.add(measure("Suffix structures", "Suffix Automaton", "20k-char document / build",
+            out.add(measure("Suffix structures", "Suffix Automaton", "O(N) build", "O(N·Σ)", "20k-char document / build",
                     () -> M2SuffixAutomaton.build(text)));
             return out;
         }
@@ -163,11 +166,11 @@ public final class BenchmarkArenaPanel extends ModulePanel {
             int[] dims = { 30, 45, 20, 60, 35, 25, 50, 40, 30 };
 
             List<BenchmarkResult> out = new ArrayList<>();
-            out.add(measure("Dynamic programming", "Levenshtein", "30-char typo query pair",
+            out.add(measure("Dynamic programming", "Levenshtein", "O(N·M)", "O(N·M)", "30-char typo query pair",
                     () -> M3DynamicProgramming.levenshtein(query, candidate)));
-            out.add(measure("Dynamic programming", "Damerau-Levenshtein", "30-char typo query pair",
+            out.add(measure("Dynamic programming", "Damerau-Levenshtein", "O(N·M)", "O(N·M)", "30-char typo query pair",
                     () -> M3DynamicProgramming.damerauOSA(query, candidate)));
-            out.add(measure("Dynamic programming", "Matrix-Chain", "8 matrices / scalar-cost DP",
+            out.add(measure("Dynamic programming", "Matrix-Chain", "O(K³)", "O(K²)", "8 matrices / scalar-cost DP",
                     () -> {
                         int[][] split = new int[dims.length - 1][dims.length - 1];
                         return M3DynamicProgramming.matrixChainOrder(dims, split);
@@ -183,8 +186,8 @@ public final class BenchmarkArenaPanel extends ModulePanel {
             return sb.substring(0, length);
         }
 
-        private static <T> BenchmarkResult measure(String arena, String algorithm, String workload,
-                Supplier<T> operation) {
+        private static <T> BenchmarkResult measure(String arena, String algorithm, String timeComplexity,
+                String spaceComplexity, String workload, Supplier<T> operation) {
             for (int i = 0; i < WARMUPS; i++) {
                 consume(operation.get());
             }
@@ -195,7 +198,8 @@ public final class BenchmarkArenaPanel extends ModulePanel {
                 samples[i] = (System.nanoTime() - start) / 1_000.0;
             }
             Arrays.sort(samples);
-            return new BenchmarkResult(arena, algorithm, samples[samples.length / 2], workload);
+            return new BenchmarkResult(arena, algorithm, timeComplexity, spaceComplexity,
+                    samples[samples.length / 2], workload);
         }
 
         private static void consume(Object value) {
@@ -219,12 +223,17 @@ public final class BenchmarkArenaPanel extends ModulePanel {
     private static final class BenchmarkResult {
         final String arena;
         final String algorithm;
+        final String timeComplexity;
+        final String spaceComplexity;
         final double medianMicros;
         final String workload;
 
-        BenchmarkResult(String arena, String algorithm, double medianMicros, String workload) {
+        BenchmarkResult(String arena, String algorithm, String timeComplexity, String spaceComplexity,
+                        double medianMicros, String workload) {
             this.arena = arena;
             this.algorithm = algorithm;
+            this.timeComplexity = timeComplexity;
+            this.spaceComplexity = spaceComplexity;
             this.medianMicros = medianMicros;
             this.workload = workload;
         }
