@@ -13,10 +13,17 @@ public final class Faculty {
 
     public Faculty(int id, String name, String department, List<String> expertise) {
         this.id = id;
-        this.name = Objects.requireNonNull(name, "name");
-        this.department = Objects.requireNonNull(department, "department");
+        if (id <= 0) throw new IllegalArgumentException("id must be positive");
+        this.name = requireText(name, "name");
+        this.department = requireText(department, "department");
         this.expertise = Collections.unmodifiableList(List.copyOf(
                 Objects.requireNonNull(expertise, "expertise")));
+    }
+
+    private static String requireText(String value, String field) {
+        Objects.requireNonNull(value, field);
+        if (value.isBlank()) throw new IllegalArgumentException(field + " must not be blank");
+        return value;
     }
 
     @Override
