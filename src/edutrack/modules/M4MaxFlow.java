@@ -196,13 +196,13 @@ public final class M4MaxFlow {
         for (int u = 0; u < net.nodeCount(); u++) {
             long balance = 0;
             for (M4FlowNetwork.Edge e : net.edgesFrom(u)) {
-                if (e.flow > e.capacity) {
+                if (e.flow() > e.capacity) {
                     return false;
                 }
-                if (e.capacity > 0 && e.flow < 0) {
+                if (e.capacity > 0 && e.flow() < 0) {
                     return false;
                 }
-                balance += e.flow;
+                balance += e.flow();
             }
             if (u != source && u != sink && balance != 0) {
                 return false;
