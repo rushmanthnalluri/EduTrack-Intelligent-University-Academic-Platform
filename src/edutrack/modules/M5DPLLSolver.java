@@ -142,14 +142,15 @@ public class M5DPLLSolver {
         }
         for (int[] clause : clauses) {
             for (int lit : clause) {
-                int v = Math.abs(lit);
-                if (lit == 0 || v >= assignment.length) {
+                long magnitude = Math.abs((long) lit);
+                if (lit == 0 || magnitude >= assignment.length) {
                     throw new IllegalArgumentException("literal " + lit + " does not fit assignment");
                 }
             }
             boolean satisfied = false;
             for (int lit : clause) {
-                if (assignment[Math.abs(lit)] == (lit > 0)) {
+                int v = (int) Math.abs((long) lit);
+                if (assignment[v] == (lit > 0)) {
                     satisfied = true;
                     break;
                 }
