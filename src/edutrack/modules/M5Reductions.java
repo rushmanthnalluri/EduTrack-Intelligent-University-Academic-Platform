@@ -50,37 +50,63 @@ public class M5Reductions {
         return enc;
     }
 
+    /**
+     * Produces an equisatisfiable 3-CNF encoding of exam scheduling.
+     * Each course receives exactly one slot: one at-least-one constraint and
+     * pairwise at-most-one constraints. For more than three slots, a chain of
+     * fresh auxiliary variables converts the long at-least-one clause to 3-CNF.
+     */
     public static List<int[]> examScheduling3CNF(M5Graph g, int slots) {
-        List<int[]> clauses = new ArrayList<>();
-        for (int c = 0; c < g.n; c++) {
-            int[] clause = new int[slots];
-            for (int s = 0; s < slots; s++) {
-                clause[s] = c * slots + s + 1;
-            }
-            clauses.add(padToThree(clause));
+        if (g == null || slots < 1) {
+            throw new IllegalArgumentException("graph must be non-null and slots must be >= 1");
         }
+        List<int[]> clauses = new ArrayList<>();
+        int baseVars = g.n * slots;
+        int nextAux = baseVars + 1;
+
+        for (int c = 0; c < g.n; c++) {
+            int[] vars = new int[slots];
+            for (int s = 0; s < slots; s++) {
+                vars[s] = c * slots + s + 1;
+            }
+
+            if (slots <= 3) {
+                clauses.add(padToThree(vars));
+            } else {
+                // OR(x1,...,xn) encoded as:
+                // (x1 v x2 v y1), (~y1 v x3 v y2), ..., (~y(n-3) v x(n-1) v xn)
+                int previousAux = 0;
+                clauses.add(new int[] { vars[0], vars[1], nextAux });
+                previousAux = nextAux++;
+                for (int s = 2; s < slots - 2; s++) {
+                    int aux = nextAux++;
+                    clauses.add(new int[] { -previousAux, vars[s], aux });
+                    previousAux = aux;
+                }
+                clauses.add(new int[] { -previousAux, vars[slots - 2], vars[slots - 1] });
+            }
+
+            for (int s1 = 0; s1 < slots; s1++) {
+                for (int s2 = s1 + 1; s2 < slots; s2++) {
+                    clauses.add(new int[] {
+                        -vars[s1], -vars[s2], -vars[s2]
+                    });
+                }
+            }
+        }
+
         for (int u = 0; u < g.n; u++) {
             for (int v = u + 1; v < g.n; v++) {
                 if (g.adj[u][v]) {
                     for (int s = 0; s < slots; s++) {
-                        clauses.add(new int[] { -(u * slots + s + 1), -(v * slots + s + 1),
-                                -(v * slots + s + 1) });
+                        int uVar = u * slots + s + 1;
+                        int vVar = v * slots + s + 1;
+                        clauses.add(new int[] { -uVar, -vVar, -vVar });
                     }
                 }
             }
         }
         return clauses;
-    }
-
-    private static int[] padToThree(int[] lits) {
-        if (lits.length >= 3) {
-            return lits;
-        }
-        int[] out = new int[3];
-        for (int i = 0; i < 3; i++) {
-            out[i] = lits[Math.min(i, lits.length - 1)];
-        }
-        return out;
     }
 
     public static class GadgetReduction {
