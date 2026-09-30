@@ -228,7 +228,7 @@ public class SearchPanel extends ModulePanel {
                 body = studentDetails(result.id);
                 break;
             case "Suggestion":
-                body = suggestionDetails(result.id);
+                body = suggestionDetails(result);
                 break;
             case "Faculty":
                 body = facultyDetails(result.id);
@@ -281,22 +281,14 @@ public class SearchPanel extends ModulePanel {
                 + "\nCourses  : " + joinCapped(student.enrolledCourses, 8);
     }
 
-    private String suggestionDetails(String id) {
-        for (Course course : dataStore.courses()) {
-            if (course.code.equals(id)) return courseDetails(id);
-        }
-        for (Student student : dataStore.students()) {
-            if (String.valueOf(student.id).equals(id)) return studentDetails(id);
-        }
-        for (Faculty faculty : dataStore.faculty()) {
-            if (String.valueOf(faculty.id).equals(id)) return facultyDetails(id);
-        }
-        for (Assignment assignment : dataStore.assignments()) {
-            if (assignment.id.equals(id)) return assignmentDetails(id);
-        }
-        for (LearningResource resource : dataStore.resources()) {
-            if (resource.id.equals(id)) return resourceDetails(id);
-        }
+    private String suggestionDetails(SearchResult result) {
+        String id = result.id;
+        String subtitle = result.subtitle == null ? "" : result.subtitle;
+        if (subtitle.startsWith("Course ·")) return courseDetails(id);
+        if (subtitle.startsWith("Student ·")) return studentDetails(id);
+        if (subtitle.startsWith("Faculty ·")) return facultyDetails(id);
+        if (subtitle.startsWith("Assignment ·")) return assignmentDetails(id);
+        if (subtitle.startsWith("Resource ·")) return resourceDetails(id);
         return "No details available for " + id;
     }
 
