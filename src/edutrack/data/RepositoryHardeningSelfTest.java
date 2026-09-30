@@ -61,6 +61,21 @@ public final class RepositoryHardeningSelfTest {
             expectThrows(UnsupportedOperationException.class, () -> ds.coursesByCode().clear());
         });
 
+        check("model and CRUD validation reject null or blank fields", () -> {
+            expectThrows(NullPointerException.class,
+                    () -> new Course(null, "Course", "Dept", 3, 1));
+            expectThrows(IllegalArgumentException.class,
+                    () -> new Course(" ", "Course", "Dept", 3, 1));
+            expectThrows(IllegalArgumentException.class,
+                    () -> new Course("C1", "Course", " ", 3, 1));
+            DataStore ds = new DataStore(false);
+            expectThrows(IllegalArgumentException.class, () -> ds.addStudent(null));
+            expectThrows(IllegalArgumentException.class, () ->
+                    ds.addFaculty(new Faculty(9999, "Faculty", " ", List.of())));
+            expectThrows(IllegalArgumentException.class, () ->
+                    ds.addCourse(new Course("C999", "Course", "Dept", 0, 1)));
+        });
+
         check("course removal creates a new immutable student snapshot", () -> {
             DataStore ds = new DataStore(false);
             Student before = ds.studentsById().get(1000);
@@ -93,6 +108,21 @@ public final class RepositoryHardeningSelfTest {
             Student duplicate = new Student(1, "B", "Program", 1, 8.0, List.of("C1"));
             expectThrows(IllegalArgumentException.class,
                     () -> DataStore.validateLoadedData(List.of(c), List.of(good, duplicate), List.of(f), List.of(e)));
+        });
+
+        check("CSV save publishes a verifiable complete snapshot", () -> {
+            Path dir = Files.createTempDirectory("edutrack-csv-save-test");
+            try {
+                DataStore ds = new DataStore(false);
+                CsvStore.saveAll(ds, dir);
+                assertTrue(CsvStore.coreFilesExist(dir), "freshly saved snapshot is not valid");
+                Files.writeString(dir.resolve(CsvStore.COURSES_FILE),
+                        Files.readString(dir.resolve(CsvStore.COURSES_FILE), StandardCharsets.UTF_8)
+                                .replace("CS101", "BROKEN"), StandardCharsets.UTF_8);
+                assertTrue(!CsvStore.coreFilesExist(dir), "manifest did not detect modified dataset");
+            } finally {
+                deleteRecursively(dir);
+            }
         });
 
         check("CSV parser round-trips multiline quoted data", () -> {

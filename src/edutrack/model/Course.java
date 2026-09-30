@@ -1,6 +1,8 @@
 package edutrack.model;
 
-public class Course {
+import java.util.Objects;
+
+public final class Course {
 
     public final String code;
     public final String name;
@@ -9,11 +11,19 @@ public class Course {
     public final int semester;
 
     public Course(String code, String name, String department, int credits, int semester) {
-        this.code = code;
-        this.name = name;
-        this.department = department;
+        this.code = requireText(code, "code");
+        this.name = requireText(name, "name");
+        this.department = requireText(department, "department");
         this.credits = credits;
         this.semester = semester;
+    }
+
+    private static String requireText(String value, String field) {
+        Objects.requireNonNull(value, field);
+        if (value.isBlank()) {
+            throw new IllegalArgumentException(field + " must not be blank");
+        }
+        return value;
     }
 
     @Override

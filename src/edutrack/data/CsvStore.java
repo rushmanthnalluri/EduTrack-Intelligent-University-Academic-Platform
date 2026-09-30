@@ -2,11 +2,16 @@ package edutrack.data;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import edutrack.model.Course;
 import edutrack.model.ExamRecord;
@@ -26,6 +31,7 @@ public final class CsvStore {
     public static final String FACULTY_FILE = "faculty.csv";
     public static final String COURSES_FILE = "courses.csv";
     public static final String EXAMS_FILE = "exams.csv";
+    private static final String MANIFEST_FILE = ".edutrack.manifest";
 
     private CsvStore() {
     }
@@ -41,8 +47,12 @@ public final class CsvStore {
     }
 
     public static boolean coreFilesExist(Path dir) {
-        return Files.isRegularFile(dir.resolve(STUDENTS_FILE))
-                && Files.isRegularFile(dir.resolve(COURSES_FILE));
+        if (!Files.isRegularFile(dir.resolve(STUDENTS_FILE))
+                || !Files.isRegularFile(dir.resolve(COURSES_FILE))) {
+            return false;
+        }
+        Path manifest = dir.resolve(MANIFEST_FILE);
+        return !Files.isRegularFile(manifest) || manifestMatches(dir, manifest);
     }
 
     public static List<Course> loadCourses(Path dir) throws IOException {
@@ -93,7 +103,32 @@ public final class CsvStore {
 
     public static void saveAll(DataStore ds, Path dir) throws IOException {
         Files.createDirectories(dir);
+        Path staging = dir.resolve(".edutrack-save-" + UUID.randomUUID());
+        Files.createDirectories(staging);
+        try {
+            writeString(staging.resolve(STUDENTS_FILE), studentsCsv(ds));
+            writeString(staging.resolve(FACULTY_FILE), facultyCsv(ds));
+            writeString(staging.resolve(COURSES_FILE), coursesCsv(ds));
+            writeString(staging.resolve(EXAMS_FILE), examsCsv(ds));
 
+            String manifest = MANIFEST_FILE + "\n"
+                    + STUDENTS_FILE + "=" + sha256(staging.resolve(STUDENTS_FILE)) + "\n"
+                    + FACULTY_FILE + "=" + sha256(staging.resolve(FACULTY_FILE)) + "\n"
+                    + COURSES_FILE + "=" + sha256(staging.resolve(COURSES_FILE)) + "\n"
+                    + EXAMS_FILE + "=" + sha256(staging.resolve(EXAMS_FILE)) + "\n";
+            writeString(staging.resolve(MANIFEST_FILE), manifest);
+
+            for (String name : new String[] {
+                    STUDENTS_FILE, FACULTY_FILE, COURSES_FILE, EXAMS_FILE }) {
+                moveReplace(staging.resolve(name), dir.resolve(name));
+            }
+            moveReplace(staging.resolve(MANIFEST_FILE), dir.resolve(MANIFEST_FILE));
+        } finally {
+            deleteRecursively(staging);
+        }
+    }
+
+    private static String studentsCsv(DataStore ds) {
         StringBuilder sb = new StringBuilder("id,name,program,semester,cgpa,enrolledCourses\n");
         for (Student s : ds.students()) {
             sb.append(s.id).append(',')
@@ -103,18 +138,22 @@ public final class CsvStore {
                     .append(s.cgpa).append(',')
                     .append(escape(String.join(";", s.enrolledCourses))).append('\n');
         }
-        Files.writeString(dir.resolve(STUDENTS_FILE), sb.toString(), StandardCharsets.UTF_8);
+        return sb.toString();
+    }
 
-        sb = new StringBuilder("id,name,department,expertise\n");
+    private static String facultyCsv(DataStore ds) {
+        StringBuilder sb = new StringBuilder("id,name,department,expertise\n");
         for (Faculty f : ds.faculty()) {
             sb.append(f.id).append(',')
                     .append(escape(f.name)).append(',')
                     .append(escape(f.department)).append(',')
                     .append(escape(String.join(";", f.expertise))).append('\n');
         }
-        Files.writeString(dir.resolve(FACULTY_FILE), sb.toString(), StandardCharsets.UTF_8);
+        return sb.toString();
+    }
 
-        sb = new StringBuilder("code,name,department,credits,semester\n");
+    private static String coursesCsv(DataStore ds) {
+        StringBuilder sb = new StringBuilder("code,name,department,credits,semester\n");
         for (Course c : ds.courses()) {
             sb.append(escape(c.code)).append(',')
                     .append(escape(c.name)).append(',')
@@ -122,28 +161,99 @@ public final class CsvStore {
                     .append(c.credits).append(',')
                     .append(c.semester).append('\n');
         }
-        Files.writeString(dir.resolve(COURSES_FILE), sb.toString(), StandardCharsets.UTF_8);
+        return sb.toString();
+    }
 
-        sb = new StringBuilder("studentId,courseCode,midsem,endsem\n");
+    private static String examsCsv(DataStore ds) {
+        StringBuilder sb = new StringBuilder("studentId,courseCode,midsem,endsem\n");
         for (ExamRecord r : ds.examRecords()) {
             sb.append(r.studentId).append(',')
                     .append(escape(r.courseCode)).append(',')
                     .append(r.midsem).append(',')
                     .append(r.endsem).append('\n');
         }
-        Files.writeString(dir.resolve(EXAMS_FILE), sb.toString(), StandardCharsets.UTF_8);
+        return sb.toString();
     }
 
-    public static boolean deleteCoreFiles(Path dir) {
-        boolean deleted = false;
-        for (String name : new String[] { STUDENTS_FILE, FACULTY_FILE, COURSES_FILE, EXAMS_FILE }) {
-            try {
-                deleted |= Files.deleteIfExists(dir.resolve(name));
-            } catch (IOException e) {
-                // leave the file in place
+    private static void writeString(Path file, String content) throws IOException {
+        Files.writeString(file, content, StandardCharsets.UTF_8);
+    }
+
+    private static void moveReplace(Path source, Path target) throws IOException {
+        try {
+            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private static boolean manifestMatches(Path dir, Path manifest) {
+        try {
+            List<String> lines = Files.readAllLines(manifest, StandardCharsets.UTF_8);
+            if (lines.size() != 5 || !MANIFEST_FILE.equals(lines.get(0))) {
+                return false;
+            }
+            for (int i = 1; i < lines.size(); i++) {
+                String[] parts = lines.get(i).split("=", 2);
+                if (parts.length != 2 || !sha256(dir.resolve(parts[0])).equals(parts[1])) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static String sha256(Path file) throws IOException {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file));
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException("SHA-256 unavailable", e);
+        }
+    }
+
+    public static boolean deleteCoreFiles(Path dir) throws IOException {
+        List<Path> existing = new ArrayList<>();
+        for (String name : new String[] {
+                STUDENTS_FILE, FACULTY_FILE, COURSES_FILE, EXAMS_FILE, MANIFEST_FILE }) {
+            Path path = dir.resolve(name);
+            if (Files.exists(path)) {
+                existing.add(path);
             }
         }
-        return deleted;
+        if (existing.isEmpty()) {
+            return false;
+        }
+
+        Path quarantine = dir.resolve(".edutrack-reset-" + UUID.randomUUID());
+        Files.createDirectories(quarantine);
+        List<Path[]> moved = new ArrayList<>();
+        try {
+            for (Path path : existing) {
+                Path target = quarantine.resolve(path.getFileName().toString());
+                moveReplace(path, target);
+                moved.add(new Path[] { path, target });
+            }
+            deleteRecursively(quarantine);
+            return true;
+        } catch (IOException failure) {
+            for (int i = moved.size() - 1; i >= 0; i--) {
+                Path[] pair = moved.get(i);
+                try {
+                    moveReplace(pair[1], pair[0]);
+                } catch (IOException ignored) {
+                    // Preserve the original failure; rollback is best effort.
+                }
+            }
+            deleteRecursively(quarantine);
+            throw failure;
+        }
     }
 
     private static List<String[]> parse(Path file) throws IOException {
@@ -232,6 +342,23 @@ public final class CsvStore {
             rows.add(fields.toArray(new String[0]));
         }
         return rows;
+    }
+
+    private static void deleteRecursively(Path dir) {
+        if (!Files.exists(dir)) {
+            return;
+        }
+        try (var walk = Files.walk(dir)) {
+            walk.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException ignored) {
+                    // Staging/quarantine cleanup must not hide the original operation result.
+                }
+            });
+        } catch (IOException ignored) {
+            // Best-effort cleanup only.
+        }
     }
 
     private static String escape(String value) {
