@@ -108,7 +108,7 @@ public final class BenchmarkArenaPanel extends ModulePanel {
             runButton.setEnabled(true);
             status.setText("Benchmark failed.");
             showError(error);
-        });
+        }, runButton);
     }
 
     private static final class BenchmarkSuite {
