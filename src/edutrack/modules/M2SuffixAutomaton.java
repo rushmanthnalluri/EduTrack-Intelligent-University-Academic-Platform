@@ -74,7 +74,7 @@ public class M2SuffixAutomaton {
 
     public long countOccurrences(String pattern) {
         if (pattern.isEmpty()) {
-            return states[last].len;
+            return states[last].len + 1L;
         }
         int v = walk(pattern);
         if (v == -1) {
