@@ -349,7 +349,7 @@ public class AcademicSearchPanel extends ModulePanel {
                     model.addRow(new Object[] {
                         record.recordId, record.recordType, record.hashHits,
                         formatPositions(record.verified), record.spurious()
-                    }, searchButton);
+                    });
                 }
                 summary.setText(String.format(
                         "%d records scanned · %d matched · %d hash hits · %d verified · %d spurious · %d ms",
@@ -364,7 +364,7 @@ public class AcademicSearchPanel extends ModulePanel {
                 searchButton.setEnabled(true);
                 console.appendLine("Error: " + error.getMessage());
                 showError(error);
-            });
+            }, searchButton);
         });
         return tab;
     }
