@@ -43,6 +43,15 @@ public class M4FlowNetwork {
 
     /** Adds a forward edge with the given capacity plus a zero-capacity reverse edge. */
     public void addEdge(int from, int to, int capacity) {
+        if (from < 0 || from >= nodeCount() || to < 0 || to >= nodeCount()) {
+            throw new IllegalArgumentException("edge endpoint out of range");
+        }
+        if (from == to) {
+            throw new IllegalArgumentException("self-loops are not supported");
+        }
+        if (capacity < 0) {
+            throw new IllegalArgumentException("capacity must be non-negative");
+        }
         Edge forward = new Edge(to, adj.get(to).size(), capacity);
         Edge backward = new Edge(from, adj.get(from).size(), 0);
         adj.get(from).add(forward);
