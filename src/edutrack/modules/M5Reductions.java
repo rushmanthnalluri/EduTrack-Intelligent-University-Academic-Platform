@@ -237,6 +237,7 @@ public class M5Reductions {
     }
 
     private static final long EXPANSION_CAP = 20_000_000L;
+    private static final int RECURSION_NODE_CAP = 4096;
 
     public static CliqueSearch maxClique(M5Graph g) {
         return cliqueSearch(g, g.n);
@@ -248,6 +249,10 @@ public class M5Reductions {
 
     private static CliqueSearch cliqueSearch(M5Graph g, int target) {
         if (g == null) throw new IllegalArgumentException("graph must not be null");
+        if (g.n > RECURSION_NODE_CAP) {
+            throw new IllegalArgumentException("recursive clique search is limited to "
+                    + RECURSION_NODE_CAP + " vertices");
+        }
         if (target < 0 || target > g.n) {
             throw new IllegalArgumentException("target clique size must be between 0 and " + g.n);
         }
