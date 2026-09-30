@@ -76,6 +76,7 @@ Every capability has an interactive CLI entry point and a dedicated GUI screen w
 **Activity Analytics** — clearer summary cards and corrected chart scaling for hourly activity, action totals, and top course/student activity without overcrowded labels.
 
 ![Analytics](docs/screenshots/analytics.png)
+![Benchmark Arena](docs/screenshots/benchmark-arena.png)
 
 **Reports & Export** — an official-style transcript preview (per-course marks, credits attempted/earned, weighted GPA, stored CGPA, class rank) ready to save as text; grade sheets, department summaries and at-risk lists export as CSV.
 
@@ -178,7 +179,7 @@ Errors return JSON `400/404/405` bodies. Handlers are thread-safe (copy-on-write
 │       ├── features/            RecordQueries · ExamAnalytics · ActivityAnalytics · ManageSupport · ReportGenerator
 │       ├── search/              SearchService (global smart search)
 │       ├── api/                 ApiServer · JsonWriter (REST API)
-│       └── gui/                 EduTrackGUI + theme/components + 12 panels
+│       └── gui/                 EduTrackGUI + theme/components + 13 panels
 ├── docs/
 │   ├── screenshots/             GUI screenshots and feature visualizations
 │   └── EduTrack_Report.tex      Full LaTeX project report
