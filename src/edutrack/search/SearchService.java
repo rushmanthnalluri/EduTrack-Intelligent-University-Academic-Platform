@@ -6,6 +6,7 @@ import java.util.Locale;
 import java.util.Scanner;
 
 import edutrack.data.DataStore;
+import edutrack.data.DataSnapshot;
 import edutrack.model.Assignment;
 import edutrack.model.Course;
 import edutrack.model.Faculty;
@@ -79,6 +80,33 @@ public class SearchService {
     // ------------------------------------------------------------------
     // Engine
     // ------------------------------------------------------------------
+
+    /** Snapshot-safe search used by the REST API. */
+    public static List<SearchResult> search(DataSnapshot snapshot, String query) {
+        String normalized = normalize(query);
+        if (normalized.isEmpty()) {
+            return List.of();
+        }
+        String queryLower = normalized.toLowerCase(Locale.ROOT);
+        String[] terms = queryLower.split(" ");
+        List<SearchResult> results = new ArrayList<>();
+        for (Candidate candidate : candidates(snapshot)) {
+            if (allTermsMatch(candidate, terms)) {
+                results.add(new SearchResult(candidate.kind, candidate.id, candidate.title,
+                        candidate.subtitle, score(candidate, queryLower, terms)));
+            }
+        }
+        if (results.isEmpty()) {
+            return fuzzySuggestions(snapshot, queryLower, terms);
+        }
+        results.sort((a, b) -> {
+            if (a.score != b.score) return Integer.compare(b.score, a.score);
+            int byTitle = a.title.compareTo(b.title);
+            return byTitle != 0 ? byTitle : a.id.compareTo(b.id);
+        });
+        return results.size() > MAX_RESULTS
+                ? new ArrayList<>(results.subList(0, MAX_RESULTS)) : results;
+    }
 
     public static List<SearchResult> search(DataStore ds, String query) {
         String normalized = normalize(query);
@@ -184,6 +212,41 @@ public class SearchService {
         }
     }
 
+    private static List<Candidate> candidates(DataSnapshot snapshot) {
+        List<Candidate> list = new ArrayList<>();
+        for (Course course : snapshot.courses()) {
+            list.add(new Candidate("Course", course.code, course.name,
+                    course.department + " · " + course.credits + " credits · Sem " + course.semester,
+                    List.of(new Field(course.code, CAT_ID), new Field(course.name, CAT_NAME),
+                            new Field(course.department, CAT_OTHER))));
+        }
+        for (Student student : snapshot.students()) {
+            list.add(new Candidate("Student", String.valueOf(student.id), student.name,
+                    student.program + " · Sem " + student.semester
+                            + String.format(" · CGPA %.2f", student.cgpa),
+                    List.of(new Field(String.valueOf(student.id), CAT_ID),
+                            new Field(student.name, CAT_NAME), new Field(student.program, CAT_OTHER))));
+        }
+        for (Faculty faculty : snapshot.faculty()) {
+            list.add(new Candidate("Faculty", String.valueOf(faculty.id), faculty.name,
+                    faculty.department + " · Teaches " + joinCapped(faculty.expertise, 6),
+                    List.of(new Field(String.valueOf(faculty.id), CAT_ID),
+                            new Field(faculty.name, CAT_NAME), new Field(faculty.department, CAT_OTHER))));
+        }
+        for (Assignment assignment : snapshot.assignments()) {
+            list.add(new Candidate("Assignment", assignment.id, assignment.title,
+                    "Course " + assignment.courseCode,
+                    List.of(new Field(assignment.id, CAT_ID), new Field(assignment.title, CAT_NAME))));
+        }
+        for (LearningResource resource : snapshot.resources()) {
+            list.add(new Candidate("Resource", resource.id, resource.title,
+                    resource.type + " · Course " + resource.courseCode,
+                    List.of(new Field(resource.id, CAT_ID), new Field(resource.title, CAT_NAME),
+                            new Field(resource.type, CAT_OTHER))));
+        }
+        return list;
+    }
+
     private static List<Candidate> candidates(DataStore ds) {
         List<Candidate> list = new ArrayList<>();
         for (Course course : ds.courses()) {
@@ -243,6 +306,11 @@ public class SearchService {
     // Fuzzy fallback ("Did you mean")
     // ------------------------------------------------------------------
 
+    private static List<SearchResult> fuzzySuggestions(DataSnapshot snapshot, String queryLower,
+            String[] terms) {
+        return fuzzySuggestionsFromCandidates(snapshot, queryLower, terms);
+    }
+
     private static List<SearchResult> fuzzySuggestions(DataStore ds, String queryLower,
             String[] terms) {
         List<ScoredEntity> pool = new ArrayList<>();
@@ -272,6 +340,32 @@ public class SearchService {
             }
         }
 
+        for (Faculty faculty : ds.faculty()) {
+            List<String> words = new ArrayList<>();
+            words.add(String.valueOf(faculty.id));
+            words.add(faculty.name.toLowerCase(Locale.ROOT));
+            words.add(faculty.department.toLowerCase(Locale.ROOT));
+            words.addAll(faculty.expertise.stream().map(v -> v.toLowerCase(Locale.ROOT)).toList());
+            int distance = fuzzyDistance(terms, queryLower, words);
+            if (distance >= 0) pool.add(new ScoredEntity("Faculty", String.valueOf(faculty.id),
+                    faculty.name, "Faculty · " + faculty.id, distance));
+        }
+        for (Assignment assignment : ds.assignments()) {
+            List<String> words = List.of(assignment.id.toLowerCase(Locale.ROOT),
+                    assignment.title.toLowerCase(Locale.ROOT), assignment.courseCode.toLowerCase(Locale.ROOT));
+            int distance = fuzzyDistance(terms, queryLower, words);
+            if (distance >= 0) pool.add(new ScoredEntity("Assignment", assignment.id,
+                    assignment.title, "Assignment · " + assignment.courseCode, distance));
+        }
+        for (LearningResource resource : ds.resources()) {
+            List<String> words = List.of(resource.id.toLowerCase(Locale.ROOT),
+                    resource.title.toLowerCase(Locale.ROOT), resource.courseCode.toLowerCase(Locale.ROOT),
+                    resource.type.toLowerCase(Locale.ROOT));
+            int distance = fuzzyDistance(terms, queryLower, words);
+            if (distance >= 0) pool.add(new ScoredEntity("Resource", resource.id,
+                    resource.title, "Resource · " + resource.courseCode, distance));
+        }
+
         pool.sort((a, b) -> {
             if (a.distance != b.distance) {
                 return Integer.compare(a.distance, b.distance);
@@ -285,6 +379,36 @@ public class SearchService {
             ScoredEntity entity = pool.get(i);
             suggestions.add(new SearchResult("Suggestion", entity.id,
                     "Did you mean: " + entity.title, entity.subtitle, 100 - entity.distance));
+        }
+        return suggestions;
+    }
+
+    private static List<SearchResult> fuzzySuggestionsFromCandidates(DataSnapshot snapshot,
+            String queryLower, String[] terms) {
+        List<ScoredEntity> pool = new ArrayList<>();
+        for (Candidate c : candidates(snapshot)) {
+            List<String> words = new ArrayList<>();
+            for (Field f : c.fields) {
+                words.add(f.lower);
+                for (String word : f.lower.split("[^a-z0-9]+")) {
+                    if (!word.isEmpty()) words.add(word);
+                }
+            }
+            int distance = fuzzyDistance(terms, queryLower, words);
+            if (distance >= 0) {
+                pool.add(new ScoredEntity(c.kind, c.id, c.title, c.kind + " · " + c.id, distance));
+            }
+        }
+        pool.sort((a, b) -> {
+            if (a.distance != b.distance) return Integer.compare(a.distance, b.distance);
+            int byTitle = a.title.compareTo(b.title);
+            return byTitle != 0 ? byTitle : a.id.compareTo(b.id);
+        });
+        List<SearchResult> suggestions = new ArrayList<>();
+        for (int i = 0; i < Math.min(pool.size(), MAX_SUGGESTIONS); i++) {
+            ScoredEntity e = pool.get(i);
+            suggestions.add(new SearchResult("Suggestion", e.id,
+                    "Did you mean: " + e.title, e.subtitle, 100 - e.distance));
         }
         return suggestions;
     }
