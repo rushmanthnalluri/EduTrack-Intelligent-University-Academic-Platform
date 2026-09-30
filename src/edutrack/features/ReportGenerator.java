@@ -168,15 +168,15 @@ public final class ReportGenerator {
             deptOfCourse.put(c.code, c.department);
         }
 
-        Map<String, int[]> enrolled = new LinkedHashMap<>();
+        Map<String, java.util.Set<Integer>> enrolledStudents = new LinkedHashMap<>();
         for (String dept : deptOrder.keySet()) {
-            enrolled.put(dept, new int[1]);
+            enrolledStudents.put(dept, new java.util.HashSet<>());
         }
         for (Student s : ds.students()) {
             for (String code : s.enrolledCourses) {
                 String dept = deptOfCourse.get(code);
                 if (dept != null) {
-                    enrolled.get(dept)[0]++;
+                    enrolledStudents.get(dept).add(s.id);
                 }
             }
         }
@@ -213,7 +213,7 @@ public final class ReportGenerator {
             rows.add(new String[] {
                     dept,
                     String.valueOf(coursesPerDept.get(dept)),
-                    String.valueOf(enrolled.get(dept)[0]),
+                    String.valueOf(enrolledStudents.get(dept).size()),
                     String.valueOf(a[0]),
                     String.format(Locale.ROOT, "%.2f", avgTotal),
                     String.format(Locale.ROOT, "%.2f", passPct),
