@@ -38,9 +38,9 @@ import edutrack.modules.M4NetworkFlow;
  */
 public class ResourceAllocationPanel extends ModulePanel {
 
-    private final List<Faculty> faculty;
-    private final List<Course> courses;
-    private final List<List<Integer>> graph;
+    private List<Faculty> faculty;
+    private List<Course> courses;
+    private List<List<Integer>> graph;
 
     private final M4BipartiteCanvas bipartiteCanvas = new M4BipartiteCanvas();
     private final JLabel matchingStats = small("Matching not computed yet.", GuiTheme.TEXT);
@@ -119,6 +119,31 @@ public class ResourceAllocationPanel extends ModulePanel {
                 + " courses, " + edgeCount() + " eligibility edges.");
         runMatching();
         runAllocation();
+    }
+
+    /** Rebuilds the live faculty/course graph after CRUD changes. */
+    public void refresh() {
+        faculty = dataStore.faculty();
+        courses = dataStore.courses();
+        graph = M4NetworkFlow.facultyCourseGraph(dataStore);
+        String[] facultyNames = new String[faculty.size()];
+        for (int i = 0; i < faculty.size(); i++) facultyNames[i] = faculty.get(i).name;
+        String[] courseCodes = new String[courses.size()];
+        for (int i = 0; i < courses.size(); i++) courseCodes[i] = courses.get(i).code;
+        bipartiteCanvas.setGraph(facultyNames, courseCodes, graph);
+        matching = null;
+        cover = null;
+        coverShown = false;
+        konigButton.setEnabled(false);
+        allocationModel.setRowCount(0);
+        matchingStats.setText("Live dataset refreshed — run matching.");
+        konigStats.setText(" ");
+        unmatchedFacultyLabel.setText("Run the matching to see unmatched");
+        unmatchedCoursesLabel.setText("faculty and courses.");
+        ffStats.setText("Ford-Fulkerson (DFS): not run yet");
+        ekAllocStats.setText("Edmonds-Karp (BFS): not run yet");
+        console.appendLine("Live data refreshed: " + faculty.size() + " faculty, "
+                + courses.size() + " courses, " + edgeCount() + " eligibility edges.");
     }
 
     // ------------------------------------------------------------------
