@@ -517,8 +517,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
             buildButton.setEnabled(true);
             setStatus("Index build failed");
             showError(err);
-        });
-    }
+        }, buildButton);   }
 
     private void onSearch() {
         if (currentText == null) {
@@ -573,8 +572,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
             searchButton.setEnabled(true);
             setStatus("Search failed");
             showError(err);
-        });
-    }
+        }, searchButton);   }
 
     private int applyHighlights(String pattern, List<Integer> positions) {
         Highlighter highlighter = docView.getHighlighter();
@@ -641,8 +639,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
             repeatsButton.setEnabled(true);
             setStatus("Kasai LCP failed");
             showError(err);
-        });
-    }
+        }, repeatsButton);   }
 
     private void onCompare() {
         int indexA = simComboA.getSelectedIndex();
@@ -689,8 +686,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
             compareButton.setEnabled(true);
             setStatus("Comparison failed");
             showError(err);
-        });
-    }
+        }, compareButton);   }
 
     private void buildAutomaton(Runnable after) {
         final DocItem item = (DocItem) docCombo.getSelectedItem();
@@ -728,8 +724,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
             autoBuildButton.setEnabled(true);
             setStatus("Automaton build failed");
             showError(err);
-        });
-    }
+        }, autoBuildButton);   }
 
     private void onAutomatonCount() {
         if (currentText == null) {
@@ -773,8 +768,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
         }, err -> {
             autoCountButton.setEnabled(true);
             showError(err);
-        });
-    }
+        }, autoCountButton);   }
 
     private void onAutomatonLcs() {
         if (currentText == null) {
@@ -822,8 +816,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
         }, err -> {
             autoLcsButton.setEnabled(true);
             showError(err);
-        });
-    }
+        }, autoLcsButton);   }
 
     private void setStatus(String message) {
         statusLabel.setText(message);
