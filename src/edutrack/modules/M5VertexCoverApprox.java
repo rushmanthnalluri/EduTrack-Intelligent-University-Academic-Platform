@@ -13,6 +13,7 @@ public class M5VertexCoverApprox {
     }
 
     public static ApproxResult approximate(M5Graph g) {
+        if (g == null) throw new IllegalArgumentException("graph must not be null");
         ApproxResult r = new ApproxResult();
         r.cover = new boolean[g.n];
         r.matchingEdges = new ArrayList<>();
@@ -40,6 +41,7 @@ public class M5VertexCoverApprox {
     }
 
     public static boolean isVertexCover(M5Graph g, boolean[] cover) {
+        validateSet(g, cover, "cover");
         for (int u = 0; u < g.n; u++) {
             for (int v = u + 1; v < g.n; v++) {
                 if (g.hasEdge(u, v) && !cover[u] && !cover[v]) {
@@ -51,6 +53,7 @@ public class M5VertexCoverApprox {
     }
 
     public static boolean isIndependentSet(M5Graph g, boolean[] set) {
+        validateSet(g, set, "independent set");
         for (int u = 0; u < g.n; u++) {
             if (!set[u]) {
                 continue;
@@ -109,9 +112,17 @@ public class M5VertexCoverApprox {
     }
 
     private static void requireBruteForceSize(M5Graph g) {
+        if (g == null) throw new IllegalArgumentException("graph must not be null");
         if (g.n > 22) {
             throw new IllegalArgumentException(
                     "brute force is limited to graphs with at most 22 vertices (got " + g.n + ")");
+        }
+    }
+
+    private static void validateSet(M5Graph g, boolean[] set, String name) {
+        if (g == null) throw new IllegalArgumentException("graph must not be null");
+        if (set == null || set.length != g.n) {
+            throw new IllegalArgumentException(name + " must have length " + g.n);
         }
     }
 
