@@ -282,10 +282,22 @@ public class SearchPanel extends ModulePanel {
     }
 
     private String suggestionDetails(String id) {
-        if (dataStore.coursesByCode().containsKey(id)) {
-            return courseDetails(id);
+        for (Course course : dataStore.courses()) {
+            if (course.code.equals(id)) return courseDetails(id);
         }
-        return studentDetails(id);
+        for (Student student : dataStore.students()) {
+            if (String.valueOf(student.id).equals(id)) return studentDetails(id);
+        }
+        for (Faculty faculty : dataStore.faculty()) {
+            if (String.valueOf(faculty.id).equals(id)) return facultyDetails(id);
+        }
+        for (Assignment assignment : dataStore.assignments()) {
+            if (assignment.id.equals(id)) return assignmentDetails(id);
+        }
+        for (LearningResource resource : dataStore.resources()) {
+            if (resource.id.equals(id)) return resourceDetails(id);
+        }
+        return "No details available for " + id;
     }
 
     private String facultyDetails(String id) {
