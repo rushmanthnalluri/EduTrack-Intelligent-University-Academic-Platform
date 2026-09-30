@@ -519,7 +519,7 @@ public class QueryOptimizationPanel extends ModulePanel {
         }, error -> {
             obstButton.setEnabled(true);
             showError(error);
-        });
+        }, obstButton);
     }
 
     private static String preorderText(String[] keys, int[] freq, int[][] root) {
