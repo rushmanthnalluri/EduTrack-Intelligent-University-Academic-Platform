@@ -247,6 +247,9 @@ public class M4NetworkFlow {
                     rows.add(new AllocationRow(courses.get(ci).code, sectionNo[ci],
                             rooms.get(roomNode - an.roomBase), slots.get(slotNode - an.slotBase)));
                 }
+                // The source->course unit is consumed only after its complete
+                // course->room->slot path has been examined.
+                an.net.augment(srcEdge, -1);
             }
         }
         return rows;
