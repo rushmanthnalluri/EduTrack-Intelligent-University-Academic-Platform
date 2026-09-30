@@ -95,7 +95,7 @@ Every capability has an interactive CLI entry point and a dedicated GUI screen w
 
 ![Academic Search GUI](docs/screenshots/academic-search.png)
 
-**Document Similarity** — suffix-array indexing, SA-IS, Kasai LCP and suffix-automaton visualizations for document matching and similarity analysis.
+**Document Similarity & Plagiarism Check** — suffix-array indexing, SA-IS, Kasai LCP and suffix-automaton visualizations, plus a three-submission plagiarism-style checker that reports pairwise similarity, matched-text coverage, longest shared phrases and review flags.
 
 ![Document Similarity GUI](docs/screenshots/document-similarity.png)
 

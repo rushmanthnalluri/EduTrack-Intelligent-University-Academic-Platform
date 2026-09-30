@@ -75,6 +75,14 @@ public class DocumentSimilarityPanel extends ModulePanel {
     private final JLabel simOccB = new JLabel(" ");
     private final JLabel simAssessment = new JLabel(" ");
 
+    private final JComboBox<String> plagComboA = new JComboBox<>();
+    private final JComboBox<String> plagComboB = new JComboBox<>();
+    private final JComboBox<String> plagComboC = new JComboBox<>();
+    private final JButton plagiarismButton = GuiTheme.primaryButton("Run Plagiarism Check");
+    private final JLabel plagiarismSummary = new JLabel(" ");
+    private final JLabel plagiarismWitness = new JLabel(" ");
+    private final DefaultTableModel plagiarismModel;
+
     private final JButton autoBuildButton = GuiTheme.primaryButton("Build Automaton");
     private final JLabel autoStates = valueLabel();
     private final JLabel autoDistinct = valueLabel();
@@ -112,6 +120,15 @@ public class DocumentSimilarityPanel extends ModulePanel {
             simComboB.setSelectedIndex(1);
         }
 
+        plagiarismModel = new DefaultTableModel(
+                new String[] { "Pair", "Similarity", "Matched A", "Matched B", "Longest Shared", "Assessment" }, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        populatePlagiarismSelectors();
+
         add(buildHeader(), BorderLayout.NORTH);
 
         JTabbedPane tabs = new JTabbedPane();
@@ -119,6 +136,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
         tabs.addTab("Index & Search", buildIndexTab());
         tabs.addTab("Repeated Phrases (Kasai LCP)", buildRepeatsTab());
         tabs.addTab("Cross-Submission Similarity", buildSimilarityTab());
+        tabs.addTab("Plagiarism Check (3)", buildPlagiarismTab());
         tabs.addTab("Suffix Automaton", buildAutomatonTab());
         add(tabs, BorderLayout.CENTER);
 
@@ -130,11 +148,28 @@ public class DocumentSimilarityPanel extends ModulePanel {
         onDocumentSelected();
     }
 
+    private void populatePlagiarismSelectors() {
+        plagComboA.removeAllItems();
+        plagComboB.removeAllItems();
+        plagComboC.removeAllItems();
+        for (Assignment a : dataStore.assignments()) {
+            String item = a.id + " · " + a.courseCode;
+            plagComboA.addItem(item);
+            plagComboB.addItem(item);
+            plagComboC.addItem(item);
+        }
+        if (plagComboA.getItemCount() > 1) plagComboB.setSelectedIndex(1);
+        if (plagComboA.getItemCount() > 2) plagComboC.setSelectedIndex(2);
+    }
+
     /** Refreshes assignment-backed selectors and invalidates removed-document state. */
     public void refresh() {
         String previousDoc = selectedDocKey();
         String previousA = (String) simComboA.getSelectedItem();
         String previousB = (String) simComboB.getSelectedItem();
+        String previousPlagA = (String) plagComboA.getSelectedItem();
+        String previousPlagB = (String) plagComboB.getSelectedItem();
+        String previousPlagC = (String) plagComboC.getSelectedItem();
         refreshingSelectors = true;
         try {
             docCombo.removeAllItems();
@@ -148,6 +183,11 @@ public class DocumentSimilarityPanel extends ModulePanel {
             }
             restoreCombo(simComboA, previousA, 0);
             restoreCombo(simComboB, previousB, Math.min(1, simComboB.getItemCount() - 1));
+
+            populatePlagiarismSelectors();
+            restoreCombo(plagComboA, previousPlagA, 0);
+            restoreCombo(plagComboB, previousPlagB, Math.min(1, plagComboB.getItemCount() - 1));
+            restoreCombo(plagComboC, previousPlagC, Math.min(2, plagComboC.getItemCount() - 1));
         } finally {
             refreshingSelectors = false;
         }
@@ -337,6 +377,48 @@ public class DocumentSimilarityPanel extends ModulePanel {
         return tab;
     }
 
+    private Component buildPlagiarismTab() {
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        controls.setOpaque(false);
+        controls.add(new JLabel("Submission 1:"));
+        controls.add(plagComboA);
+        controls.add(new JLabel("Submission 2:"));
+        controls.add(plagComboB);
+        controls.add(new JLabel("Submission 3:"));
+        controls.add(plagComboC);
+        controls.add(plagiarismButton);
+
+        plagiarismSummary.setFont(GuiTheme.BODY_BOLD);
+        plagiarismSummary.setForeground(GuiTheme.TEXT);
+        plagiarismWitness.setFont(GuiTheme.BODY);
+        plagiarismWitness.setForeground(GuiTheme.MUTED);
+
+        JTable table = new JTable(plagiarismModel);
+        table.setFillsViewportHeight(true);
+        table.getColumnModel().getColumn(0).setPreferredWidth(180);
+        table.getColumnModel().getColumn(1).setPreferredWidth(90);
+        table.getColumnModel().getColumn(2).setPreferredWidth(100);
+        table.getColumnModel().getColumn(3).setPreferredWidth(100);
+        table.getColumnModel().getColumn(4).setPreferredWidth(120);
+        table.getColumnModel().getColumn(5).setPreferredWidth(430);
+
+        JPanel resultHeader = new JPanel();
+        resultHeader.setLayout(new BoxLayout(resultHeader, BoxLayout.Y_AXIS));
+        resultHeader.setOpaque(false);
+        resultHeader.add(plagiarismSummary);
+        resultHeader.add(Box.createVerticalStrut(4));
+        resultHeader.add(plagiarismWitness);
+
+        JPanel tab = new JPanel(new BorderLayout(10, 10));
+        tab.setOpaque(false);
+        tab.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        tab.add(card("3-Submission Plagiarism Check — Suffix Array + Kasai LCP (minimum shared phrase: 40 chars)",
+                controls), BorderLayout.NORTH);
+        tab.add(card(null, new JScrollPane(table)), BorderLayout.CENTER);
+        tab.add(card("Finding", resultHeader), BorderLayout.SOUTH);
+        return tab;
+    }
+
     private Component buildAutomatonTab() {
         JPanel buildRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         buildRow.setOpaque(false);
@@ -390,6 +472,7 @@ public class DocumentSimilarityPanel extends ModulePanel {
         queryField.addActionListener(e -> onSearch());
         repeatsButton.addActionListener(e -> onRepeats());
         compareButton.addActionListener(e -> onCompare());
+        plagiarismButton.addActionListener(e -> onPlagiarismCheck());
         autoBuildButton.addActionListener(e -> buildAutomaton(null));
         autoCountButton.addActionListener(e -> onAutomatonCount());
         autoQueryField.addActionListener(e -> onAutomatonCount());
@@ -456,6 +539,9 @@ public class DocumentSimilarityPanel extends ModulePanel {
         queryInfo.setText(" ");
         repeatsModel.setRowCount(0);
         repeatsInfo.setText(" ");
+        plagiarismSummary.setText(" ");
+        plagiarismWitness.setText(" ");
+        plagiarismModel.setRowCount(0);
         autoStates.setText(NONE);
         autoDistinct.setText(NONE);
         autoBuilt.setText(NONE);
@@ -640,6 +726,66 @@ public class DocumentSimilarityPanel extends ModulePanel {
             setStatus("Kasai LCP failed");
             showError(err);
         }, repeatsButton);   }
+
+    private void onPlagiarismCheck() {
+        int indexA = plagComboA.getSelectedIndex();
+        int indexB = plagComboB.getSelectedIndex();
+        int indexC = plagComboC.getSelectedIndex();
+        if (indexA < 0 || indexB < 0 || indexC < 0) {
+            setStatus("Select three submissions first.");
+            return;
+        }
+        if (indexA == indexB || indexA == indexC || indexB == indexC) {
+            setStatus("Choose three different submissions.");
+            plagiarismSummary.setText("Three different submissions are required.");
+            return;
+        }
+
+        List<Assignment> assignments = dataStore.assignments();
+        Assignment a = assignments.get(indexA);
+        Assignment b = assignments.get(indexB);
+        Assignment d = assignments.get(indexC);
+
+        List<M2SuffixStructures.Submission> submissions = Arrays.asList(
+                new M2SuffixStructures.Submission(a.id, a.text),
+                new M2SuffixStructures.Submission(b.id, b.text),
+                new M2SuffixStructures.Submission(d.id, d.text));
+
+        plagiarismButton.setEnabled(false);
+        setStatus("Comparing 3 submissions with suffix array + Kasai LCP ...");
+        runAsync(() -> M2SuffixStructures.plagiarismCheck(submissions, 40), result -> {
+            plagiarismButton.setEnabled(true);
+            plagiarismModel.setRowCount(0);
+            for (M2SuffixStructures.PlagiarismPair pair : result.pairs) {
+                plagiarismModel.addRow(new Object[] {
+                        pair.idA + " vs " + pair.idB,
+                        String.format("%.1f%%", pair.similarityPercent),
+                        String.format("%.1f%%", pair.coverageA),
+                        String.format("%.1f%%", pair.coverageB),
+                        pair.longestSharedPhrase + " chars",
+                        pair.assessment
+                });
+            }
+            plagiarismSummary.setText(result.pairs.size() + " pair(s) analyzed · "
+                    + result.flaggedPairs + " high-overlap pair(s)");
+            M2SuffixStructures.PlagiarismPair strongest = result.pairs.stream()
+                    .max((x, y) -> Double.compare(x.similarityPercent, y.similarityPercent))
+                    .orElse(null);
+            if (strongest != null && !strongest.witnessPhrase.isEmpty()) {
+                plagiarismWitness.setText("<html>Example shared text: \""
+                        + escapeHtml(preview(strongest.witnessPhrase, 240)) + "\"</html>");
+            } else {
+                plagiarismWitness.setText("No significant shared phrase reached the 40-character threshold.");
+            }
+            console.appendLine("plagiarism check: " + result.pairs.size()
+                    + " pairs, " + result.flaggedPairs + " high-overlap pair(s)");
+            setStatus("Plagiarism check complete");
+        }, err -> {
+            plagiarismButton.setEnabled(true);
+            setStatus("Plagiarism check failed");
+            showError(err);
+        }, plagiarismButton);
+    }
 
     private void onCompare() {
         int indexA = simComboA.getSelectedIndex();

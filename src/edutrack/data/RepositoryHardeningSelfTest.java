@@ -27,6 +27,7 @@ import edutrack.model.Faculty;
 import edutrack.model.Student;
 import edutrack.modules.M1AhoCorasick;
 import edutrack.modules.M2SuffixAutomaton;
+import edutrack.modules.M2SuffixStructures;
 import edutrack.modules.M3DynamicProgramming;
 import edutrack.modules.M4FlowNetwork;
 import edutrack.modules.M5Graph;
@@ -487,6 +488,26 @@ public final class RepositoryHardeningSelfTest {
                             new int[2][2]));
         });
 
+        check("Kasai plagiarism checker compares three submissions", () -> {
+            String shared = "Students analyze algorithms using suffix arrays and Kasai longest common prefix tables. "
+                    + "This exact methodology should only appear when the same material is reused.";
+            M2SuffixStructures.PlagiarismReport report = M2SuffixStructures.plagiarismCheck(
+                    List.of(
+                            new M2SuffixStructures.Submission("STU-1", shared + " Original ending A."),
+                            new M2SuffixStructures.Submission("STU-2", shared + " Original ending B."),
+                            new M2SuffixStructures.Submission("STU-3", "A completely unrelated submission about campus events and clubs.")),
+                    40);
+            assertTrue(report.pairs.size() == 3, "expected all 3 submission pairs");
+            M2SuffixStructures.PlagiarismPair first = report.pairs.get(0);
+            assertTrue(first.longestSharedPhrase >= 40 && first.similarityPercent > 0,
+                    "Kasai overlap was not detected");
+            assertTrue(report.flaggedPairs >= 1, "copied-looking overlap was not flagged");
+            expectThrows(IllegalArgumentException.class,
+                    () -> M2SuffixStructures.plagiarismCheck(
+                            List.of(new M2SuffixStructures.Submission("A", "x"),
+                                    new M2SuffixStructures.Submission("B", "y")), 40));
+        });
+
         check("suffix-structure APIs reject malformed suffix arrays", () -> {
             expectThrows(IllegalArgumentException.class,
                     () -> edutrack.modules.M2SuffixArray.findOccurrences("banana",
@@ -605,4 +626,4 @@ public final class RepositoryHardeningSelfTest {
         } catch (IOException ignored) {
         }
     }
-}
+} 
