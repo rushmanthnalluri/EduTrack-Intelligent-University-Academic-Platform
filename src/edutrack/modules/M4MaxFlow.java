@@ -11,6 +11,8 @@ import java.util.Queue;
  */
 public final class M4MaxFlow {
 
+    private static final int RECURSION_NODE_CAP = 4096;
+
     private M4MaxFlow() {
     }
 
@@ -177,6 +179,10 @@ public final class M4MaxFlow {
     }
 
     private static void checkEndpoints(M4FlowNetwork net, int source, int sink) {
+        if (net.nodeCount() > RECURSION_NODE_CAP) {
+            throw new IllegalArgumentException("recursive max-flow implementation is limited to "
+                    + RECURSION_NODE_CAP + " nodes");
+        }
         if (source < 0 || source >= net.nodeCount() || sink < 0 || sink >= net.nodeCount()) {
             throw new IllegalArgumentException("source/sink out of range for network with "
                     + net.nodeCount() + " nodes: source=" + source + ", sink=" + sink);
