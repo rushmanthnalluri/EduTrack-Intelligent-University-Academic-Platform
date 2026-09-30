@@ -158,7 +158,7 @@ public class ExamSchedulingPanel extends ModulePanel {
         graphRevision = dataStore.revision();
     }
 
-    /** Rebuilds all graph-derived scheduling state after live CRUD changes.
+    /** Rebuilds all graph-derived scheduling state after live CRUD changes. */
     public void refresh() {
         if (graphRevision == dataStore.revision()) {
             return;
