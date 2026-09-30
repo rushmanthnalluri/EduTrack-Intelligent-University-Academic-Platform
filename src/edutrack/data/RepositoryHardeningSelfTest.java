@@ -465,7 +465,7 @@ public final class RepositoryHardeningSelfTest {
             final edutrack.gui.panels.SearchPanel[] holder = new edutrack.gui.panels.SearchPanel[1];
             SwingUtilities.invokeAndWait(() -> holder[0] = new edutrack.gui.panels.SearchPanel(ds));
             java.lang.reflect.Method method = holder[0].getClass()
-                    .getDeclaredMethod("suggestionDetails", String.class);
+                    .getDeclaredMethod("suggestionDetails", SearchResult.class);
             method.setAccessible(true);
             Object body = method.invoke(holder[0],
                     new SearchResult("Suggestion", "RES-1", "Did you mean: Introduction to Algorithms",
