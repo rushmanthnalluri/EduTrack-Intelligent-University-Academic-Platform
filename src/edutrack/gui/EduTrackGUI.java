@@ -30,6 +30,7 @@ import javax.swing.border.LineBorder;
 import edutrack.data.DataStore;
 import edutrack.gui.panels.AcademicSearchPanel;
 import edutrack.gui.panels.AnalyticsPanel;
+import edutrack.gui.panels.BenchmarkArenaPanel;
 import edutrack.gui.panels.DocumentSimilarityPanel;
 import edutrack.gui.panels.ExamSchedulingPanel;
 import edutrack.gui.panels.ExamsPanel;
@@ -85,6 +86,7 @@ public class EduTrackGUI extends JFrame {
         cards.add(new ManagePanel(dataStore), "manage");
         cards.add(new ExamsPanel(dataStore), "exams");
         cards.add(new AnalyticsPanel(dataStore), "analytics");
+        cards.add(new BenchmarkArenaPanel(dataStore), "benchmark-arena");
         cards.add(new ReportsPanel(dataStore), "reports");
 
         SearchPanel searchPanel = new SearchPanel(dataStore);
@@ -190,6 +192,7 @@ public class EduTrackGUI extends JFrame {
         addNavButton(sidebar, "manage", "Manage Records");
         addNavButton(sidebar, "exams", "Exams & Grades");
         addNavButton(sidebar, "analytics", "Activity Analytics");
+        addNavButton(sidebar, "benchmark-arena", "Benchmark Arena");
         addNavButton(sidebar, "reports", "Reports & Transcripts");
 
         addSectionLabel(sidebar, "ALGORITHMS");
