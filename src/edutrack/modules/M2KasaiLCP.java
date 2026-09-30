@@ -3,7 +3,20 @@ package edutrack.modules;
 public class M2KasaiLCP {
 
     public static int[] buildLCP(String text, int[] sa) {
+        if (text == null || sa == null) {
+            throw new IllegalArgumentException("text and suffix array must not be null");
+        }
         int n = text.length();
+        if (sa.length != n) {
+            throw new IllegalArgumentException("suffix array length must equal text length");
+        }
+        boolean[] seen = new boolean[n];
+        for (int pos : sa) {
+            if (pos < 0 || pos >= n || seen[pos]) {
+                throw new IllegalArgumentException("suffix array is not a permutation of text positions");
+            }
+            seen[pos] = true;
+        }
         if (n < 2) {
             return new int[0];
         }
