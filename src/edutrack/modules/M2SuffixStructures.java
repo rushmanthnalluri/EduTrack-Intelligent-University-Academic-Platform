@@ -477,7 +477,7 @@ public class M2SuffixStructures {
         int n2 = t2.length();
 
         if (n1 == 0 || n2 == 0) {
-            return new PlagiarismPair(a.id, b.id, 0, 0, 0, 0.0, 0.0, "",
+            return new PlagiarismPair(a.id, b.id, 0, 0, 0, 0.0, 0.0, 0.0, "",
                     "Insufficient text for comparison.", 0L);
         }
 
