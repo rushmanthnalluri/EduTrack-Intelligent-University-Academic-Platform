@@ -11,6 +11,7 @@ public class M6RandomizedQuickSort {
     }
 
     public static long sort(double[] a, Random rnd) {
+        if (a == null || rnd == null) throw new IllegalArgumentException("array and random source must not be null");
         long[] comparisons = new long[1];
         sort(a, 0, a.length - 1, rnd, comparisons);
         return comparisons[0];
@@ -46,6 +47,7 @@ public class M6RandomizedQuickSort {
     }
 
     public static long sortDeterministic(double[] a) {
+        if (a == null) throw new IllegalArgumentException("array must not be null");
         long comparisons = 0;
         int[] stack = new int[64];
         int top = 0;
@@ -80,6 +82,7 @@ public class M6RandomizedQuickSort {
     }
 
     public static long sortStudents(Student[] a, Random rnd) {
+        if (a == null || rnd == null) throw new IllegalArgumentException("students array and random source must not be null");
         long[] comparisons = new long[1];
         sortStudents(a, 0, a.length - 1, rnd, comparisons);
         return comparisons[0];
@@ -115,6 +118,7 @@ public class M6RandomizedQuickSort {
     }
 
     public static int compareStudents(Student x, Student y) {
+        if (x == null || y == null) throw new IllegalArgumentException("students must not be null");
         int c = Double.compare(y.cgpa, x.cgpa);
         if (c != 0) {
             return c;
