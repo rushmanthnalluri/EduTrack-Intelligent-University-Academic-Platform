@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import edutrack.data.DataSnapshot;
+
 import edutrack.model.Course;
 import edutrack.model.ExamRecord;
 import edutrack.model.Faculty;
@@ -108,14 +110,20 @@ public final class CsvStore {
     }
 
     public static void saveAll(DataStore ds, Path dir) throws IOException {
+        if (ds == null) throw new IllegalArgumentException("data store must not be null");
+        saveAll(ds.snapshot(), dir);
+    }
+
+    public static void saveAll(DataSnapshot snapshot, Path dir) throws IOException {
+        if (snapshot == null) throw new IllegalArgumentException("snapshot must not be null");
         Files.createDirectories(dir);
         Path staging = dir.resolve(".edutrack-save-" + UUID.randomUUID());
         Files.createDirectories(staging);
         try {
-            writeString(staging.resolve(STUDENTS_FILE), studentsCsv(ds));
-            writeString(staging.resolve(FACULTY_FILE), facultyCsv(ds));
-            writeString(staging.resolve(COURSES_FILE), coursesCsv(ds));
-            writeString(staging.resolve(EXAMS_FILE), examsCsv(ds));
+            writeString(staging.resolve(STUDENTS_FILE), studentsCsv(snapshot));
+            writeString(staging.resolve(FACULTY_FILE), facultyCsv(snapshot));
+            writeString(staging.resolve(COURSES_FILE), coursesCsv(snapshot));
+            writeString(staging.resolve(EXAMS_FILE), examsCsv(snapshot));
 
             String manifest = MANIFEST_FILE + "\n"
                     + STUDENTS_FILE + "=" + sha256(staging.resolve(STUDENTS_FILE)) + "\n"
@@ -134,9 +142,9 @@ public final class CsvStore {
         }
     }
 
-    private static String studentsCsv(DataStore ds) {
+    private static String studentsCsv(DataSnapshot snapshot) {
         StringBuilder sb = new StringBuilder("id,name,program,semester,cgpa,enrolledCourses\n");
-        for (Student s : ds.students()) {
+        for (Student s : snapshot.students()) {
             sb.append(s.id).append(',')
                     .append(escape(s.name)).append(',')
                     .append(escape(s.program)).append(',')
@@ -147,9 +155,9 @@ public final class CsvStore {
         return sb.toString();
     }
 
-    private static String facultyCsv(DataStore ds) {
+    private static String facultyCsv(DataSnapshot snapshot) {
         StringBuilder sb = new StringBuilder("id,name,department,expertise\n");
-        for (Faculty f : ds.faculty()) {
+        for (Faculty f : snapshot.faculty()) {
             sb.append(f.id).append(',')
                     .append(escape(f.name)).append(',')
                     .append(escape(f.department)).append(',')
@@ -158,9 +166,9 @@ public final class CsvStore {
         return sb.toString();
     }
 
-    private static String coursesCsv(DataStore ds) {
+    private static String coursesCsv(DataSnapshot snapshot) {
         StringBuilder sb = new StringBuilder("code,name,department,credits,semester\n");
-        for (Course c : ds.courses()) {
+        for (Course c : snapshot.courses()) {
             sb.append(escape(c.code)).append(',')
                     .append(escape(c.name)).append(',')
                     .append(escape(c.department)).append(',')
@@ -170,9 +178,9 @@ public final class CsvStore {
         return sb.toString();
     }
 
-    private static String examsCsv(DataStore ds) {
+    private static String examsCsv(DataSnapshot snapshot) {
         StringBuilder sb = new StringBuilder("studentId,courseCode,midsem,endsem\n");
-        for (ExamRecord r : ds.examRecords()) {
+        for (ExamRecord r : snapshot.examRecords()) {
             sb.append(r.studentId).append(',')
                     .append(escape(r.courseCode)).append(',')
                     .append(r.midsem).append(',')
