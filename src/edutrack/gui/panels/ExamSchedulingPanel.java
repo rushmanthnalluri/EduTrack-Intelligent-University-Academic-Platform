@@ -45,7 +45,6 @@ public class ExamSchedulingPanel extends ModulePanel {
     private M5Graph graph;
     private int[] degreeOrder;
     private long graphRevision = -1;
-    private long graphRevision = -1;
     private final M5GraphCanvas canvas;
     private final JLabel statsLabel;
 
