@@ -259,8 +259,41 @@ public final class CsvStore {
     private static List<String[]> parse(Path file) throws IOException {
         String content = Files.readString(file, StandardCharsets.UTF_8);
         List<String[]> all = parseCsvContent(content);
-        if (!all.isEmpty()) {
-            all.remove(0); // header
+        if (all.isEmpty()) {
+            throw new IOException("CSV file is empty: " + file.getFileName());
+        }
+        String expectedHeader;
+        int expectedColumns;
+        switch (file.getFileName().toString()) {
+            case STUDENTS_FILE:
+                expectedHeader = STUDENTS_HEADER;
+                expectedColumns = 6;
+                break;
+            case FACULTY_FILE:
+                expectedHeader = FACULTY_HEADER;
+                expectedColumns = 4;
+                break;
+            case COURSES_FILE:
+                expectedHeader = COURSES_HEADER;
+                expectedColumns = 5;
+                break;
+            case EXAMS_FILE:
+                expectedHeader = EXAMS_HEADER;
+                expectedColumns = 4;
+                break;
+            default:
+                throw new IOException("Unsupported CSV file: " + file.getFileName());
+        }
+        if (all.get(0).length != expectedColumns
+                || !expectedHeader.equals(String.join(",", all.get(0)))) {
+            throw new IOException("Invalid CSV header/schema in " + file.getFileName());
+        }
+        all.remove(0);
+        for (int i = 0; i < all.size(); i++) {
+            if (all.get(i).length != expectedColumns) {
+                throw new IOException("Invalid column count in " + file.getFileName()
+                        + " at data row " + (i + 2));
+            }
         }
         return all;
     }
