@@ -10,17 +10,23 @@ import java.util.List;
  */
 public class M4FlowNetwork {
 
-    public static class Edge {
+    public static final class Edge {
         public final int to;
         public final int rev;      // index of the reverse edge in edgesFrom(to)
         public final int capacity;
-        public int flow;
+        private int flow;
+        private final M4FlowNetwork owner;
 
-        Edge(int to, int rev, int capacity) {
+        Edge(M4FlowNetwork owner, int to, int rev, int capacity) {
+            this.owner = owner;
             this.to = to;
             this.rev = rev;
             this.capacity = capacity;
             this.flow = 0;
+        }
+
+        public int flow() {
+            return flow;
         }
 
         public int residualCapacity() {
@@ -53,8 +59,8 @@ public class M4FlowNetwork {
         if (capacity < 0) {
             throw new IllegalArgumentException("capacity must be non-negative");
         }
-        Edge forward = new Edge(to, adj.get(to).size(), capacity);
-        Edge backward = new Edge(from, adj.get(from).size(), 0);
+        Edge forward = new Edge(this, to, adj.get(to).size(), capacity);
+        Edge backward = new Edge(this, from, adj.get(from).size(), 0);
         adj.get(from).add(forward);
         adj.get(to).add(backward);
     }
@@ -67,6 +73,9 @@ public class M4FlowNetwork {
     /** Pushes {@code amount} units of flow along edge e (negative amounts cancel flow). */
     public void augment(Edge e, int amount) {
         if (e == null) throw new IllegalArgumentException("edge must not be null");
+        if (e.owner != this) {
+            throw new IllegalArgumentException("edge belongs to a different flow network");
+        }
         if (e.to < 0 || e.to >= nodeCount() || e.rev < 0 || e.rev >= adj.get(e.to).size()) {
             throw new IllegalArgumentException("edge is not valid for this network");
         }
