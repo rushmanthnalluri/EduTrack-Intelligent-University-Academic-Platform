@@ -44,7 +44,7 @@ public class M6ParallelMergeSort {
                 a[k] = aux[j++];
             } else if (j >= hi) {
                 a[k] = aux[i++];
-            } else if (aux[j] < aux[i]) {
+            } else if (Double.compare(aux[j], aux[i]) < 0) {
                 a[k] = aux[j++];
             } else {
                 a[k] = aux[i++];

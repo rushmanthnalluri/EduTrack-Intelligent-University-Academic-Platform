@@ -126,16 +126,21 @@ jobs:
           fi
           git commit -m "Refresh GUI screenshots"
 
-          # The capture can overlap with another main-branch writer.
-          # Rebase and retry so a transient non-fast-forward cannot fail CI.
+          # Never rebase a screenshot captured from an older source onto a newer
+          # main commit. If main moved, abandon this publication and let the newer
+          # push run its own screenshot capture.
           for attempt in 1 2 3; do
             git fetch origin main
-            git rebase origin/main
+            latest="$(git rev-parse origin/main)"
+            if [ "$latest" != "$GITHUB_SHA" ]; then
+              echo "Main advanced to $latest; refusing to publish screenshots captured from $GITHUB_SHA."
+              exit 0
+            fi
             if git push origin HEAD:main; then
               exit 0
             fi
             sleep 2
           done
 
-          echo "Unable to publish screenshots after 3 attempts."
+          echo "Unable to publish screenshots without risking a stale source revision."
           exit 1

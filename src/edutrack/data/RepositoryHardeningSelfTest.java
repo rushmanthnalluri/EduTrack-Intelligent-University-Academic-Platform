@@ -27,8 +27,11 @@ import edutrack.modules.M1AhoCorasick;
 import edutrack.modules.M2SuffixAutomaton;
 import edutrack.modules.M3DynamicProgramming;
 import edutrack.modules.M4FlowNetwork;
+import edutrack.modules.M5Graph;
+import edutrack.modules.M5Reductions;
 import edutrack.modules.M5DPLLSolver;
 import edutrack.modules.M6ReservoirSampler;
+import modules.ZFunctionSearch;
 import edutrack.search.SearchResult;
 import edutrack.search.SearchService;
 
@@ -91,6 +94,69 @@ public final class RepositoryHardeningSelfTest {
             assertTrue(ds.revision() == rev + 1, "revision did not increment");
         });
 
+        check("DataStore snapshot is atomic across collections", () -> {
+            DataStore ds = new DataStore(false);
+            DataSnapshot snapshot = ds.snapshot();
+            assertTrue(snapshot.revision() == ds.revision(), "snapshot revision mismatch");
+            assertTrue(snapshot.studentsById().get(1000) == snapshot.students().get(0),
+                    "snapshot index does not point to snapshot student");
+            ds.enroll(1000, "CS401");
+            assertTrue(snapshot.revision() != ds.revision(), "revision did not change");
+            assertTrue(!snapshot.studentsById().get(1000).enrolledCourses.contains("CS401"),
+                    "old snapshot changed after mutation");
+        });
+
+        check("course delete and re-add restores supporting records", () -> {
+            DataStore ds = new DataStore(false);
+            assertTrue(ds.removeCourse("CS101"), "initial course removal failed");
+            ds.addCourse(new Course("CS101", "Programming Fundamentals", "Computer Science", 4, 1));
+            assertTrue(ds.assignments().stream().filter(a -> a.courseCode.equals("CS101")).count() == 2,
+                    "re-added course lacks assignments");
+            assertTrue(ds.resources().stream().anyMatch(r -> r.courseCode.equals("CS101")),
+                    "re-added course lacks resource");
+            assertTrue(ds.faculty().stream().anyMatch(f -> f.expertise.contains("CS101")),
+                    "re-added course lacks faculty expertise");
+        });
+
+        check("course codes reject persistence-unsafe separators", () -> {
+            expectThrows(IllegalArgumentException.class,
+                    () -> new Course("CS;201", "Bad", "Computer Science", 3, 1));
+        });
+
+        check("CSV header and row schema are validated", () -> {
+            Path dir = Files.createTempDirectory("edutrack-csv-schema-test");
+            try {
+                Files.writeString(dir.resolve(CsvStore.COURSES_FILE),
+                        "WRONG,HEADER,SCHEMA,4,1\nCS101,Name,Dept,4,1\n", StandardCharsets.UTF_8);
+                expectThrows(IOException.class, () -> CsvStore.loadCourses(dir));
+                Files.writeString(dir.resolve(CsvStore.COURSES_FILE),
+                        "code,name,department,credits,semester\nCS101,Name,Dept,4\n", StandardCharsets.UTF_8);
+                expectThrows(IOException.class, () -> CsvStore.loadCourses(dir));
+            } finally {
+                deleteRecursively(dir);
+            }
+        });
+
+        check("Z-function handles dollar signs in pattern and text", () -> {
+            assertTrue(ZFunctionSearch.search("a$$a$", "a$").equals(List.of(0, 3)),
+                    "Z search missed matches containing dollar signs");
+        });
+
+        check("3-CNF scheduling enforces exactly one slot and remains 3-CNF", () -> {
+            M5Graph g = new M5Graph(1);
+            List<int[]> clauses = M5Reductions.examScheduling3CNF(g, 4);
+            for (int[] clause : clauses) {
+                assertTrue(clause.length == 3, "non-3-literal clause produced");
+            }
+            M5DPLLSolver.Result result = M5DPLLSolver.solve(5, clauses);
+            assertTrue(result.status == M5DPLLSolver.Status.SAT, "valid scheduling formula is not SAT");
+            int selected = 0;
+            for (int slot = 0; slot < 4; slot++) {
+                if (result.assignment[slot + 1]) selected++;
+            }
+            assertTrue(selected == 1, "assignment selected " + selected + " slots");
+        });
+
         check("saved-data validator rejects empty and broken datasets", () -> {
             expectThrows(IllegalArgumentException.class,
                     () -> DataStore.validateLoadedData(List.of(), List.of(), List.of(), List.of()));
@@ -103,11 +169,13 @@ public final class RepositoryHardeningSelfTest {
 
             Student badRef = new Student(2, "B", "Program", 1, 8.0, List.of("NOPE"));
             expectThrows(IllegalArgumentException.class,
-                    () -> DataStore.validateLoadedData(List.of(c), List.of(good, badRef), List.of(f), List.of(e)));
+                    () -> DataStore.validateLoadedData(List.of(c), List.of(good, badRef),
+                            List.of(f), List.of(e)));
 
             Student duplicate = new Student(1, "B", "Program", 1, 8.0, List.of("C1"));
             expectThrows(IllegalArgumentException.class,
-                    () -> DataStore.validateLoadedData(List.of(c), List.of(good, duplicate), List.of(f), List.of(e)));
+                    () -> DataStore.validateLoadedData(List.of(c), List.of(good, duplicate),
+                            List.of(f), List.of(e)));
         });
 
         check("CSV save publishes a verifiable complete snapshot", () -> {
@@ -167,6 +235,24 @@ public final class RepositoryHardeningSelfTest {
                     () -> M3DynamicProgramming.bitmaskBestSubset(new int[] { 1 }, new long[] { 1 }, -1));
         });
 
+        check("reservoir sampling does not preallocate pathological k", () -> {
+            M6ReservoirSampler.SampleResult<Integer> result =
+                    M6ReservoirSampler.sample(List.of(1, 2, 3), 1_000_000_000, new java.util.Random(1));
+            assertTrue(result.reservoir.size() == 3 && result.seen == 3,
+                    "reservoir did not adapt to a short stream");
+        });
+
+        check("model constructors reject invalid academic records", () -> {
+            expectThrows(IllegalArgumentException.class, () -> new ExamRecord(1, "CS101", -1, 10));
+            expectThrows(IllegalArgumentException.class, () -> new ExamRecord(1, null, 10, 10));
+            expectThrows(IllegalArgumentException.class,
+                    () -> new edutrack.model.Assignment("", "CS101", "Title", "Text"));
+            expectThrows(IllegalArgumentException.class,
+                    () -> new edutrack.model.LearningResource("R", "Title", "", "CS101"));
+            expectThrows(IllegalArgumentException.class,
+                    () -> new edutrack.model.ActivityEvent(-1, 1, "LOGIN", "-"));
+        });
+
         check("reservoir sampling rejects negative k", () -> {
             expectThrows(IllegalArgumentException.class,
                     () -> M6ReservoirSampler.sample(List.of(1, 2, 3), -1, new java.util.Random(1)));
@@ -176,6 +262,16 @@ public final class RepositoryHardeningSelfTest {
             M2SuffixAutomaton sam = M2SuffixAutomaton.build("banana");
             assertTrue(sam.contains(""), "empty pattern should be contained");
             assertTrue(sam.countOccurrences("") == 7, "expected 7 empty-pattern occurrences");
+        });
+
+        check("fuzzy search covers faculty, assignment and resource entities", () -> {
+            DataStore ds = new DataStore(false);
+            assertTrue(!SearchService.search(ds, "Dr. Anil Kapor").isEmpty(),
+                    "faculty fuzzy search returned no suggestion");
+            assertTrue(!SearchService.search(ds, "Data Structurs Assignment 1").isEmpty(),
+                    "assignment fuzzy search returned no suggestion");
+            assertTrue(!SearchService.search(ds, "Introduction to Algorithns").isEmpty(),
+                    "resource fuzzy search returned no suggestion");
         });
 
         check("smart search finds faculty and resource IDs", () -> {

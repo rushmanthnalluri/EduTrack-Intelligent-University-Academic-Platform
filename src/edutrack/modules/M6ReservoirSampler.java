@@ -31,7 +31,7 @@ public class M6ReservoirSampler {
         if (k < 0) {
             throw new IllegalArgumentException("k must be non-negative");
         }
-        List<T> reservoir = new ArrayList<>(k);
+        List<T> reservoir = new ArrayList<>();
         long seen = 0;
         for (T item : stream) {
             if (filter != null && !filter.test(item)) {

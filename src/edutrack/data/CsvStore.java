@@ -32,6 +32,10 @@ public final class CsvStore {
     public static final String COURSES_FILE = "courses.csv";
     public static final String EXAMS_FILE = "exams.csv";
     private static final String MANIFEST_FILE = ".edutrack.manifest";
+    private static final String STUDENTS_HEADER = "id,name,program,semester,cgpa,enrolledCourses";
+    private static final String FACULTY_HEADER = "id,name,department,expertise";
+    private static final String COURSES_HEADER = "code,name,department,credits,semester";
+    private static final String EXAMS_HEADER = "studentId,courseCode,midsem,endsem";
 
     private CsvStore() {
     }
@@ -259,8 +263,41 @@ public final class CsvStore {
     private static List<String[]> parse(Path file) throws IOException {
         String content = Files.readString(file, StandardCharsets.UTF_8);
         List<String[]> all = parseCsvContent(content);
-        if (!all.isEmpty()) {
-            all.remove(0); // header
+        if (all.isEmpty()) {
+            throw new IOException("CSV file is empty: " + file.getFileName());
+        }
+        String expectedHeader;
+        int expectedColumns;
+        switch (file.getFileName().toString()) {
+            case STUDENTS_FILE:
+                expectedHeader = STUDENTS_HEADER;
+                expectedColumns = 6;
+                break;
+            case FACULTY_FILE:
+                expectedHeader = FACULTY_HEADER;
+                expectedColumns = 4;
+                break;
+            case COURSES_FILE:
+                expectedHeader = COURSES_HEADER;
+                expectedColumns = 5;
+                break;
+            case EXAMS_FILE:
+                expectedHeader = EXAMS_HEADER;
+                expectedColumns = 4;
+                break;
+            default:
+                throw new IOException("Unsupported CSV file: " + file.getFileName());
+        }
+        if (all.get(0).length != expectedColumns
+                || !expectedHeader.equals(String.join(",", all.get(0)))) {
+            throw new IOException("Invalid CSV header/schema in " + file.getFileName());
+        }
+        all.remove(0);
+        for (int i = 0; i < all.size(); i++) {
+            if (all.get(i).length != expectedColumns) {
+                throw new IOException("Invalid column count in " + file.getFileName()
+                        + " at data row " + (i + 2));
+            }
         }
         return all;
     }

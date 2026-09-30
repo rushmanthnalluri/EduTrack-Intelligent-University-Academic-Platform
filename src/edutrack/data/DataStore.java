@@ -253,6 +253,13 @@ public class DataStore {
         return revision;
     }
 
+    /** Atomically captures every collection/index reference for one revision. */
+    public synchronized DataSnapshot snapshot() {
+        return new DataSnapshot(revision, loadedFromDisk,
+                students, faculty, courses, assignments, resources, activityStream,
+                examRecords, studentsById, coursesByCode, rooms, timeSlots);
+    }
+
     // ------------------------------------------------------------------
     // Record management (copy-on-write: CRUD swaps in a fresh list, so
     // background readers keep a consistent snapshot — re-fetch after edits).
@@ -356,9 +363,51 @@ public class DataStore {
         if (course.credits <= 0 || course.semester < 1 || course.semester > 8) {
             throw new IllegalArgumentException("Credits must be > 0 and semester 1..8");
         }
+        if (!course.code.matches("[A-Za-z0-9]+")) {
+            throw new IllegalArgumentException("Course code must contain only letters and digits");
+        }
         List<Course> copy = new ArrayList<>(courses);
         copy.add(course);
         courses = immutable(copy);
+
+        List<Assignment> newAssignments = new ArrayList<>(assignments);
+        Random assignmentRandom = new Random(SEED + 2 + course.code.hashCode());
+        for (int n = 1; n <= 2; n++) {
+            newAssignments.add(new Assignment("ASG-" + course.code + "-" + n, course.code,
+                    course.name + " Assignment " + n,
+                    buildAssignmentText(assignmentRandom, course, n)));
+        }
+        assignments = immutable(newAssignments);
+
+        int nextResourceId = 1;
+        for (LearningResource resource : resources) {
+            if (resource.id.startsWith("RES-")) {
+                try {
+                    nextResourceId = Math.max(nextResourceId,
+                            Integer.parseInt(resource.id.substring(4)) + 1);
+                } catch (NumberFormatException ignored) {
+                    // Ignore non-generated resource IDs.
+                }
+            }
+        }
+        List<LearningResource> newResources = new ArrayList<>(resources);
+        newResources.add(new LearningResource("RES-" + nextResourceId,
+                course.name + " Lecture Notes", "notes", course.code));
+        resources = immutable(newResources);
+
+        List<Faculty> facultyCopy = new ArrayList<>(faculty);
+        for (int i = 0; i < facultyCopy.size(); i++) {
+            Faculty f = facultyCopy.get(i);
+            if (f.department.equals(course.department) && !f.expertise.contains(course.code)) {
+                List<String> expertise = new ArrayList<>(f.expertise);
+                expertise.add(course.code);
+                expertise.sort(null);
+                facultyCopy.set(i, new Faculty(f.id, f.name, f.department, expertise));
+                break;
+            }
+        }
+        faculty = immutable(facultyCopy);
+
         rebuildIndexes();
         dirty = true;
         revision++;
@@ -494,6 +543,9 @@ public class DataStore {
     }
 
     private Course requireCourse(String code) {
+        if (code == null || code.isBlank() || !code.matches("[A-Za-z0-9]+")) {
+            throw new IllegalArgumentException("Course code must contain only letters and digits");
+        }
         Course course = coursesByCode.get(code);
         if (course == null) {
             throw new IllegalArgumentException("Unknown course code: " + code);

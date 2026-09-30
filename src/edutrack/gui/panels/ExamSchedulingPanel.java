@@ -42,8 +42,8 @@ public class ExamSchedulingPanel extends ModulePanel {
     private static final int CONTROL_COLUMN_WIDTH = 330;
     private static final int CONSOLE_COLUMNS = 34;
 
-    private final M5Graph graph;
-    private final int[] degreeOrder;
+    private M5Graph graph;
+    private int[] degreeOrder;
     private final M5GraphCanvas canvas;
     private final JLabel statsLabel;
 
@@ -66,16 +66,7 @@ public class ExamSchedulingPanel extends ModulePanel {
     public ExamSchedulingPanel(DataStore dataStore) {
         super(dataStore);
 
-        graph = M5Graph.courseConflictGraph(dataStore);
-        degreeOrder = graph.degreeOrder();
-        M5Reductions.CliqueSearch topClique = M5Reductions.maxClique(graph);
-        int minDeg = Integer.MAX_VALUE;
-        int maxDeg = 0;
-        for (int v = 0; v < graph.n; v++) {
-            minDeg = Math.min(minDeg, graph.degree(v));
-            maxDeg = Math.max(maxDeg, graph.degree(v));
-        }
-
+        rebuildGraphState();
         canvas = new M5GraphCanvas();
         canvas.setGraph(graph);
 
@@ -91,11 +82,11 @@ public class ExamSchedulingPanel extends ModulePanel {
         subtitle.setFont(GuiTheme.BODY);
         subtitle.setForeground(GuiTheme.MUTED);
         subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-        statsLabel = new JLabel(graph.n + " courses · " + graph.edgeCount() + " conflict edges"
-                + " · degree range " + minDeg + "–" + maxDeg
-                + " · maximum clique " + topClique.clique.length + " courses");
+        statsLabel = new JLabel();
         statsLabel.setFont(GuiTheme.BODY_BOLD);
         statsLabel.setForeground(GuiTheme.ACCENT_DARK);
+        statsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         statsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         header.add(title);
         header.add(Box.createVerticalStrut(4));
@@ -142,6 +133,36 @@ public class ExamSchedulingPanel extends ModulePanel {
 
         add(header, BorderLayout.NORTH);
         add(buildBody(), BorderLayout.CENTER);
+    }
+
+    private void rebuildGraphState() {
+        graph = M5Graph.courseConflictGraph(dataStore);
+        degreeOrder = graph.degreeOrder();
+        M5Reductions.CliqueSearch topClique = M5Reductions.maxClique(graph);
+        int minDeg = graph.n == 0 ? 0 : Integer.MAX_VALUE;
+        int maxDeg = 0;
+        for (int v = 0; v < graph.n; v++) {
+            minDeg = Math.min(minDeg, graph.degree(v));
+            maxDeg = Math.max(maxDeg, graph.degree(v));
+        }
+        if (statsLabel != null) {
+            statsLabel.setText(graph.n + " courses · " + graph.edgeCount() + " conflict edges"
+                    + " · degree range " + minDeg + "–" + maxDeg
+                    + " · maximum clique " + topClique.clique.length + " courses");
+        }
+        if (canvas != null) {
+            canvas.setGraph(graph);
+        }
+    }
+
+    /** Rebuilds all graph-derived scheduling state after live CRUD changes. */
+    public void refresh() {
+        rebuildGraphState();
+        scheduleModel.setRowCount(0);
+        timetableCaption.setText("Timetable: —");
+        setStatus(GuiTheme.MUTED, "Scheduling graph refreshed from the live dataset.");
+        vcConsole.setText("");
+        reductionConsole.setText("");
     }
 
     private static void narrowConsole(ConsoleArea console) {

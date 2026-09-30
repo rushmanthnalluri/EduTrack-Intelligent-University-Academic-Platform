@@ -99,16 +99,39 @@ public final class M4Konig {
      */
     private static void checkInputs(int leftCount, int rightCount, List<List<Integer>> adj,
             int[] matchLeft, int[] matchRight) {
-        if (matchLeft.length != leftCount || matchRight.length != rightCount || adj.size() < leftCount) {
-            throw new IllegalArgumentException("matching arrays do not fit the graph: leftCount="
-                    + leftCount + ", rightCount=" + rightCount + ", matchLeft.length=" + matchLeft.length
-                    + ", matchRight.length=" + matchRight.length + ", adjacency lists=" + adj.size());
+        if (leftCount < 0 || rightCount < 0 || adj == null || matchLeft == null || matchRight == null) {
+            throw new IllegalArgumentException("graph and matching inputs must be non-null with non-negative sizes");
+        }
+        if (matchLeft.length != leftCount || matchRight.length != rightCount || adj.size() != leftCount) {
+            throw new IllegalArgumentException("matching arrays/adjacency do not fit the graph");
+        }
+        for (int u = 0; u < leftCount; u++) {
+            List<Integer> edges = adj.get(u);
+            if (edges == null) {
+                throw new IllegalArgumentException("adjacency list " + u + " is null");
+            }
+            for (Integer boxedV : edges) {
+                if (boxedV == null || boxedV < 0 || boxedV >= rightCount) {
+                    throw new IllegalArgumentException("invalid right vertex in adjacency list " + u);
+                }
+            }
+        }
+        for (int v = 0; v < rightCount; v++) {
+            int u = matchRight[v];
+            if (u < -1 || u >= leftCount) {
+                throw new IllegalArgumentException("invalid matchRight at right vertex " + v);
+            }
+            if (u >= 0 && !adj.get(u).contains(v)) {
+                throw new IllegalArgumentException("matchRight[" + v + "] is not an adjacency edge");
+            }
         }
         for (int u = 0; u < leftCount; u++) {
             int v = matchLeft[u];
-            if (v < -1 || v >= rightCount || (v >= 0 && matchRight[v] != u)) {
+            if (v < -1 || v >= rightCount) {
+                throw new IllegalArgumentException("invalid matchLeft at left vertex " + u);
+            }
+            if (v >= 0 && matchRight[v] != u) {
                 throw new IllegalArgumentException("inconsistent matching at left vertex " + u);
             }
         }
-    }
-}
+    }}

@@ -15,12 +15,23 @@ public final class Student {
 
     public Student(int id, String name, String program, int semester, double cgpa, List<String> enrolledCourses) {
         this.id = id;
-        this.name = Objects.requireNonNull(name, "name");
-        this.program = Objects.requireNonNull(program, "program");
+        this.name = requireText(name, "name");
+        this.program = requireText(program, "program");
+        if (id <= 0) throw new IllegalArgumentException("id must be positive");
+        if (semester < 1 || semester > 8) throw new IllegalArgumentException("semester must be 1..8");
+        if (!Double.isFinite(cgpa) || cgpa < 0 || cgpa > 10) {
+            throw new IllegalArgumentException("cgpa must be finite and in 0..10");
+        }
         this.semester = semester;
         this.cgpa = cgpa;
         this.enrolledCourses = Collections.unmodifiableList(List.copyOf(
                 Objects.requireNonNull(enrolledCourses, "enrolledCourses")));
+    }
+
+    private static String requireText(String value, String field) {
+        Objects.requireNonNull(value, field);
+        if (value.isBlank()) throw new IllegalArgumentException(field + " must not be blank");
+        return value;
     }
 
     @Override
