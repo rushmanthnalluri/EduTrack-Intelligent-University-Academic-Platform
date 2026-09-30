@@ -12,6 +12,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import edutrack.data.DataStore;
+import edutrack.data.DataSnapshot;
 import edutrack.model.Course;
 import edutrack.model.ExamRecord;
 import edutrack.model.Student;
@@ -104,6 +105,26 @@ public class ExamAnalytics {
         return out;
     }
 
+    /** Snapshot-safe course statistics for multi-collection API reads. */
+    public static List<CourseStats> courseStats(DataSnapshot snapshot) {
+        Map<String, Accum> byCourse = new LinkedHashMap<>();
+        for (Course c : snapshot.courses()) {
+            byCourse.put(c.code, new Accum());
+        }
+        for (ExamRecord r : snapshot.examRecords()) {
+            Accum a = byCourse.get(r.courseCode);
+            if (a != null) {
+                a.add(r);
+            }
+        }
+        List<CourseStats> out = new ArrayList<>();
+        for (Map.Entry<String, Accum> e : byCourse.entrySet()) {
+            Course c = snapshot.coursesByCode().get(e.getKey());
+            out.add(e.getValue().toCourseStats(e.getKey(), c == null ? e.getKey() : c.name));
+        }
+        return out;
+    }
+
     public static int[] overallGradeDistribution(DataStore ds) {
         int[] counts = new int[GRADES.length];
         for (ExamRecord r : ds.examRecords()) {
@@ -163,6 +184,22 @@ public class ExamAnalytics {
             }
         }
         StudentGpa sg = computeGpa(s, records, ds.coursesByCode());
+        return new ReportCard(s, records, sg.gpa, sg.credits, sg.failCount, sg.failingCourses);
+    }
+
+    /** Snapshot-safe report card for multi-collection API reads. */
+    public static ReportCard reportCard(DataSnapshot snapshot, int studentId) {
+        Student s = snapshot.studentsById().get(studentId);
+        if (s == null) {
+            return null;
+        }
+        List<ExamRecord> records = new ArrayList<>();
+        for (ExamRecord r : snapshot.examRecords()) {
+            if (r.studentId == studentId) {
+                records.add(r);
+            }
+        }
+        StudentGpa sg = computeGpa(s, records, snapshot.coursesByCode());
         return new ReportCard(s, records, sg.gpa, sg.credits, sg.failCount, sg.failingCourses);
     }
 
