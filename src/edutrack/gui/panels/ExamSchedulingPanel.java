@@ -570,7 +570,7 @@ public class ExamSchedulingPanel extends ModulePanel {
     private static void appendWrappedLabels(StringBuilder sb, M5Graph g, int[] vertices) {
         StringBuilder line = new StringBuilder("  ");
         for (int i = 0; i < vertices.length; i++) {
-            String label = g.label(vertices[i)] + (i < vertices.length - 1 ? "," : "");
+            String label = g.label(vertices[i]) + (i < vertices.length - 1 ? "," : "");
             if (line.length() + label.length() + 1 > 34 && line.length() > 2) {
                 sb.append(line).append("\n");
                 line = new StringBuilder("  ");
