@@ -142,6 +142,8 @@ public class DataStore {
     private final boolean loadedFromDisk;
     private volatile boolean dirty;
     private volatile long revision;
+    private volatile long persistedRevision;
+    private final Object persistenceLock = new Object();
 
     public DataStore() {
         this(true);
@@ -536,18 +538,19 @@ public class DataStore {
     }
 
     public void saveToDisk() throws IOException {
-        DataSnapshot snapshot;
-        synchronized (this) {
-            snapshot = snapshot();
-        }
-        CsvStore.saveAll(snapshot, CsvStore.resolveDir());
-        synchronized (this) {
-            // Preserve the dirty flag when another CRUD mutation happened while
-            // the snapshot was being written.
-            if (revision == snapshot.revision()) {
-                dirty = false;
-            } else {
-                dirty = true;
+        synchronized (persistenceLock) {
+            // Serialize save/reset operations without holding the DataStore monitor
+            // across disk I/O, so GUI CRUD actions remain responsive.
+            DataSnapshot snapshot;
+            synchronized (this) {
+                snapshot = snapshot();
+            }
+            CsvStore.saveAll(snapshot, CsvStore.resolveDir());
+            synchronized (this) {
+                // The newest successfully persisted revision wins. Older concurrent
+                // saves must not make a newer persisted dataset look dirty.
+                persistedRevision = Math.max(persistedRevision, snapshot.revision());
+                dirty = persistedRevision < revision;
             }
         }
     }
@@ -555,15 +558,20 @@ public class DataStore {
     /**
      * Deletes the saved CSV files; generated data returns on the next application start.
      */
-    public synchronized boolean resetToGenerated() throws IOException {
-        boolean reset = CsvStore.deleteCoreFiles(CsvStore.resolveDir());
-        if (reset) {
-            // The live in-memory dataset is intentionally retained until restart,
-            // so deleting its persisted copy means the current state is no longer
-            // safely persisted and must remain marked dirty.
-            dirty = true;
+    public boolean resetToGenerated() throws IOException {
+        synchronized (persistenceLock) {
+            boolean reset = CsvStore.deleteCoreFiles(CsvStore.resolveDir());
+            if (reset) {
+                synchronized (this) {
+                    // The live in-memory dataset is intentionally retained until restart,
+                    // so deleting its persisted copy means the current state is no longer
+                    // safely persisted and must remain marked dirty.
+                    persistedRevision = -1;
+                    dirty = true;
+                }
+            }
+            return reset;
         }
-        return reset;
     }
 
     private Student requireStudent(int id) {
