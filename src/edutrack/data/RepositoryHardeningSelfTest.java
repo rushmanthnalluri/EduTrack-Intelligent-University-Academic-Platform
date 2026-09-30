@@ -382,7 +382,7 @@ public final class RepositoryHardeningSelfTest {
 
         check("DPLL satisfies rejects null clauses", () -> {
             expectThrows(IllegalArgumentException.class,
-                    () -> M5DPLLSolver.satisfies(List.of((int[]) null), new boolean[2]));
+                    () -> M5DPLLSolver.satisfies(java.util.Collections.singletonList((int[]) null), new boolean[2]));
         });
 
         System.out.println("----");
