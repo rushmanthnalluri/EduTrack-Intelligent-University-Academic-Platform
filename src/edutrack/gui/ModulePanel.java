@@ -7,6 +7,7 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
@@ -110,7 +111,13 @@ public abstract class ModulePanel extends JPanel {
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+                    reenableButtons(ModulePanel.this);
+                    onError.accept(e);
+                } catch (CancellationException e) {
+                    reenableButtons(ModulePanel.this);
+                    onError.accept(e);
                 } catch (ExecutionException e) {
+                    reenableButtons(ModulePanel.this);
                     Throwable cause = e.getCause() == null ? e : e.getCause();
                     onError.accept(cause);
                 }
