@@ -13,8 +13,8 @@ import edutrack.model.Student;
 public class M5Graph {
 
     public final int n;
-    public final boolean[][] adj;
-    public final String[] labels;
+    private final boolean[][] adj;
+    private final String[] labels;
 
     public M5Graph(int n) {
         if (n < 0) throw new IllegalArgumentException("node count must be non-negative");
@@ -33,6 +33,25 @@ public class M5Graph {
             adj[u][v] = true;
             adj[v][u] = true;
         }
+    }
+
+    public boolean hasEdge(int u, int v) {
+        checkVertex(u);
+        checkVertex(v);
+        return adj[u][v];
+    }
+
+    public String label(int v) {
+        checkVertex(v);
+        return labels[v];
+    }
+
+    public void setLabel(int v, String label) {
+        checkVertex(v);
+        if (label == null || label.isBlank()) {
+            throw new IllegalArgumentException("label must not be blank");
+        }
+        labels[v] = label;
     }
 
     public int edgeCount() {
