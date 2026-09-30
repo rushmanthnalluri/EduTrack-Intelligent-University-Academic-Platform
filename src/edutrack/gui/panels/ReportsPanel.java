@@ -150,6 +150,8 @@ public class ReportsPanel extends ModulePanel {
         cachedText = null;
         previewArea.setText("Pick a report above and press Preview.");
         statusLabel.setText("Ready — live dataset refreshed.");
+        studentCombo.setEnabled(!students.isEmpty());
+        courseCombo.setEnabled(!courses.isEmpty());
     }
 
     // ------------------------------------------------------------------
@@ -169,11 +171,19 @@ public class ReportsPanel extends ModulePanel {
         panel.add(buttonRow(previewButton, saveButton));
 
         previewButton.addActionListener(e -> {
+            if (students.isEmpty() || studentCombo.getSelectedIndex() < 0) {
+                statusLabel.setText("No students are available.");
+                return;
+            }
             int id = selectedStudentId();
             runPreview(previewButton, saveButton, "transcript:" + id,
                     () -> ReportGenerator.transcript(dataStore, id));
         });
         saveButton.addActionListener(e -> {
+            if (students.isEmpty() || studentCombo.getSelectedIndex() < 0) {
+                statusLabel.setText("No students are available.");
+                return;
+            }
             int id = selectedStudentId();
             runSave(saveButton, previewButton, "transcript:" + id,
                     () -> ReportGenerator.transcript(dataStore, id),
@@ -195,11 +205,19 @@ public class ReportsPanel extends ModulePanel {
         panel.add(buttonRow(previewButton, saveButton));
 
         previewButton.addActionListener(e -> {
+            if (courses.isEmpty() || courseCombo.getSelectedIndex() < 0) {
+                statusLabel.setText("No courses are available.");
+                return;
+            }
             String code = selectedCourseCode();
             runPreview(previewButton, saveButton, "gradesheet:" + code,
                     () -> ReportGenerator.csvToString(ReportGenerator.courseGradeSheet(dataStore, code)));
         });
         saveButton.addActionListener(e -> {
+            if (courses.isEmpty() || courseCombo.getSelectedIndex() < 0) {
+                statusLabel.setText("No courses are available.");
+                return;
+            }
             String code = selectedCourseCode();
             runSave(saveButton, previewButton, "gradesheet:" + code,
                     () -> ReportGenerator.csvToString(ReportGenerator.courseGradeSheet(dataStore, code)),
