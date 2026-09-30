@@ -31,6 +31,7 @@ public class M4FlowNetwork {
     private final List<List<Edge>> adj;
 
     public M4FlowNetwork(int nodeCount) {
+        if (nodeCount < 0) throw new IllegalArgumentException("node count must be non-negative");
         adj = new ArrayList<>(nodeCount);
         for (int i = 0; i < nodeCount; i++) {
             adj.add(new ArrayList<>());
@@ -59,13 +60,27 @@ public class M4FlowNetwork {
     }
 
     public List<Edge> edgesFrom(int u) {
-        return adj.get(u);
+        checkNode(u);
+        return java.util.Collections.unmodifiableList(adj.get(u));
     }
 
     /** Pushes {@code amount} units of flow along edge e (negative amounts cancel flow). */
     public void augment(Edge e, int amount) {
-        e.flow += amount;
-        adj.get(e.to).get(e.rev).flow -= amount;
+        if (e == null) throw new IllegalArgumentException("edge must not be null");
+        if (e.to < 0 || e.to >= nodeCount() || e.rev < 0 || e.rev >= adj.get(e.to).size()) {
+            throw new IllegalArgumentException("edge is not valid for this network");
+        }
+        Edge reverse = adj.get(e.to).get(e.rev);
+        int nextFlow = e.flow + amount;
+        if (nextFlow < 0 || nextFlow > e.capacity) {
+            throw new IllegalArgumentException("flow update exceeds edge capacity");
+        }
+        e.flow = nextFlow;
+        reverse.flow -= amount;
+    }
+
+    private void checkNode(int u) {
+        if (u < 0 || u >= nodeCount()) throw new IllegalArgumentException("node out of range: " + u);
     }
 
     /** Resets the flow on every edge to zero, so the same network can be reused for another run. */
