@@ -11,6 +11,7 @@ public class M6ParallelMergeSort {
     }
 
     public static void sequentialSort(double[] a) {
+        if (a == null) throw new IllegalArgumentException("array must not be null");
         double[] aux = new double[a.length];
         sequentialSort(a, aux, 0, a.length);
     }
@@ -26,6 +27,8 @@ public class M6ParallelMergeSort {
     }
 
     public static void parallelSort(double[] a, int processors) {
+        if (a == null) throw new IllegalArgumentException("array must not be null");
+        if (processors < 1) throw new IllegalArgumentException("processors must be >= 1");
         double[] aux = new double[a.length];
         ForkJoinPool pool = new ForkJoinPool(Math.max(1, processors));
         try {
