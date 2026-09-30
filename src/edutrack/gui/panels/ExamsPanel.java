@@ -361,7 +361,7 @@ public class ExamsPanel extends ModulePanel {
             button.setEnabled(true);
             button.setText(label);
             showError(error);
-        });
+        }, button);
     }
 
     private static DefaultTableModel tableModel(String... columns) {
