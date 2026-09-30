@@ -283,7 +283,7 @@ public class M5Reductions {
             int[] newCand = new int[i];
             int m = 0;
             for (int j = 0; j < i; j++) {
-                if (g.hasEdge(v, cand[j]) {
+                if (g.hasEdge(v, cand[j])) {
                     newCand[m++] = cand[j];
                 }
             }
