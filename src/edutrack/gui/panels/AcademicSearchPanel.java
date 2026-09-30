@@ -42,6 +42,9 @@ import edutrack.modules.M1StringAlgorithms;
  */
 public class AcademicSearchPanel extends ModulePanel {
 
+    private JComboBox<String> zAssignmentCombo;
+    private boolean refreshingAssignments;
+
     private static final String[] SCAN_TARGETS = {
         "Assignment texts", "Wikipedia document", "Both"
     };
@@ -76,6 +79,37 @@ public class AcademicSearchPanel extends ModulePanel {
 
         add(header, BorderLayout.NORTH);
         add(tabs, BorderLayout.CENTER);
+    }
+
+    /** Refreshes assignment-backed selectors after CRUD changes. */
+    public void refresh() {
+        int previous = zAssignmentCombo == null ? 0 : zAssignmentCombo.getSelectedIndex();
+        refreshingAssignments = true;
+        try {
+            refreshAssignmentSelector();
+            if (zAssignmentCombo.getItemCount() > 0) {
+                zAssignmentCombo.setSelectedIndex(Math.min(Math.max(previous, 0),
+                        zAssignmentCombo.getItemCount() - 1));
+            }
+        } finally {
+            refreshingAssignments = false;
+        }
+    }
+
+    private void refreshAssignmentSelector() {
+        if (zAssignmentCombo == null) {
+            return;
+        }
+        int previous = zAssignmentCombo.getSelectedIndex();
+        zAssignmentCombo.removeAllItems();
+        List<Assignment> assignments = dataStore.assignments();
+        for (int i = 0; i < assignments.size(); i++) {
+            zAssignmentCombo.addItem((i + 1) + ")  " + assignments.get(i).id);
+        }
+        if (zAssignmentCombo.getItemCount() > 0) {
+            zAssignmentCombo.setSelectedIndex(Math.min(Math.max(previous, 0),
+                    zAssignmentCombo.getItemCount() - 1));
+        }
     }
 
     // ------------------------------------------------------------------
@@ -172,13 +206,9 @@ public class AcademicSearchPanel extends ModulePanel {
     // ------------------------------------------------------------------
 
     private JComponent buildZTab() {
-        List<Assignment> assignments = dataStore.assignments();
-        String[] ids = new String[assignments.size()];
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = (i + 1) + ")  " + assignments.get(i).id;
-        }
-        JComboBox<String> assignmentCombo = new JComboBox<>(ids);
-        assignmentCombo.setFont(GuiTheme.BODY);
+        zAssignmentCombo = new JComboBox<>();
+        zAssignmentCombo.setFont(GuiTheme.BODY);
+        refreshAssignmentSelector();
         JSpinner minLengthSpinner = new JSpinner(new SpinnerNumberModel(12, 1, 500, 1));
         JButton detectButton = GuiTheme.primaryButton("Detect repeats (Z-function)");
         JLabel summary = summaryLabel("Pick an assignment and detect repeated phrases.");
@@ -190,7 +220,7 @@ public class AcademicSearchPanel extends ModulePanel {
 
         JPanel controls = controlRow();
         controls.add(fieldLabel("Assignment:"));
-        controls.add(assignmentCombo);
+        controls.add(zAssignmentCombo);
         controls.add(fieldLabel("Min phrase length:"));
         controls.add(minLengthSpinner);
         controls.add(detectButton);
@@ -207,7 +237,8 @@ public class AcademicSearchPanel extends ModulePanel {
         tab.add(south, BorderLayout.SOUTH);
 
         detectButton.addActionListener(e -> {
-            int index = assignmentCombo.getSelectedIndex();
+            List<Assignment> assignments = dataStore.assignments();
+            int index = zAssignmentCombo.getSelectedIndex();
             int minLength = ((Number) minLengthSpinner.getValue()).intValue();
             if (index < 0 || index >= assignments.size()) {
                 console.appendLine("Select an assignment first.");
