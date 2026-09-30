@@ -118,8 +118,14 @@ public final class ApiServer {
                 return;
             }
             String path = exchange.getRequestURI().getPath();
-            Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
             try {
+                Map<String, String> query;
+                try {
+                    query = parseQuery(exchange.getRequestURI().getRawQuery());
+                } catch (IllegalArgumentException e) {
+                    send(exchange, 400, errorJson("malformed query string: " + e.getMessage()));
+                    return;
+                }
                 send(exchange, 200, route(path, query));
             } catch (ApiError e) {
                 send(exchange, e.status, errorJson(e.getMessage()));

@@ -3,12 +3,14 @@ package edutrack.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -90,6 +92,7 @@ public abstract class ModulePanel extends JPanel {
     }
 
     protected <T> void runAsync(Callable<T> work, Consumer<T> onDone, Consumer<Throwable> onError) {
+        final long submittedRevision = dataStore.revision();
         new SwingWorker<T, Void>() {
             @Override
             protected T doInBackground() throws Exception {
@@ -99,7 +102,12 @@ public abstract class ModulePanel extends JPanel {
             @Override
             protected void done() {
                 try {
-                    onDone.accept(get());
+                    T result = get();
+                    if (dataStore.revision() == submittedRevision) {
+                        onDone.accept(result);
+                    } else {
+                        reenableButtons(ModulePanel.this);
+                    }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (ExecutionException e) {
@@ -108,6 +116,18 @@ public abstract class ModulePanel extends JPanel {
                 }
             }
         }.execute();
+    }
+
+    /** Re-enables controls when a background result became stale due to a data mutation. */
+    private static void reenableButtons(Container root) {
+        for (Component component : root.getComponents()) {
+            if (component instanceof AbstractButton button) {
+                button.setEnabled(true);
+            }
+            if (component instanceof Container child) {
+                reenableButtons(child);
+            }
+        }
     }
 
     protected void showError(Throwable t) {

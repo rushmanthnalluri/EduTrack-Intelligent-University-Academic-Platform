@@ -59,7 +59,7 @@ public class M1AhoCorasick {
     }
 
     /** Adds a keyword; returns its pattern index. Empty/duplicate keywords are ignored. */
-    public int addPattern(String pattern) {
+    public synchronized int addPattern(String pattern) {
         if (pattern == null || pattern.isEmpty()) {
             return -1;
         }
@@ -86,20 +86,20 @@ public class M1AhoCorasick {
         return index;
     }
 
-    public int patternCount() {
+    public synchronized int patternCount() {
         return patterns.size();
     }
 
-    public String pattern(int index) {
+    public synchronized String pattern(int index) {
         return patterns.get(index);
     }
 
-    public int stateCount() {
+    public synchronized int stateCount() {
         return nodes.size();
     }
 
     /** Computes failure links and dictionary-suffix links with a BFS over the trie. */
-    public void build() {
+    public synchronized void build() {
         Queue<Integer> queue = new ArrayDeque<>();
         for (int child : nodes.get(0).next.values()) {
             nodes.get(child).fail = 0;
@@ -126,7 +126,7 @@ public class M1AhoCorasick {
     }
 
     /** Scans the text, reporting every occurrence (overlaps included) of every keyword. */
-    public Result search(String text) {
+    public synchronized Result search(String text) {
         if (text == null) {
             throw new IllegalArgumentException("text must not be null");
         }

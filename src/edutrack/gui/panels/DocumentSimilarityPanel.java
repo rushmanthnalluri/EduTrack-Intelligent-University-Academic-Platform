@@ -90,14 +90,12 @@ public class DocumentSimilarityPanel extends ModulePanel {
     private int displayLength;
     private int[] suffixArray;
     private M2SuffixAutomaton automaton;
+    private boolean refreshingSelectors;
 
     public DocumentSimilarityPanel(DataStore dataStore) {
         super(dataStore);
 
-        for (Assignment a : dataStore.assignments()) {
-            docCombo.addItem(new DocItem(a.id + " (" + a.text.length() + " chars)", a.text, false));
-        }
-        docCombo.addItem(new DocItem("Wikipedia.txt (first " + WIKI_CAP + " chars)", null, true));
+        populateDocumentSelector();
 
         repeatsModel = new DefaultTableModel(
                 new String[] { "#", "Length", "Occurrences", "Positions (first 6)", "Phrase" }, 0) {
@@ -130,6 +128,67 @@ public class DocumentSimilarityPanel extends ModulePanel {
 
         wireActions();
         onDocumentSelected();
+    }
+
+    /** Refreshes assignment-backed selectors and invalidates removed-document state. */
+    public void refresh() {
+        String previousDoc = selectedDocKey();
+        String previousA = (String) simComboA.getSelectedItem();
+        String previousB = (String) simComboB.getSelectedItem();
+        refreshingSelectors = true;
+        try {
+            docCombo.removeAllItems();
+            populateDocumentSelector();
+            restoreDocument(previousDoc);
+            simComboA.removeAllItems();
+            simComboB.removeAllItems();
+            for (Assignment a : dataStore.assignments()) {
+                simComboA.addItem(a.id);
+                simComboB.addItem(a.id);
+            }
+            restoreCombo(simComboA, previousA, 0);
+            restoreCombo(simComboB, previousB, Math.min(1, simComboB.getItemCount() - 1));
+        } finally {
+            refreshingSelectors = false;
+        }
+        onDocumentSelected();
+    }
+
+    private void populateDocumentSelector() {
+        if (docCombo == null) return;
+        for (Assignment a : dataStore.assignments()) {
+            docCombo.addItem(new DocItem(a.id + " (" + a.text.length() + " chars)", a.text, false));
+        }
+        docCombo.addItem(new DocItem("Wikipedia.txt (first " + WIKI_CAP + " chars)", null, true));
+    }
+
+    private String selectedDocKey() {
+        DocItem item = (DocItem) docCombo.getSelectedItem();
+        return item == null ? null : item.label;
+    }
+
+    private void restoreDocument(String previousDoc) {
+        if (previousDoc == null) {
+            if (docCombo.getItemCount() > 0) docCombo.setSelectedIndex(0);
+            return;
+        }
+        for (int i = 0; i < docCombo.getItemCount(); i++) {
+            DocItem item = (DocItem) docCombo.getItemAt(i);
+            if (previousDoc.equals(item.label)) {
+                docCombo.setSelectedIndex(i);
+                return;
+            }
+        }
+        if (docCombo.getItemCount() > 0) docCombo.setSelectedIndex(0);
+    }
+
+    private static void restoreCombo(JComboBox<String> combo, String previous, int fallback) {
+        if (combo.getItemCount() == 0) return;
+        if (previous != null) {
+            combo.setSelectedItem(previous);
+            if (previous.equals(combo.getSelectedItem())) return;
+        }
+        combo.setSelectedIndex(Math.max(0, Math.min(fallback, combo.getItemCount() - 1)));
     }
 
     private Component buildHeader() {
@@ -321,7 +380,11 @@ public class DocumentSimilarityPanel extends ModulePanel {
     }
 
     private void wireActions() {
-        docCombo.addActionListener(e -> onDocumentSelected());
+        docCombo.addActionListener(e -> {
+            if (!refreshingSelectors) {
+                onDocumentSelected();
+            }
+        });
         buildButton.addActionListener(e -> buildIndex(null));
         searchButton.addActionListener(e -> onSearch());
         queryField.addActionListener(e -> onSearch());

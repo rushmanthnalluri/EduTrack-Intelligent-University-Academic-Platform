@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -140,6 +141,7 @@ public class DataStore {
     private final List<String> timeSlots;
     private final boolean loadedFromDisk;
     private volatile boolean dirty;
+    private volatile long revision;
 
     public DataStore() {
         this(true);
@@ -176,21 +178,22 @@ public class DataStore {
         }
 
         if (coreCourses != null) {
-            this.courses = coreCourses;
-            this.students = coreStudents;
-            this.faculty = coreFaculty;
-            this.examRecords = coreExams;
+            validateLoadedData(coreCourses, coreStudents, coreFaculty, coreExams);
+            this.courses = immutable(coreCourses);
+            this.students = immutable(coreStudents);
+            this.faculty = immutable(coreFaculty);
+            this.examRecords = immutable(coreExams);
             this.loadedFromDisk = true;
         } else {
-            this.courses = buildCourses();
-            this.students = buildStudents(this.courses);
-            this.faculty = buildFaculty(this.courses);
-            this.examRecords = buildExamRecords(this.students);
+            this.courses = immutable(buildCourses());
+            this.students = immutable(buildStudents(this.courses));
+            this.faculty = immutable(buildFaculty(this.courses));
+            this.examRecords = immutable(buildExamRecords(this.students));
             this.loadedFromDisk = false;
         }
-        this.assignments = buildAssignments(this.courses);
-        this.resources = buildResources(this.courses);
-        this.activityStream = buildActivityStream(this.students, this.courses);
+        this.assignments = immutable(buildAssignments(this.courses));
+        this.resources = immutable(buildResources(this.courses));
+        this.activityStream = immutable(buildActivityStream(this.students, this.courses));
         rebuildIndexes();
         this.rooms = List.of("R101", "R102", "R103", "R201", "R202", "R203", "R301", "R401");
         this.timeSlots = List.of(
@@ -245,6 +248,11 @@ public class DataStore {
         return dirty;
     }
 
+    /** Monotonic in-memory data revision used to reject stale asynchronous results. */
+    public long revision() {
+        return revision;
+    }
+
     // ------------------------------------------------------------------
     // Record management (copy-on-write: CRUD swaps in a fresh list, so
     // background readers keep a consistent snapshot — re-fetch after edits).
@@ -269,9 +277,10 @@ public class DataStore {
         List<Student> copy = new ArrayList<>(students);
         copy.add(new Student(student.id, student.name, student.program, student.semester,
                 student.cgpa, new ArrayList<>(student.enrolledCourses)));
-        students = copy;
+        students = immutable(copy);
         rebuildIndexes();
         dirty = true;
+        revision++;
     }
 
     public synchronized boolean removeStudent(int id) {
@@ -280,12 +289,13 @@ public class DataStore {
         }
         List<Student> copy = new ArrayList<>(students);
         copy.removeIf(s -> s.id == id);
-        students = copy;
+        students = immutable(copy);
         List<ExamRecord> exams = new ArrayList<>(examRecords);
         exams.removeIf(r -> r.studentId == id);
-        examRecords = exams;
+        examRecords = immutable(exams);
         rebuildIndexes();
         dirty = true;
+        revision++;
         return true;
     }
 
@@ -302,16 +312,18 @@ public class DataStore {
         }
         List<Faculty> copy = new ArrayList<>(faculty);
         copy.add(new Faculty(member.id, member.name, member.department, new ArrayList<>(member.expertise)));
-        faculty = copy;
+        faculty = immutable(copy);
         dirty = true;
+        revision++;
     }
 
     public synchronized boolean removeFaculty(int id) {
         List<Faculty> copy = new ArrayList<>(faculty);
         boolean removed = copy.removeIf(f -> f.id == id);
         if (removed) {
-            faculty = copy;
+            faculty = immutable(copy);
             dirty = true;
+            revision++;
         }
         return removed;
     }
@@ -328,35 +340,46 @@ public class DataStore {
         }
         List<Course> copy = new ArrayList<>(courses);
         copy.add(course);
-        courses = copy;
+        courses = immutable(copy);
         rebuildIndexes();
         dirty = true;
+        revision++;
     }
 
     public synchronized boolean removeCourse(String code) {
         if (!coursesByCode.containsKey(code)) {
             return false;
         }
+        List<Student> studentCopy = new ArrayList<>(students.size());
         for (Student s : students) {
-            s.enrolledCourses.remove(code);
+            List<String> enrolled = new ArrayList<>(s.enrolledCourses);
+            enrolled.remove(code);
+            studentCopy.add(new Student(s.id, s.name, s.program, s.semester, s.cgpa, enrolled));
         }
+        List<Faculty> facultyCopy = new ArrayList<>(faculty.size());
         for (Faculty f : faculty) {
-            f.expertise.remove(code);
+            List<String> expertise = new ArrayList<>(f.expertise);
+            expertise.remove(code);
+            facultyCopy.add(new Faculty(f.id, f.name, f.department, expertise));
         }
         List<Course> courseCopy = new ArrayList<>(courses);
         courseCopy.removeIf(c -> c.code.equals(code));
-        courses = courseCopy;
         List<ExamRecord> exams = new ArrayList<>(examRecords);
         exams.removeIf(r -> r.courseCode.equals(code));
-        examRecords = exams;
         List<Assignment> asg = new ArrayList<>(assignments);
         asg.removeIf(a -> a.courseCode.equals(code));
-        assignments = asg;
         List<LearningResource> res = new ArrayList<>(resources);
         res.removeIf(r -> r.courseCode.equals(code));
-        resources = res;
+
+        students = immutable(studentCopy);
+        faculty = immutable(facultyCopy);
+        courses = immutable(courseCopy);
+        examRecords = immutable(exams);
+        assignments = immutable(asg);
+        resources = immutable(res);
         rebuildIndexes();
         dirty = true;
+        revision++;
         return true;
     }
 
@@ -364,20 +387,37 @@ public class DataStore {
         Student student = requireStudent(studentId);
         requireCourse(courseCode);
         if (!student.enrolledCourses.contains(courseCode)) {
-            student.enrolledCourses.add(courseCode);
-            student.enrolledCourses.sort(null);
+            List<Student> copy = new ArrayList<>(students);
+            List<String> enrolled = new ArrayList<>(student.enrolledCourses);
+            enrolled.add(courseCode);
+            enrolled.sort(null);
+            copy.set(indexOfStudent(studentId),
+                    new Student(student.id, student.name, student.program, student.semester, student.cgpa, enrolled));
+            students = immutable(copy);
+            rebuildIndexes();
             dirty = true;
+            revision++;
         }
     }
 
     public synchronized boolean drop(int studentId, String courseCode) {
         Student student = requireStudent(studentId);
-        boolean removed = student.enrolledCourses.remove(courseCode);
-        if (removed) {
-            removeExamRecord(studentId, courseCode);
-            dirty = true;
+        if (!student.enrolledCourses.contains(courseCode)) {
+            return false;
         }
-        return removed;
+        List<Student> copy = new ArrayList<>(students);
+        List<String> enrolled = new ArrayList<>(student.enrolledCourses);
+        enrolled.remove(courseCode);
+        copy.set(indexOfStudent(studentId),
+                new Student(student.id, student.name, student.program, student.semester, student.cgpa, enrolled));
+        students = immutable(copy);
+        List<ExamRecord> exams = new ArrayList<>(examRecords);
+        exams.removeIf(r -> r.studentId == studentId && r.courseCode.equals(courseCode));
+        examRecords = immutable(exams);
+        rebuildIndexes();
+        dirty = true;
+        revision++;
+        return true;
     }
 
     public synchronized void upsertExamRecord(ExamRecord record) {
@@ -395,16 +435,18 @@ public class DataStore {
         List<ExamRecord> copy = new ArrayList<>(examRecords);
         copy.removeIf(r -> r.studentId == record.studentId && r.courseCode.equals(record.courseCode));
         copy.add(record);
-        examRecords = copy;
+        examRecords = immutable(copy);
         dirty = true;
+        revision++;
     }
 
     public synchronized boolean removeExamRecord(int studentId, String courseCode) {
         List<ExamRecord> copy = new ArrayList<>(examRecords);
         boolean removed = copy.removeIf(r -> r.studentId == studentId && r.courseCode.equals(courseCode));
         if (removed) {
-            examRecords = copy;
+            examRecords = immutable(copy);
             dirty = true;
+            revision++;
         }
         return removed;
     }
@@ -446,8 +488,8 @@ public class DataStore {
         for (Course c : courses) {
             byCode.put(c.code, c);
         }
-        studentsById = byId;
-        coursesByCode = byCode;
+        studentsById = Collections.unmodifiableMap(byId);
+        coursesByCode = Collections.unmodifiableMap(byCode);
     }
 
     public List<String> rooms() {
@@ -469,6 +511,73 @@ public class DataStore {
             }
         }
         throw new IOException("Wikipedia.txt not found; tried: " + Arrays.toString(candidates));
+    }
+
+
+    private static <T> List<T> immutable(List<T> list) {
+        return Collections.unmodifiableList(new ArrayList<>(list));
+    }
+
+    private int indexOfStudent(int id) {
+        for (int i = 0; i < students.size(); i++) {
+            if (students.get(i).id == id) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("Unknown student id: " + id);
+    }
+
+    static void validateLoadedData(List<Course> courses, List<Student> students,
+            List<Faculty> faculty, List<ExamRecord> exams) {
+        if (courses == null || students == null || faculty == null || exams == null
+                || courses.isEmpty() || students.isEmpty()) {
+            throw new IllegalArgumentException("saved data must contain at least one student and one course");
+        }
+        java.util.HashSet<String> courseCodes = new java.util.HashSet<>();
+        for (Course c : courses) {
+            if (c == null || c.code == null || c.code.isBlank() || !courseCodes.add(c.code)
+                    || c.name == null || c.name.isBlank() || c.department == null || c.department.isBlank()
+                    || c.credits < 1 || c.credits > 6 || c.semester < 1 || c.semester > 8) {
+                throw new IllegalArgumentException("invalid or duplicate course in saved data");
+            }
+        }
+        java.util.HashSet<Integer> studentIds = new java.util.HashSet<>();
+        for (Student s : students) {
+            if (s == null || s.id <= 0 || !studentIds.add(s.id)
+                    || s.name == null || s.name.isBlank() || s.program == null || s.program.isBlank()
+                    || s.semester < 1 || s.semester > 8 || !Double.isFinite(s.cgpa)
+                    || s.cgpa < 0 || s.cgpa > 10) {
+                throw new IllegalArgumentException("invalid or duplicate student in saved data");
+            }
+            java.util.HashSet<String> enrolled = new java.util.HashSet<>();
+            for (String code : s.enrolledCourses) {
+                if (code == null || !courseCodes.contains(code) || !enrolled.add(code)) {
+                    throw new IllegalArgumentException("invalid student course enrollment in saved data");
+                }
+            }
+        }
+        java.util.HashSet<Integer> facultyIds = new java.util.HashSet<>();
+        for (Faculty f : faculty) {
+            if (f == null || f.id <= 0 || !facultyIds.add(f.id)
+                    || f.name == null || f.name.isBlank() || f.department == null || f.department.isBlank()) {
+                throw new IllegalArgumentException("invalid or duplicate faculty in saved data");
+            }
+            java.util.HashSet<String> expertise = new java.util.HashSet<>();
+            for (String code : f.expertise) {
+                if (code == null || !courseCodes.contains(code) || !expertise.add(code)) {
+                    throw new IllegalArgumentException("invalid faculty expertise in saved data");
+                }
+            }
+        }
+        java.util.HashSet<String> examKeys = new java.util.HashSet<>();
+        for (ExamRecord r : exams) {
+            if (r == null || !studentIds.contains(r.studentId) || !courseCodes.contains(r.courseCode)
+                    || r.midsem < 0 || r.midsem > ExamRecord.MIDSEM_MAX
+                    || r.endsem < 0 || r.endsem > ExamRecord.ENDSEM_MAX
+                    || !examKeys.add(r.studentId + "\u0000" + r.courseCode)) {
+                throw new IllegalArgumentException("invalid or duplicate exam record in saved data");
+            }
+        }
     }
 
     private static List<Course> buildCourses() {

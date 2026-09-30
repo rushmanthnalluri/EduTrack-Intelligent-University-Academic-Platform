@@ -25,7 +25,13 @@ public class M6ReservoirSampler {
     }
 
     public static <T> SampleResult<T> sample(Iterable<T> stream, Predicate<T> filter, int k, Random rnd) {
-        List<T> reservoir = new ArrayList<>(Math.max(0, k));
+        if (stream == null || rnd == null) {
+            throw new IllegalArgumentException("stream and random generator must not be null");
+        }
+        if (k < 0) {
+            throw new IllegalArgumentException("k must be non-negative");
+        }
+        List<T> reservoir = new ArrayList<>(k);
         long seen = 0;
         for (T item : stream) {
             if (filter != null && !filter.test(item)) {

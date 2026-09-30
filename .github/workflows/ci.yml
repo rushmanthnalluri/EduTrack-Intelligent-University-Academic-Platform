@@ -36,4 +36,6 @@ jobs:
           java -cp bin edutrack.modules.M4NetworkFlow
           java -cp bin edutrack.modules.M5NPCompleteness
           java -cp bin edutrack.modules.M6RandomizedParallel
+          java -cp bin edutrack.api.JsonWriter
           java -cp bin edutrack.api.ApiServer
+          java -cp bin edutrack.data.RepositoryHardeningSelfTest

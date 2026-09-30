@@ -21,6 +21,7 @@ public class M5DPLLSolver {
     }
 
     public static Result solve(int numVars, List<int[]> clauses) {
+        validateFormula(numVars, clauses);
         Result res = new Result();
         int[] assign = new int[numVars + 1];
         long[] decisions = new long[1];
@@ -38,6 +39,22 @@ public class M5DPLLSolver {
         }
         res.decisions = decisions[0];
         return res;
+    }
+
+    private static void validateFormula(int numVars, List<int[]> clauses) {
+        if (numVars < 0 || clauses == null) {
+            throw new IllegalArgumentException("numVars must be non-negative and clauses must not be null");
+        }
+        for (int[] clause : clauses) {
+            if (clause == null) {
+                throw new IllegalArgumentException("clause must not be null");
+            }
+            for (int lit : clause) {
+                if (lit == 0 || Math.abs((long) lit) > numVars) {
+                    throw new IllegalArgumentException("literal " + lit + " is outside 1.." + numVars);
+                }
+            }
+        }
     }
 
     private static boolean dpll(int[][] clauses, int[] assign, long[] decisions) {
@@ -120,10 +137,20 @@ public class M5DPLLSolver {
     }
 
     public static boolean satisfies(List<int[]> clauses, boolean[] assignment) {
+        if (assignment == null) {
+            throw new IllegalArgumentException("assignment must not be null");
+        }
         for (int[] clause : clauses) {
+            for (int lit : clause) {
+                long magnitude = Math.abs((long) lit);
+                if (lit == 0 || magnitude >= assignment.length) {
+                    throw new IllegalArgumentException("literal " + lit + " does not fit assignment");
+                }
+            }
             boolean satisfied = false;
             for (int lit : clause) {
-                if (assignment[Math.abs(lit)] == (lit > 0)) {
+                int v = (int) Math.abs((long) lit);
+                if (assignment[v] == (lit > 0)) {
                     satisfied = true;
                     break;
                 }

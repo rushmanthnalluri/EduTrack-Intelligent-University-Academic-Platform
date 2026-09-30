@@ -9,7 +9,7 @@
 [![CI](https://img.shields.io/badge/CI-Java_21-0E9F6E)](#-testing)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![GUI](https://img.shields.io/badge/GUI-Swing_%2B_Java2D-6B46C1)](#-screenshots)
-[![API](https://img.shields.io/badge/REST_API-8_endpoints-D97706)](#-rest-api)
+[![API](https://img.shields.io/badge/REST_API-7_endpoints-D97706)](#-rest-api)
 
 ![EduTrack Dashboard](docs/screenshots/dashboard.png)
 

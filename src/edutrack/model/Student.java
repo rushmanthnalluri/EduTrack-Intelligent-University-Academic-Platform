@@ -1,8 +1,10 @@
 package edutrack.model;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Collections;
 
-public class Student {
+public final class Student {
 
     public final int id;
     public final String name;
@@ -13,11 +15,12 @@ public class Student {
 
     public Student(int id, String name, String program, int semester, double cgpa, List<String> enrolledCourses) {
         this.id = id;
-        this.name = name;
-        this.program = program;
+        this.name = Objects.requireNonNull(name, "name");
+        this.program = Objects.requireNonNull(program, "program");
         this.semester = semester;
         this.cgpa = cgpa;
-        this.enrolledCourses = enrolledCourses;
+        this.enrolledCourses = Collections.unmodifiableList(List.copyOf(
+                Objects.requireNonNull(enrolledCourses, "enrolledCourses")));
     }
 
     @Override
