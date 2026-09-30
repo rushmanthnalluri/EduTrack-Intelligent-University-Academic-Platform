@@ -108,7 +108,7 @@ public class M5NPCompleteness {
         }
         for (int u = 0; u < sub.n; u++) {
             for (int v = u + 1; v < sub.n; v++) {
-                if (sub.adj[u][v] && slotOf[u] == slotOf[v]) {
+                if (sub.hasEdge(u, v) && slotOf[u] == slotOf[v]) {
                     return false;
                 }
             }
@@ -222,7 +222,7 @@ public class M5NPCompleteness {
             if (bySlot[slotOf[c]].length() > 0) {
                 bySlot[slotOf[c]].append(", ");
             }
-            bySlot[slotOf[c]].append(sub.labels[c]);
+            bySlot[slotOf[c]].append(sub.label(c));
         }
         System.out.println("Derived exam schedule:");
         for (int s = 0; s < slots; s++) {
@@ -289,7 +289,7 @@ public class M5NPCompleteness {
             varNames = new String[numVars + 1];
             for (int c = 0; c < sub.n; c++) {
                 for (int s = 0; s < slots; s++) {
-                    varNames[c * slots + s + 1] = sub.labels[c] + "@S" + (s + 1);
+                    varNames[c * slots + s + 1] = sub.label(c) + "@S" + (s + 1);
                 }
             }
             formula = M5Reductions.examScheduling3CNF(sub, slots);
