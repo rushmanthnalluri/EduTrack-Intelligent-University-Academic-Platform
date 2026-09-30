@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
@@ -79,7 +80,7 @@ public class M3DynamicProgramming {
         }
 
         List<Candidate> candidates = buildCandidates(ds);
-        String q = query.toLowerCase();
+        String q = query.toLowerCase(Locale.ROOT);
 
         long start = System.nanoTime();
         for (Candidate c : candidates) {
@@ -217,7 +218,14 @@ public class M3DynamicProgramming {
                 int j = i + len - 1;
                 m[i][j] = Long.MAX_VALUE;
                 for (int k = i; k < j; k++) {
-                    long q = m[i][k] + m[k + 1][j] + (long) dims[i] * dims[k + 1] * dims[j + 1];
+                    long multiply = Math.multiplyExact(
+                            Math.multiplyExact((long) dims[i], dims[k + 1]), dims[j + 1]);
+                    long q;
+                    try {
+                        q = Math.addExact(Math.addExact(m[i][k], m[k + 1][j]), multiply);
+                    } catch (ArithmeticException e) {
+                        throw new IllegalArgumentException("matrix-chain cost exceeds long range", e);
+                    }
                     if (q < m[i][j]) {
                         m[i][j] = q;
                         split[i][j] = k;
@@ -346,7 +354,11 @@ public class M3DynamicProgramming {
             int bit = Integer.numberOfTrailingZeros(mask);
             int prev = mask & (mask - 1);
             creditSum[mask] = creditSum[prev] + credits[bit];
-            valueSum[mask] = valueSum[prev] + values[bit];
+            try {
+                valueSum[mask] = Math.addExact(valueSum[prev], values[bit]);
+            } catch (ArithmeticException e) {
+                throw new IllegalArgumentException("subset value exceeds long range", e);
+            }
         }
 
         long bestValue = -1;
@@ -379,7 +391,11 @@ public class M3DynamicProgramming {
             for (int i = 0; i < n; i++) {
                 if ((mask & (1 << i)) != 0) {
                     c += credits[i];
-                    v += values[i];
+                    try {
+                        v = Math.addExact(v, values[i]);
+                    } catch (ArithmeticException e) {
+                        throw new IllegalArgumentException("subset value exceeds long range", e);
+                    }
                 }
             }
             if (c <= budget && v > best) {
@@ -573,7 +589,7 @@ public class M3DynamicProgramming {
         List<Candidate> candidates = buildCandidates(ds);
         String q = query.toLowerCase();
         for (Candidate c : candidates) {
-            String name = c.name.toLowerCase();
+            String name = c.name.toLowerCase(Locale.ROOT);
             c.lev = levenshtein(q, name);
             c.dam = damerauOSA(q, name);
         }
