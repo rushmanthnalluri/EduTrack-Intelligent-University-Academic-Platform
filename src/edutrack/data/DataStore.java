@@ -535,9 +535,21 @@ public class DataStore {
         return removed;
     }
 
-    public synchronized void saveToDisk() throws IOException {
-        CsvStore.saveAll(this, CsvStore.resolveDir());
-        dirty = false;
+    public void saveToDisk() throws IOException {
+        DataSnapshot snapshot;
+        synchronized (this) {
+            snapshot = snapshot();
+        }
+        CsvStore.saveAll(snapshot, CsvStore.resolveDir());
+        synchronized (this) {
+            // Preserve the dirty flag when another CRUD mutation happened while
+            // the snapshot was being written.
+            if (revision == snapshot.revision()) {
+                dirty = false;
+            } else {
+                dirty = true;
+            }
+        }
     }
 
     /**
