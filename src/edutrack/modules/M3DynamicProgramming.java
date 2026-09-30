@@ -192,7 +192,22 @@ public class M3DynamicProgramming {
     }
 
     public static long matrixChainOrder(int[] dims, int[][] split) {
+        if (dims == null || split == null) {
+            throw new IllegalArgumentException("dims and split must not be null");
+        }
+        if (dims.length < 1) {
+            throw new IllegalArgumentException("dims must contain at least one dimension");
+        }
+        for (int d : dims) {
+            if (d <= 0) throw new IllegalArgumentException("matrix dimensions must be positive");
+        }
         int n = dims.length - 1;
+        if (split.length < n) throw new IllegalArgumentException("split matrix is too small");
+        for (int i = 0; i < n; i++) {
+            if (split[i] == null || split[i].length < n) {
+                throw new IllegalArgumentException("split matrix must be at least n x n");
+            }
+        }
         if (n <= 0) {
             return 0;
         }
@@ -214,6 +229,12 @@ public class M3DynamicProgramming {
     }
 
     public static String buildParenthesization(int[][] split, int i, int j) {
+        if (split == null || split.length == 0) {
+            throw new IllegalArgumentException("split matrix must not be empty");
+        }
+        if (i < 0 || j < i || i >= split.length || j >= split.length) {
+            throw new IllegalArgumentException("invalid matrix-chain range");
+        }
         if (i == j) {
             return "A" + i;
         }
@@ -312,6 +333,7 @@ public class M3DynamicProgramming {
             throw new IllegalArgumentException("budget must be non-negative");
         }
         int n = credits.length;
+        for (int credit : credits) if (credit < 0) throw new IllegalArgumentException("credits must be non-negative");
         if (n > MAX_BITMASK_ITEMS) {
             throw new IllegalArgumentException(
                     "Bitmask enumeration supports at most " + MAX_BITMASK_ITEMS + " items, got " + n);
@@ -407,7 +429,17 @@ public class M3DynamicProgramming {
     }
 
     public static long optimalBstCost(int[] freq, int[][] root) {
+        if (freq == null || root == null) {
+            throw new IllegalArgumentException("freq and root must not be null");
+        }
         int n = freq.length;
+        if (root.length < n) throw new IllegalArgumentException("root matrix is too small");
+        for (int f : freq) if (f < 0) throw new IllegalArgumentException("frequencies must be non-negative");
+        for (int i = 0; i < n; i++) {
+            if (root[i] == null || root[i].length < n) {
+                throw new IllegalArgumentException("root matrix must be at least n x n");
+            }
+        }
         if (n == 0) {
             return 0;
         }
@@ -449,6 +481,13 @@ public class M3DynamicProgramming {
     }
 
     public static long balancedBstCost(int[] freq, int lo, int hi, int depth) {
+        if (freq == null) throw new IllegalArgumentException("freq must not be null");
+        if (lo < 0 || hi >= freq.length || depth < 1 || (lo > hi && lo != 0 && hi != lo - 1)) {
+            throw new IllegalArgumentException("invalid balanced BST range/depth");
+        }
+        for (int i = Math.max(0, lo); i <= hi; i++) {
+            if (freq[i] < 0) throw new IllegalArgumentException("frequencies must be non-negative");
+        }
         if (lo > hi) {
             return 0;
         }
@@ -463,6 +502,7 @@ public class M3DynamicProgramming {
     // ------------------------------------------------------------------
 
     public static int levenshtein(String a, String b) {
+        if (a == null || b == null) throw new IllegalArgumentException("strings must not be null");
         int m = a.length();
         int n = b.length();
         int[][] d = new int[m + 1][n + 1];
@@ -482,6 +522,7 @@ public class M3DynamicProgramming {
     }
 
     public static int damerauOSA(String a, String b) {
+        if (a == null || b == null) throw new IllegalArgumentException("strings must not be null");
         int m = a.length();
         int n = b.length();
         int[][] d = new int[m + 1][n + 1];
@@ -572,6 +613,13 @@ public class M3DynamicProgramming {
     }
 
     public static String[] selectTopCodes(Map<String, Integer> freq, int limit) {
+        if (freq == null) throw new IllegalArgumentException("frequency map must not be null");
+        if (limit < 0) throw new IllegalArgumentException("limit must be non-negative");
+        for (Map.Entry<String, Integer> e : freq.entrySet()) {
+            if (e.getKey() == null || e.getKey().isBlank() || e.getValue() == null || e.getValue() < 0) {
+                throw new IllegalArgumentException("frequency map contains invalid data");
+            }
+        }
         List<String> codes = new ArrayList<>(freq.keySet());
         codes.sort(Comparator.comparingInt((String c) -> freq.get(c)).reversed()
                 .thenComparing(Comparator.naturalOrder()));
