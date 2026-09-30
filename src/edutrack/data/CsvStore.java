@@ -56,7 +56,9 @@ public final class CsvStore {
             return false;
         }
         Path manifest = dir.resolve(MANIFEST_FILE);
-        return !Files.isRegularFile(manifest) || manifestMatches(dir, manifest);
+        // A manifest is the commit marker for a complete four-file snapshot.
+        // Without it, a crash during multi-file replacement could expose a mixed dataset.
+        return Files.isRegularFile(manifest) && manifestMatches(dir, manifest);
     }
 
     public static List<Course> loadCourses(Path dir) throws IOException {
@@ -197,9 +199,12 @@ public final class CsvStore {
             if (lines.size() != 5 || !MANIFEST_FILE.equals(lines.get(0))) {
                 return false;
             }
+            String[] expected = { STUDENTS_FILE, FACULTY_FILE, COURSES_FILE, EXAMS_FILE };
             for (int i = 1; i < lines.size(); i++) {
                 String[] parts = lines.get(i).split("=", 2);
-                if (parts.length != 2 || !sha256(dir.resolve(parts[0])).equals(parts[1])) {
+                if (parts.length != 2 || !expected[i - 1].equals(parts[0])
+                        || !Files.isRegularFile(dir.resolve(parts[0]))
+                        || !sha256(dir.resolve(parts[0])).equals(parts[1])) {
                     return false;
                 }
             }
