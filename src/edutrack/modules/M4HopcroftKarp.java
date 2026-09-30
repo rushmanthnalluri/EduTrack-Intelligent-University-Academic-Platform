@@ -96,12 +96,19 @@ public final class M4HopcroftKarp {
     }
 
     private static void checkGraph(int leftCount, int rightCount, List<List<Integer>> adj) {
-        if (leftCount < 0 || rightCount < 0 || adj.size() < leftCount) {
+        if (leftCount < 0 || rightCount < 0 || adj == null || adj.size() != leftCount) {
             throw new IllegalArgumentException("adjacency must provide " + leftCount
                     + " left lists, got " + adj.size());
         }
         for (int u = 0; u < leftCount; u++) {
-            for (int v : adj.get(u)) {
+            if (adj.get(u) == null) {
+                throw new IllegalArgumentException("adjacency list " + u + " must not be null");
+            }
+            for (Integer boxedV : adj.get(u)) {
+                if (boxedV == null) {
+                    throw new IllegalArgumentException("adjacency list " + u + " contains null");
+                }
+                int v = boxedV;
                 if (v < 0 || v >= rightCount) {
                     throw new IllegalArgumentException("adjacency index out of range: " + v
                             + " (right side has " + rightCount + " vertices)");
