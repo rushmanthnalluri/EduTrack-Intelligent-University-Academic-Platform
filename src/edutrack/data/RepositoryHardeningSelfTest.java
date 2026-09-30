@@ -3,7 +3,6 @@ package edutrack.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -161,7 +160,7 @@ public final class RepositoryHardeningSelfTest {
             DataStore ds = new DataStore(false);
             ApiServer api = ApiServer.start(ds, 0);
             try {
-                URL url = URI.create("http://127.0.0.1:" + api.getPort() + "/api/search?q=%").toURL();
+                URL url = new URL("http://127.0.0.1:" + api.getPort() + "/api/search?q=%");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 int status = conn.getResponseCode();
