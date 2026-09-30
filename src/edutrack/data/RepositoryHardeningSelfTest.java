@@ -30,6 +30,7 @@ import edutrack.modules.M4FlowNetwork;
 import edutrack.modules.M5Graph;
 import edutrack.modules.M5Reductions;
 import edutrack.modules.M5DPLLSolver;
+import edutrack.modules.M6ParallelMergeSort;
 import edutrack.modules.M6ReservoirSampler;
 import modules.ZFunctionSearch;
 import edutrack.search.SearchResult;
