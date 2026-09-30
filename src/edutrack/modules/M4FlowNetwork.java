@@ -80,11 +80,11 @@ public class M4FlowNetwork {
             throw new IllegalArgumentException("edge is not valid for this network");
         }
         Edge reverse = adj.get(e.to).get(e.rev);
-        int nextFlow = e.flow + amount;
-        if (nextFlow > e.capacity || nextFlow < -reverse.capacity) {
+        long nextFlowLong = (long) e.flow + amount;
+        if (nextFlowLong > e.capacity || nextFlowLong < -reverse.capacity) {
             throw new IllegalArgumentException("flow update exceeds edge capacity");
         }
-        e.flow = nextFlow;
+        e.flow = (int) nextFlowLong;
         reverse.flow -= amount;
     }
 
