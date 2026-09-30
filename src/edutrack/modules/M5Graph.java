@@ -17,6 +17,7 @@ public class M5Graph {
     public final String[] labels;
 
     public M5Graph(int n) {
+        if (n < 0) throw new IllegalArgumentException("node count must be non-negative");
         this.n = n;
         this.adj = new boolean[n][n];
         this.labels = new String[n];
@@ -26,6 +27,8 @@ public class M5Graph {
     }
 
     public void addEdge(int u, int v) {
+        checkVertex(u);
+        checkVertex(v);
         if (u != v) {
             adj[u][v] = true;
             adj[v][u] = true;
@@ -45,6 +48,7 @@ public class M5Graph {
     }
 
     public int degree(int v) {
+        checkVertex(v);
         int d = 0;
         for (int u = 0; u < n; u++) {
             if (adj[v][u]) {
@@ -55,6 +59,7 @@ public class M5Graph {
     }
 
     public List<Integer> neighbors(int v) {
+        checkVertex(v);
         List<Integer> out = new ArrayList<>();
         for (int u = 0; u < n; u++) {
             if (adj[v][u]) {
@@ -78,6 +83,13 @@ public class M5Graph {
     }
 
     public M5Graph inducedSubgraph(int[] vertices) {
+        if (vertices == null) throw new IllegalArgumentException("vertices must not be null");
+        boolean[] seen = new boolean[n];
+        for (int v : vertices) {
+            checkVertex(v);
+            if (seen[v]) throw new IllegalArgumentException("induced subgraph vertices must be distinct");
+            seen[v] = true;
+        }
         M5Graph g = new M5Graph(vertices.length);
         for (int i = 0; i < vertices.length; i++) {
             g.labels[i] = labels[vertices[i]];
@@ -88,6 +100,10 @@ public class M5Graph {
             }
         }
         return g;
+    }
+
+    private void checkVertex(int v) {
+        if (v < 0 || v >= n) throw new IllegalArgumentException("vertex out of range: " + v);
     }
 
     public int[] degreeOrder() {
@@ -107,6 +123,7 @@ public class M5Graph {
     }
 
     public static M5Graph courseConflictGraph(DataStore ds) {
+        if (ds == null) throw new IllegalArgumentException("data store must not be null");
         List<Course> courses = ds.courses();
         M5Graph g = new M5Graph(courses.size());
         Map<String, Integer> index = new HashMap<>();

@@ -57,6 +57,7 @@ public class M5NPCompleteness {
     }
 
     public static int[] resolveCodes(M5Graph g, String[] codes) {
+        if (g == null || codes == null) throw new IllegalArgumentException("graph and codes must not be null");
         Map<String, Integer> index = new HashMap<>();
         for (int i = 0; i < g.n; i++) {
             index.put(g.labels[i], i);
@@ -73,6 +74,12 @@ public class M5NPCompleteness {
     }
 
     public static int[] decodeSchedule(M5Graph sub, M5Reductions.SchedEncoding enc, boolean[] assignment) {
+        if (sub == null || enc == null || assignment == null) {
+            throw new IllegalArgumentException("graph, encoding and assignment must not be null");
+        }
+        if (enc.courseCount != sub.n || enc.slots < 1 || assignment.length <= enc.numVars) {
+            throw new IllegalArgumentException("schedule encoding does not match graph/assignment");
+        }
         int[] slotOf = new int[sub.n];
         Arrays.fill(slotOf, -1);
         for (int c = 0; c < sub.n; c++) {
@@ -87,6 +94,10 @@ public class M5NPCompleteness {
 
     public static boolean verifySchedule(M5Graph sub, M5Reductions.SchedEncoding enc,
             boolean[] assignment, int[] slotOf) {
+        if (sub == null || enc == null || assignment == null || slotOf == null
+                || enc.courseCount != sub.n || slotOf.length != sub.n) {
+            return false;
+        }
         for (int s : slotOf) {
             if (s < 0) {
                 return false;
