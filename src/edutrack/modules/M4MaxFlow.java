@@ -202,6 +202,13 @@ public final class M4MaxFlow {
                 if (e.capacity > 0 && e.flow() < 0) {
                     return false;
                 }
+                if (e.capacity == 0 && e.flow() > 0) {
+                    return false;
+                }
+                if (e.rev < 0 || e.rev >= net.edgesFrom(e.to).size()
+                        || net.edgesFrom(e.to).get(e.rev).flow() != -e.flow()) {
+                    return false;
+                }
                 balance += e.flow();
             }
             if (u != source && u != sink && balance != 0) {
