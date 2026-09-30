@@ -309,6 +309,7 @@ public final class RepositoryHardeningSelfTest {
             Thread.sleep(250);
             assertTrue(panel.done.getCount() == 1, "stale result callback ran");
             assertTrue(panel.button.isEnabled(), "stale result left control disabled");
+            assertTrue(!panel.unrelated.isEnabled(), "stale result re-enabled unrelated disabled control");
         });
 
         check("Academic Search refresh drops deleted assignments", () -> {
@@ -515,10 +516,13 @@ public final class RepositoryHardeningSelfTest {
         final CountDownLatch release = new CountDownLatch(1);
         final CountDownLatch done = new CountDownLatch(1);
         final JButton button = new JButton("work");
+        final JButton unrelated = new JButton("unrelated");
 
         TestPanel(DataStore ds) {
             super(ds);
+            unrelated.setEnabled(false);
             add(button);
+            add(unrelated);
         }
 
         void runOne() {
