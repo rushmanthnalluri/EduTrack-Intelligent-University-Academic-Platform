@@ -315,12 +315,12 @@ public class ReportsPanel extends ModulePanel {
                 setBusy(previewButton, saveButton, false);
                 statusLabel.setText("Save failed.");
                 showError(error);
-            });
+            }, previewButton, saveButton);
         }, error -> {
             setBusy(previewButton, saveButton, false);
             statusLabel.setText("Save failed.");
             showError(error);
-        });
+        }, previewButton, saveButton);
     }
 
     private static void setBusy(JButton previewButton, JButton saveButton, boolean busy) {
