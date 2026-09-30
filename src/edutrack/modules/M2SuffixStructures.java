@@ -376,6 +376,7 @@ public class M2SuffixStructures {
     }
 
     public static int longestRepeatedLength(String text) {
+        if (text == null) throw new IllegalArgumentException("text must not be null");
         if (text.length() < 2) {
             return 0;
         }
@@ -391,6 +392,9 @@ public class M2SuffixStructures {
     }
 
     public static int[] crossLcs(String t1, String t2) {
+        if (t1 == null || t2 == null) {
+            throw new IllegalArgumentException("texts must not be null");
+        }
         int n1 = t1.length();
         char separator = chooseSeparator(t1, t2);
         String combined = t1 + separator + t2;
@@ -422,8 +426,19 @@ public class M2SuffixStructures {
     }
 
     public static List<int[]> topRepeatedSubstrings(String text, int[] sa, int[] lcp, int k) {
+        if (text == null || sa == null || lcp == null) {
+            throw new IllegalArgumentException("text, suffix array and LCP array must not be null");
+        }
+        if (sa.length != text.length() || lcp.length != Math.max(0, text.length() - 1)) {
+            throw new IllegalArgumentException("suffix array/LCP lengths do not match text");
+        }
+        if (k < 0) {
+            throw new IllegalArgumentException("k must be non-negative");
+        }
+        if (k == 0 || lcp.length == 0) {
+            return new ArrayList<>();
+        }
         List<int[]> result = new ArrayList<>();
-        if (k <= 0 || lcp.length == 0) {
             return result;
         }
         Integer[] order = new Integer[lcp.length];
@@ -464,7 +479,7 @@ public class M2SuffixStructures {
         for (int i = 0; i < t2.length(); i++) {
             used[t2.charAt(i)] = true;
         }
-        for (int c = 1; c < used.length; c++) {
+        for (int c = 0; c < used.length; c++) {
             if (!used[c]) {
                 return (char) c;
             }
