@@ -95,6 +95,10 @@ public abstract class ModulePanel extends JPanel {
         runAsync(work, onDone, onError, new AbstractButton[0]);
     }
 
+    protected <T> void runAsync(Callable<T> work, Consumer<T> onDone, AbstractButton... busyButtons) {
+        runAsync(work, onDone, this::showError, busyButtons);
+    }
+
     protected <T> void runAsync(Callable<T> work, Consumer<T> onDone,
             Consumer<Throwable> onError, AbstractButton... busyButtons) {
         final long submittedRevision = dataStore.revision();
