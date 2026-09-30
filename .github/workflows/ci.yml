@@ -30,6 +30,7 @@ jobs:
           java -cp bin edutrack.features.ReportGenerator
           java -cp bin edutrack.search.SearchService
           java -cp bin edutrack.modules.M1StringAlgorithms
+          java -cp bin edutrack.modules.BenchmarkArenaSelfTest
           java -cp bin edutrack.modules.M2SuffixStructures
           java -cp bin edutrack.modules.M3DynamicProgramming
           java -cp bin edutrack.modules.M4NetworkFlow

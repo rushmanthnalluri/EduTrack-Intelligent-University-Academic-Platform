@@ -36,7 +36,7 @@ Every answer is computed with a **hand-implemented DSA algorithm** (JDK only), e
 | 📊 **Exam Analytics** | Per-course statistics, GPA toppers, at-risk detection, report cards |
 | 📈 **Activity Analytics** | activity event stream: actions, hourly rhythm, top courses/students |
 | 🧾 **Reports & Export** | Official-style transcripts, grade sheets, department summaries, at-risk lists |
-| 🌐 **REST API** | 8 JSON endpoints over JDK's built-in HTTP server — start/stop from the dashboard |
+| 🌐 **REST API** | 7 JSON endpoints over JDK's built-in HTTP server — start/stop from the dashboard |
 | 🧮 **Algorithm Workbench** | String search, suffix structures, dynamic programming, network flow, scheduling, ranking and streaming algorithms implemented from scratch |
 
 ## 🧠 Algorithm Coverage
@@ -109,6 +109,8 @@ Every capability has an interactive CLI entry point and a dedicated GUI screen w
 **Exam Scheduling** — constraint-based course scheduling with DPLL, conflict-graph visualization and a generated timetable grid.
 
 ![Exam Scheduling GUI](docs/screenshots/exam-scheduling.png)
+
+**Algorithm Benchmark Arena** — a live Swing workspace runs deterministic head-to-head microsecond benchmarks for KMP/Z/Rabin-Karp/Aho-Corasick, suffix-array/SA-IS/Kasai/suffix-automaton, and Levenshtein/Damerau/Matrix-Chain, with comparative bar charts.
 
 **Ranking & Streams** — CGPA ranking, randomized quicksort, parallel sorting and reservoir sampling with benchmark visualizations.
 
@@ -195,7 +197,7 @@ cd docs && pdflatex EduTrack_Report.tex   # or upload to Overleaf
 
 ## ✅ Testing
 
-The project includes non-interactive self-tests for persistence, record queries, activity analytics, exam analytics and the REST API. The GitHub Actions pipeline compiles every Java source file with JDK 21 and runs these verification suites on every push to `main` and pull request.
+The project includes non-interactive self-tests for persistence, record queries, activity analytics, exam analytics, reports, smart search, REST API, and the M1–M6 algorithm modules. The GitHub Actions pipeline compiles every Java source file with JDK 21 and runs these verification suites on every push to `main` and pull request.
 
 ```bash
 java -cp bin edutrack.features.ManageSupport

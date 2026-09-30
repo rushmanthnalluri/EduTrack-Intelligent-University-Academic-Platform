@@ -29,6 +29,7 @@ public class DashboardPanel extends ModulePanel {
         { "manage", "Manage Records", "Add/edit students, faculty, courses · enrollments · marks entry · CSV persistence" },
         { "exams", "Exams & Grades", "Course statistics · Toppers · At-risk students · Report cards with GPA" },
         { "analytics", "Activity Analytics", "Action mix, hourly rhythm, top courses & students" },
+        { "benchmark-arena", "Benchmark Arena", "Live microsecond races across string, suffix and dynamic-programming algorithms" },
         { "reports", "Reports & Transcripts", "Transcripts · grade sheets · department summaries · at-risk reports" },
         { "academic-search", "Academic Search", "KMP · Z-Function · Rabin-Karp · Aho-Corasick" },
         { "document-similarity", "Document Similarity", "Suffix Array · SA-IS · Kasai LCP · Suffix Automaton" },

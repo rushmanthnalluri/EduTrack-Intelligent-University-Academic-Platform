@@ -81,6 +81,7 @@ jobs:
                   capture(robot, "manage", "manage.png");
                   capture(robot, "exams", "exams.png");
                   capture(robot, "analytics", "analytics.png");
+                  capture(robot, "benchmark-arena", "benchmark-arena.png");
                   capture(robot, "reports", "reports.png");
                   capture(robot, "search", "search.png");
                   capture(robot, "academic-search", "academic-search.png");
