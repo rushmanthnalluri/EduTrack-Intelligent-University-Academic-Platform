@@ -3,14 +3,11 @@ package edutrack.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import javax.swing.AbstractButton;
@@ -140,7 +137,7 @@ public abstract class ModulePanel extends JPanel {
         }.execute();
     }
 
-    /** Captures every button's state so stale workers can restore, rather than guess, UI state. */
+    /** Shows an error from a background task. */
     protected void showError(Throwable t) {
         t.printStackTrace();
         JOptionPane.showMessageDialog(this,
