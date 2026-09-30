@@ -186,7 +186,7 @@ public class AcademicSearchPanel extends ModulePanel {
                 searchButton.setEnabled(true);
                 console.appendLine("Error: " + error.getMessage());
                 showError(error);
-            });
+            }, scanButton);
         });
         return tab;
     }
