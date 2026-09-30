@@ -13,7 +13,7 @@
 
 ![EduTrack Dashboard](docs/screenshots/dashboard.png)
 
-> **Live GUI screenshots:** the images in this gallery are captured from the actual Swing application in a virtual display using the same Java 21 build used by CI. No mock browser renders are used.
+> **Live GUI screenshots:** all 14 images in this gallery are captured from the actual Swing application in a virtual display using the same Java 21 build used by CI. No mock browser renders are used.
 
 </div>
 
@@ -21,7 +21,7 @@
 
 ## ✨ What is EduTrack?
 
-EduTrack models a real university academic system — **200 students, 12 faculty, 20 courses, 40 assignments, 981 exam records and a activity event stream** — and answers the questions an academic office actually asks: *Who can teach what? Which exams conflict? Which students are at risk? How similar are two submissions? What's the fastest way to find anything?*
+EduTrack models a real university academic system — **200 students, 12 faculty, 20 courses, 40 assignments, 981 exam records and an activity event stream** — and answers the questions an academic office actually asks: *Who can teach what? Which exams conflict? Which students are at risk? How similar are two submissions? What's the fastest way to find anything?*
 
 Every answer is computed with a **hand-implemented DSA algorithm** (JDK only), exposed through a modern Swing GUI and a console CLI, persisted to **CSV files**, and exposed to other systems through a **built-in REST API**.
 
