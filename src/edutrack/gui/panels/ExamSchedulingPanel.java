@@ -44,6 +44,7 @@ public class ExamSchedulingPanel extends ModulePanel {
 
     private M5Graph graph;
     private int[] degreeOrder;
+    private long graphRevision = -1;
     private final M5GraphCanvas canvas;
     private final JLabel statsLabel;
 
@@ -153,10 +154,14 @@ public class ExamSchedulingPanel extends ModulePanel {
         if (canvas != null) {
             canvas.setGraph(graph);
         }
+        graphRevision = dataStore.revision();
     }
 
     /** Rebuilds all graph-derived scheduling state after live CRUD changes. */
     public void refresh() {
+        if (graphRevision == dataStore.revision()) {
+            return;
+        }
         rebuildGraphState();
         scheduleModel.setRowCount(0);
         timetableCaption.setText("Timetable: —");
