@@ -9,6 +9,8 @@ import java.awt.FlowLayout;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import javax.swing.AbstractButton;
@@ -94,6 +96,7 @@ public abstract class ModulePanel extends JPanel {
 
     protected <T> void runAsync(Callable<T> work, Consumer<T> onDone, Consumer<Throwable> onError) {
         final long submittedRevision = dataStore.revision();
+        final Map<AbstractButton, Boolean> buttonStates = captureButtonStates(ModulePanel.this);
         new SwingWorker<T, Void>() {
             @Override
             protected T doInBackground() throws Exception {
@@ -107,11 +110,11 @@ public abstract class ModulePanel extends JPanel {
                     if (dataStore.revision() == submittedRevision) {
                         onDone.accept(result);
                     } else {
-                        reenableButtons(ModulePanel.this);
+                        restoreButtonStates(buttonStates);
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    reenableButtons(ModulePanel.this);
+                    restoreButtonStates(buttonStates);
                     onError.accept(e);
                 } catch (CancellationException e) {
                     reenableButtons(ModulePanel.this);
@@ -125,15 +128,27 @@ public abstract class ModulePanel extends JPanel {
         }.execute();
     }
 
-    /** Re-enables controls when a background result became stale due to a data mutation. */
-    private static void reenableButtons(Container root) {
+    /** Captures every button's state so stale workers can restore, rather than guess, UI state. */
+    private static Map<AbstractButton, Boolean> captureButtonStates(Container root) {
+        Map<AbstractButton, Boolean> states = new IdentityHashMap<>();
+        collectButtonStates(root, states);
+        return states;
+    }
+
+    private static void collectButtonStates(Container root, Map<AbstractButton, Boolean> states) {
         for (Component component : root.getComponents()) {
             if (component instanceof AbstractButton button) {
-                button.setEnabled(true);
+                states.put(button, button.isEnabled());
             }
             if (component instanceof Container child) {
-                reenableButtons(child);
+                collectButtonStates(child, states);
             }
+        }
+    }
+
+    private static void restoreButtonStates(Map<AbstractButton, Boolean> states) {
+        for (Map.Entry<AbstractButton, Boolean> entry : states.entrySet()) {
+            entry.getKey().setEnabled(entry.getValue());
         }
     }
 
