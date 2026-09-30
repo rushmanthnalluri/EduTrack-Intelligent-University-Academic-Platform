@@ -486,7 +486,7 @@ public class M5NPCompleteness {
         StringBuilder sb = new StringBuilder();
         if (vertices == null) {
             for (int i = 0; i < g.n; i++) {
-                sb.append(i == 0 ? "" : ", ").append(g.label(i));
+                sb.append(i == 0 ? "" : ", ").append(g.label(i);
             }
         } else {
             for (int i = 0; i < vertices.length; i++) {
@@ -501,7 +501,7 @@ public class M5NPCompleteness {
         int count = 0;
         for (int v = 0; v < g.n; v++) {
             if (set[v]) {
-                sb.append(count == 0 ? "" : ", ").append(g.label(v));
+                sb.append(count == 0 ? "" : ", ").append(g.label(v);
                 count++;
             }
         }
