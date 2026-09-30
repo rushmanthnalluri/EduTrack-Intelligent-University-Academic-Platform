@@ -286,7 +286,7 @@ public class ReportsPanel extends ModulePanel {
             setBusy(previewButton, saveButton, false);
             statusLabel.setText("Preview failed.");
             showError(error);
-        });
+        }, previewButton, saveButton);
     }
 
     private void runSave(JButton saveButton, JButton previewButton, String key, TextWork work,
