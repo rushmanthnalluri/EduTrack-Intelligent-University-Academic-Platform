@@ -27,6 +27,7 @@ import edutrack.model.Faculty;
 import edutrack.model.Student;
 import edutrack.modules.M1AhoCorasick;
 import edutrack.modules.M2SuffixAutomaton;
+import edutrack.modules.M2SuffixStructures;
 import edutrack.modules.M3DynamicProgramming;
 import edutrack.modules.M4FlowNetwork;
 import edutrack.modules.M5Graph;
@@ -625,5 +626,4 @@ public final class RepositoryHardeningSelfTest {
         } catch (IOException ignored) {
         }
     }
-}
-import edutrack.modules.M2SuffixStructures;
+} 
