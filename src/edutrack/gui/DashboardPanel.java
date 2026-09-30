@@ -78,7 +78,6 @@ public class DashboardPanel extends ModulePanel {
         stats.add(statCard("assignments", "Assignments", dataStore.assignments().size()));
         stats.add(statCard("resources", "Resources", dataStore.resources().size()));
         stats.add(statCard("examRecords", "Exam Records", dataStore.examRecords().size()));
-        stats.add(statCard("activityEvents", "Activity Events", dataStore.activityStream().size()));
 
         gradeChart.setPreferredSize(new Dimension(380, 220));
         programChart.setPreferredSize(new Dimension(380, 220));
@@ -159,7 +158,6 @@ public class DashboardPanel extends ModulePanel {
         updateStat("assignments", dataStore.assignments().size());
         updateStat("resources", dataStore.resources().size());
         updateStat("examRecords", dataStore.examRecords().size());
-        updateStat("activityEvents", dataStore.activityStream().size());
 
         int[] grades = ExamAnalytics.overallGradeDistribution(dataStore);
         double[] gradeValues = new double[grades.length];
