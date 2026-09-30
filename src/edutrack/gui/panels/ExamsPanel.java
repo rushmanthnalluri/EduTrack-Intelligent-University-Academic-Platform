@@ -124,6 +124,27 @@ public class ExamsPanel extends ModulePanel {
         add(card("Log", console), BorderLayout.SOUTH);
     }
 
+    /** Refreshes student selector and Top-N bounds after live CRUD changes. */
+    public void refresh() {
+        int max = Math.max(1, dataStore.students().size());
+        SpinnerNumberModel model = (SpinnerNumberModel) topNSpinner.getModel();
+        model.setMaximum(max);
+        int current = ((Number) model.getNumber()).intValue();
+        if (current > max) model.setValue(max);
+        int old = studentCombo.getSelectedIndex();
+        studentCombo.removeAllItems();
+        String[] items = studentItems(dataStore);
+        for (String item : items) studentCombo.addItem(item);
+        if (items.length > 0) studentCombo.setSelectedIndex(Math.min(Math.max(old, 0), items.length - 1));
+        courseStatsModel.setRowCount(0);
+        toppersModel.setRowCount(0);
+        atRiskModel.setRowCount(0);
+        reportModel.setRowCount(0);
+        courseStatsStatus.setText(" ");
+        atRiskStatus.setText(" ");
+        reportSummary.setText(" ");
+    }
+
     private JPanel buildCourseStatsTab() {
         JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         controls.setOpaque(false);
