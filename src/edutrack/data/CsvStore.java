@@ -147,46 +147,91 @@ public final class CsvStore {
     }
 
     private static List<String[]> parse(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
-        List<String[]> rows = new ArrayList<>();
-        for (int i = 1; i < lines.size(); i++) {
-            String line = lines.get(i);
-            if (line.isBlank()) {
-                continue;
-            }
-            rows.add(parseLine(line).toArray(new String[0]));
+        String content = Files.readString(file, StandardCharsets.UTF_8);
+        List<String[]> all = parseCsvContent(content);
+        if (!all.isEmpty()) {
+            all.remove(0); // header
         }
-        return rows;
+        return all;
     }
 
-    private static List<String> parseLine(String line) {
+    /** Parses RFC-4180-style CSV, including quoted fields spanning physical lines. */
+    private static List<String[]> parseCsvContent(String content) throws IOException {
+        List<String[]> rows = new ArrayList<>();
         List<String> fields = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
+        StringBuilder field = new StringBuilder();
         boolean inQuotes = false;
-        for (int i = 0; i < line.length(); i++) {
-            char ch = line.charAt(i);
+        boolean justClosedQuote = false;
+
+        for (int i = 0; i < content.length(); i++) {
+            char ch = content.charAt(i);
             if (inQuotes) {
                 if (ch == '"') {
-                    if (i + 1 < line.length() && line.charAt(i + 1) == '"') {
-                        current.append('"');
+                    if (i + 1 < content.length() && content.charAt(i + 1) == '"') {
+                        field.append('"');
                         i++;
                     } else {
                         inQuotes = false;
+                        justClosedQuote = true;
                     }
                 } else {
-                    current.append(ch);
+                    field.append(ch);
                 }
-            } else if (ch == '"') {
+                continue;
+            }
+
+            if (justClosedQuote) {
+                if (ch == ',' ) {
+                    fields.add(field.toString());
+                    field.setLength(0);
+                    justClosedQuote = false;
+                    continue;
+                }
+                if (ch == '\n' || ch == '\r') {
+                    fields.add(field.toString());
+                    field.setLength(0);
+                    rows.add(fields.toArray(new String[0]));
+                    fields = new ArrayList<>();
+                    justClosedQuote = false;
+                    if (ch == '\r' && i + 1 < content.length() && content.charAt(i + 1) == '\n') {
+                        i++;
+                    }
+                    continue;
+                }
+                throw new IOException("Malformed CSV: unexpected character after closing quote");
+            }
+
+            if (ch == '"') {
+                if (field.length() != 0) {
+                    throw new IOException("Malformed CSV: quote must begin a field");
+                }
                 inQuotes = true;
             } else if (ch == ',') {
-                fields.add(current.toString());
-                current.setLength(0);
+                fields.add(field.toString());
+                field.setLength(0);
+            } else if (ch == '\n' || ch == '\r') {
+                if (!field.isEmpty() || !fields.isEmpty()) {
+                    fields.add(field.toString());
+                    field.setLength(0);
+                    rows.add(fields.toArray(new String[0]));
+                    fields = new ArrayList<>();
+                }
+                if (ch == '\r' && i + 1 < content.length() && content.charAt(i + 1) == '\n') {
+                    i++;
+                }
             } else {
-                current.append(ch);
+                field.append(ch);
             }
         }
-        fields.add(current.toString());
-        return fields;
+
+        if (inQuotes) {
+            throw new IOException("Malformed CSV: unterminated quoted field");
+        }
+        if (justClosedQuote || !field.isEmpty() || !fields.isEmpty()) {
+            fields.add(field.toString());
+            rows.add(fields.toArray(new String[0]));
+        }
+        return rows;
     }
 
     private static String escape(String value) {
