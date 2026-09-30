@@ -3,6 +3,7 @@ package edutrack.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URL;
@@ -23,6 +24,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import edutrack.data.DataStore;
+import edutrack.data.DataSnapshot;
 import edutrack.features.ActivityAnalytics;
 import edutrack.features.ExamAnalytics;
 import edutrack.model.Course;
@@ -76,7 +78,7 @@ public final class ApiServer {
      * returns once it is accepting connections.
      */
     public static ApiServer start(DataStore ds, int port) throws IOException {
-        HttpServer http = HttpServer.create(new InetSocketAddress(port), 0);
+        HttpServer http = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), port), 0);
         ExecutorService pool = Executors.newFixedThreadPool(HANDLER_THREADS);
         http.setExecutor(pool);
         ApiServer api = new ApiServer(ds, http, pool);
@@ -138,14 +140,15 @@ public final class ApiServer {
     }
 
     private String route(String path, Map<String, String> query) throws ApiError {
+        DataSnapshot snapshot = ds.snapshot();
         switch (path) {
-            case "/api/summary": return summary();
-            case "/api/students": return students(query);
-            case "/api/courses": return courses(query);
-            case "/api/faculty": return faculty();
-            case "/api/exams": return exams(query);
-            case "/api/search": return search(query);
-            case "/api/analytics": return analytics();
+            case "/api/summary": return summary(snapshot);
+            case "/api/students": return students(snapshot, query);
+            case "/api/courses": return courses(snapshot, query);
+            case "/api/faculty": return faculty(snapshot);
+            case "/api/exams": return exams(snapshot, query);
+            case "/api/search": return search(snapshot, query);
+            case "/api/analytics": return analytics(snapshot);
             default: throw new ApiError(404, "unknown endpoint: " + path);
         }
     }
@@ -186,32 +189,32 @@ public final class ApiServer {
     // Endpoints
     // ------------------------------------------------------------------
 
-    private String summary() {
+    private String summary(DataSnapshot snapshot) {
         return JsonWriter.object()
-                .put("students", ds.students().size())
-                .put("faculty", ds.faculty().size())
-                .put("courses", ds.courses().size())
-                .put("assignments", ds.assignments().size())
-                .put("resources", ds.resources().size())
-                .put("examRecords", ds.examRecords().size())
-                .put("activityEvents", ds.activityStream().size())
-                .put("rooms", ds.rooms().size())
-                .put("timeSlots", ds.timeSlots().size())
-                .put("loadedFromDisk", ds.isLoadedFromDisk())
+                .put("students", snapshot.students().size())
+                .put("faculty", snapshot.faculty().size())
+                .put("courses", snapshot.courses().size())
+                .put("assignments", snapshot.assignments().size())
+                .put("resources", snapshot.resources().size())
+                .put("examRecords", snapshot.examRecords().size())
+                .put("activityEvents", snapshot.activityStream().size())
+                .put("rooms", snapshot.rooms().size())
+                .put("timeSlots", snapshot.timeSlots().size())
+                .put("loadedFromDisk", snapshot.isLoadedFromDisk())
                 .toString();
     }
 
-    private String students(Map<String, String> query) throws ApiError {
+    private String students(DataSnapshot snapshot, Map<String, String> query) throws ApiError {
         String idParam = query.get("id");
         if (idParam == null || idParam.isBlank()) {
             JsonWriter array = JsonWriter.array();
-            for (Student s : ds.students()) {
+            for (Student s : snapshot.students()) {
                 array.value(studentSummaryJson(s));
             }
             return array.toString();
         }
         int id = parseInt(idParam, "id");
-        Student student = ds.studentsById().get(id);
+        Student student = snapshot.studentsById().get(id);
         if (student == null) {
             throw new ApiError(404, "unknown student id: " + id);
         }
@@ -242,12 +245,12 @@ public final class ApiServer {
                 .put("courses", courses);
     }
 
-    private String courses(Map<String, String> query) throws ApiError {
+    private String courses(DataSnapshot snapshot, Map<String, String> query) throws ApiError {
         String codeParam = query.get("code");
         if (codeParam == null || codeParam.isBlank()) {
             Map<String, Integer> enrollment = enrollmentByCourse(snapshot);
             JsonWriter array = JsonWriter.array();
-            for (Course c : ds.courses()) {
+            for (Course c : snapshot.courses()) {
                 array.value(JsonWriter.object()
                         .put("code", c.code)
                         .put("name", c.name)
@@ -258,7 +261,7 @@ public final class ApiServer {
             }
             return array.toString();
         }
-        Course course = ds.coursesByCode().get(codeParam);
+        Course course = snapshot.coursesByCode().get(codeParam);
         if (course == null) {
             throw new ApiError(404, "unknown course code: " + codeParam);
         }
@@ -291,7 +294,7 @@ public final class ApiServer {
                 .put("department", course.department)
                 .put("credits", course.credits)
                 .put("semester", course.semester)
-                .put("enrollment", enrollmentByCourse().getOrDefault(course.code, 0))
+                .put("enrollment", enrollmentByCourse(snapshot).getOrDefault(course.code, 0))
                 .put("examStats", JsonWriter.object()
                         .put("students", studentsWithExams)
                         .put("avg", avg)
@@ -302,9 +305,9 @@ public final class ApiServer {
                 .toString();
     }
 
-    private Map<String, Integer> enrollmentByCourse() {
+    private Map<String, Integer> enrollmentByCourse(DataSnapshot snapshot) {
         Map<String, Integer> enrollment = new HashMap<>();
-        for (Student s : ds.students()) {
+        for (Student s : snapshot.students()) {
             for (String code : s.enrolledCourses) {
                 enrollment.merge(code, 1, Integer::sum);
             }
@@ -312,9 +315,9 @@ public final class ApiServer {
         return enrollment;
     }
 
-    private String faculty() {
+    private String faculty(DataSnapshot snapshot) {
         JsonWriter array = JsonWriter.array();
-        for (Faculty f : ds.faculty()) {
+        for (Faculty f : snapshot.faculty()) {
             JsonWriter expertise = JsonWriter.array();
             for (String code : f.expertise) {
                 expertise.value(code);
@@ -328,7 +331,7 @@ public final class ApiServer {
         return array.toString();
     }
 
-    private String exams(Map<String, String> query) throws ApiError {
+    private String exams(DataSnapshot snapshot, Map<String, String> query) throws ApiError {
         Integer studentId = null;
         String idParam = query.get("studentId");
         if (idParam != null && !idParam.isBlank()) {
@@ -336,7 +339,7 @@ public final class ApiServer {
         }
         String courseParam = query.get("course");
         JsonWriter array = JsonWriter.array();
-        for (ExamRecord r : ds.examRecords()) {
+        for (ExamRecord r : snapshot.examRecords()) {
             if (studentId != null && r.studentId != studentId) {
                 continue;
             }
@@ -361,7 +364,7 @@ public final class ApiServer {
                 .put("passed", r.passed());
     }
 
-    private String search(Map<String, String> query) {
+    private String search(DataSnapshot snapshot, Map<String, String> query) {
         String q = query.getOrDefault("q", "");
         JsonWriter array = JsonWriter.array();
         for (SearchResult r : SearchService.search(snapshot, q)) {
@@ -375,8 +378,8 @@ public final class ApiServer {
         return array.toString();
     }
 
-    private String analytics() {
-        List<edutrack.model.ActivityEvent> events = ds.activityStream();
+    private String analytics(DataSnapshot snapshot) {
+        List<edutrack.model.ActivityEvent> events = snapshot.activityStream();
         LinkedHashMap<String, Integer> actions = ActivityAnalytics.countByAction(events);
         ActivityAnalytics.Summary s = ActivityAnalytics.summarize(events);
         JsonWriter actionsJson = JsonWriter.object();
