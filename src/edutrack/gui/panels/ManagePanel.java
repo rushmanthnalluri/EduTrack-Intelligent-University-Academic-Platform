@@ -668,10 +668,19 @@ public class ManagePanel extends ModulePanel {
     private void updateGradePreview() {
         int mid = ((Number) midsemSpinner.getValue()).intValue();
         int end = ((Number) endsemSpinner.getValue()).intValue();
-        ExamRecord preview = new ExamRecord(0, "-", mid, end);
-        gradePreview.setText("Total " + preview.total() + "/100 · Grade " + preview.grade()
-                + " · " + (preview.passed() ? "Pass" : "Fail"));
-        gradePreview.setForeground(preview.passed() ? GuiTheme.SUCCESS : GuiTheme.ERROR);
+        int total = mid + end;
+        String grade;
+        if (total >= 90) grade = "AA";
+        else if (total >= 80) grade = "AB";
+        else if (total >= 70) grade = "BB";
+        else if (total >= 60) grade = "BC";
+        else if (total >= 50) grade = "CC";
+        else if (total >= 40) grade = "DD";
+        else grade = "F";
+        boolean passed = total >= ExamRecord.PASS_TOTAL;
+        gradePreview.setText("Total " + total + "/100 · Grade " + grade
+                + " · " + (passed ? "Pass" : "Fail"));
+        gradePreview.setForeground(passed ? GuiTheme.SUCCESS : GuiTheme.ERROR);
     }
 
     private void enrollSelected() {
