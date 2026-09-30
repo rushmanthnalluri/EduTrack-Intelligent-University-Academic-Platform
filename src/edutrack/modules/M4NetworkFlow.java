@@ -213,7 +213,7 @@ public class M4NetworkFlow {
         List<AllocationRow> rows = new ArrayList<>();
         int[] sectionNo = new int[courses.size()];
         for (M4FlowNetwork.Edge srcEdge : an.net.edgesFrom(an.source)) {
-            if (srcEdge.flow <= 0) {
+            if (srcEdge.flow() <= 0) {
                 continue;
             }
             int courseNode = srcEdge.to;
@@ -221,10 +221,10 @@ public class M4NetworkFlow {
             if (ci < 0 || ci >= courses.size()) {
                 continue;
             }
-            for (int unit = 0; unit < srcEdge.flow; unit++) {
+            for (int unit = 0; unit < srcEdge.flow(); unit++) {
                 int roomNode = -1;
                 for (M4FlowNetwork.Edge e : an.net.edgesFrom(courseNode)) {
-                    if (e.to >= an.roomBase && e.to < an.slotBase && e.flow > 0) {
+                    if (e.to >= an.roomBase && e.to < an.slotBase && e.flow() > 0) {
                         an.net.augment(e, -1);
                         roomNode = e.to;
                         break;
@@ -233,7 +233,7 @@ public class M4NetworkFlow {
                 int slotNode = -1;
                 if (roomNode >= 0) {
                     for (M4FlowNetwork.Edge e : an.net.edgesFrom(roomNode)) {
-                        if (e.to >= an.slotBase && e.to < an.sink && e.flow > 0) {
+                        if (e.to >= an.slotBase && e.to < an.sink && e.flow() > 0) {
                             an.net.augment(e, -1);
                             slotNode = e.to;
                             break;
@@ -434,9 +434,13 @@ public class M4NetworkFlow {
     }
 
     public static int[] sectionsNeeded(int[] enrollment) {
+        if (enrollment == null) throw new IllegalArgumentException("enrollment must not be null");
         int[] sections = new int[enrollment.length];
         for (int i = 0; i < enrollment.length; i++) {
-            sections[i] = (enrollment[i] + ROOM_SEATS - 1) / ROOM_SEATS;
+            if (enrollment[i] < 0) {
+                throw new IllegalArgumentException("enrollment cannot be negative");
+            }
+            sections[i] = (int) (((long) enrollment[i] + ROOM_SEATS - 1L) / ROOM_SEATS);
         }
         return sections;
     }
@@ -504,6 +508,8 @@ public class M4NetworkFlow {
 
     /** Deterministically clones courses/rooms with perturbed demands for scaling tests. */
     public static ScaledNetwork buildScaledNetwork(DataStore ds, int factor, long seed) {
+        if (ds == null) throw new IllegalArgumentException("data store must not be null");
+        if (factor < 1) throw new IllegalArgumentException("scale factor must be >= 1");
         int[] baseSections = sectionsNeeded(computeEnrollment(ds));
         int baseCourses = ds.courses().size();
         Random rnd = new Random(seed);
@@ -667,7 +673,7 @@ public class M4NetworkFlow {
     private static long outflowFrom(M4FlowNetwork net, int source) {
         long out = 0;
         for (M4FlowNetwork.Edge e : net.edgesFrom(source)) {
-            out += e.flow;
+            out += e.flow();
         }
         return out;
     }

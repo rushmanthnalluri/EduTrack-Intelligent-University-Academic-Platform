@@ -69,7 +69,7 @@ public class M5GraphCanvas extends JComponent {
                 withDept[i] = byDegree[i];
             }
             java.util.Arrays.sort(withDept, (a, b) -> {
-                int byDept = deptOf(g.labels[a]).compareTo(deptOf(g.labels[b]));
+                int byDept = deptOf(g.label(a)).compareTo(deptOf(g.label(b)));
                 return byDept != 0 ? byDept : Integer.compare(g.degree(b), g.degree(a));
             });
             layoutOrder = new int[g.n];
@@ -123,7 +123,7 @@ public class M5GraphCanvas extends JComponent {
         g2.setColor(new Color(0xC3CAD8));
         for (int u = 0; u < graph.n; u++) {
             for (int v = u + 1; v < graph.n; v++) {
-                if (graph.adj[u][v]) {
+                if (graph.hasEdge(u, v)) {
                     g2.draw(new Line2D.Double(xs[u], ys[u], xs[v], ys[v]));
                 }
             }
@@ -152,7 +152,7 @@ public class M5GraphCanvas extends JComponent {
             g2.setColor(Color.WHITE);
             g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
             FontMetrics fm = g2.getFontMetrics();
-            String code = graph.labels[v];
+            String code = graph.label(v);
             g2.drawString(code, (float) (x - fm.stringWidth(code) / 2.0), (float) (y + 3.5));
 
             if (slotOf != null && slotOf[v] >= 0) {
@@ -177,7 +177,7 @@ public class M5GraphCanvas extends JComponent {
             double dx = e.getX() - xs[v];
             double dy = e.getY() - ys[v];
             if (dx * dx + dy * dy <= NODE_R * NODE_R) {
-                StringBuilder tip = new StringBuilder(graph.labels[v])
+                StringBuilder tip = new StringBuilder(graph.label(v))
                         .append(" — degree ").append(graph.degree(v));
                 if (slotOf != null && slotOf[v] >= 0) {
                     tip.append(" · exam slot ").append(slotOf[v] + 1);
@@ -208,7 +208,7 @@ public class M5GraphCanvas extends JComponent {
         if (slotOf != null && slotOf[v] >= 0 && slotCount > 0) {
             return SLOT_COLORS[slotOf[v] % SLOT_COLORS.length];
         }
-        return colorForCode(graph.labels[v]);
+        return colorForCode(graph.label(v));
     }
 
     static Color colorForCode(String code) {

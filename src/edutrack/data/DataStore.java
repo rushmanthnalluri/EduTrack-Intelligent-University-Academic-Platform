@@ -142,6 +142,8 @@ public class DataStore {
     private final boolean loadedFromDisk;
     private volatile boolean dirty;
     private volatile long revision;
+    private volatile long persistedRevision;
+    private final Object persistenceLock = new Object();
 
     public DataStore() {
         this(true);
@@ -178,7 +180,16 @@ public class DataStore {
         }
 
         if (coreCourses != null) {
-            validateLoadedData(coreCourses, coreStudents, coreFaculty, coreExams);
+            try {
+                validateLoadedData(coreCourses, coreStudents, coreFaculty, coreExams);
+            } catch (RuntimeException e) {
+                System.err.println("EduTrack: saved data failed validation (" + e.getMessage()
+                        + "); falling back to generated data.");
+                coreCourses = null;
+            }
+        }
+
+        if (coreCourses != null) {
             this.courses = immutable(coreCourses);
             this.students = immutable(coreStudents);
             this.faculty = immutable(coreFaculty);
@@ -284,8 +295,12 @@ public class DataStore {
         if (student.cgpa < 0.0 || student.cgpa > 10.0) {
             throw new IllegalArgumentException("CGPA must be 0..10");
         }
+        java.util.HashSet<String> enrolledCodes = new java.util.HashSet<>();
         for (String code : student.enrolledCourses) {
             requireCourse(code);
+            if (!enrolledCodes.add(code)) {
+                throw new IllegalArgumentException("Student enrollments contain duplicate course: " + code);
+            }
         }
         List<Student> copy = new ArrayList<>(students);
         copy.add(new Student(student.id, student.name, student.program, student.semester,
@@ -326,8 +341,12 @@ public class DataStore {
         if (member.department.isBlank()) {
             throw new IllegalArgumentException("Faculty department must not be blank");
         }
+        java.util.HashSet<String> expertiseCodes = new java.util.HashSet<>();
         for (String code : member.expertise) {
             requireCourse(code);
+            if (!expertiseCodes.add(code)) {
+                throw new IllegalArgumentException("Faculty expertise contains duplicate course: " + code);
+            }
         }
         List<Faculty> copy = new ArrayList<>(faculty);
         copy.add(new Faculty(member.id, member.name, member.department, new ArrayList<>(member.expertise)));
@@ -518,20 +537,41 @@ public class DataStore {
         return removed;
     }
 
-    public synchronized void saveToDisk() throws IOException {
-        CsvStore.saveAll(this, CsvStore.resolveDir());
-        dirty = false;
+    public void saveToDisk() throws IOException {
+        synchronized (persistenceLock) {
+            // Serialize save/reset operations without holding the DataStore monitor
+            // across disk I/O, so GUI CRUD actions remain responsive.
+            DataSnapshot snapshot;
+            synchronized (this) {
+                snapshot = snapshot();
+            }
+            CsvStore.saveAll(snapshot, CsvStore.resolveDir());
+            synchronized (this) {
+                // The newest successfully persisted revision wins. Older concurrent
+                // saves must not make a newer persisted dataset look dirty.
+                persistedRevision = Math.max(persistedRevision, snapshot.revision());
+                dirty = persistedRevision < revision;
+            }
+        }
     }
 
     /**
      * Deletes the saved CSV files; generated data returns on the next application start.
      */
-    public synchronized boolean resetToGenerated() throws IOException {
-        boolean reset = CsvStore.deleteCoreFiles(CsvStore.resolveDir());
-        if (reset) {
-            dirty = false;
+    public boolean resetToGenerated() throws IOException {
+        synchronized (persistenceLock) {
+            boolean reset = CsvStore.deleteCoreFiles(CsvStore.resolveDir());
+            if (reset) {
+                synchronized (this) {
+                    // The live in-memory dataset is intentionally retained until restart,
+                    // so deleting its persisted copy means the current state is no longer
+                    // safely persisted and must remain marked dirty.
+                    persistedRevision = -1;
+                    dirty = true;
+                }
+            }
+            return reset;
         }
-        return reset;
     }
 
     private Student requireStudent(int id) {
@@ -648,10 +688,20 @@ public class DataStore {
             if (r == null || !studentIds.contains(r.studentId) || !courseCodes.contains(r.courseCode)
                     || r.midsem < 0 || r.midsem > ExamRecord.MIDSEM_MAX
                     || r.endsem < 0 || r.endsem > ExamRecord.ENDSEM_MAX
+                    || !studentHasCourse(students, r.studentId, r.courseCode)
                     || !examKeys.add(r.studentId + "\u0000" + r.courseCode)) {
                 throw new IllegalArgumentException("invalid or duplicate exam record in saved data");
             }
         }
+    }
+
+    private static boolean studentHasCourse(List<Student> students, int studentId, String courseCode) {
+        for (Student s : students) {
+            if (s.id == studentId) {
+                return s.enrolledCourses.contains(courseCode);
+            }
+        }
+        return false;
     }
 
     private static List<Course> buildCourses() {

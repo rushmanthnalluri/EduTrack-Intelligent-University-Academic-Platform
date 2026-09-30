@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import edutrack.data.DataSnapshot;
+
 import edutrack.model.Course;
 import edutrack.model.ExamRecord;
 import edutrack.model.Faculty;
@@ -56,7 +58,9 @@ public final class CsvStore {
             return false;
         }
         Path manifest = dir.resolve(MANIFEST_FILE);
-        return !Files.isRegularFile(manifest) || manifestMatches(dir, manifest);
+        // A manifest is the commit marker for a complete four-file snapshot.
+        // Without it, a crash during multi-file replacement could expose a mixed dataset.
+        return Files.isRegularFile(manifest) && manifestMatches(dir, manifest);
     }
 
     public static List<Course> loadCourses(Path dir) throws IOException {
@@ -106,14 +110,20 @@ public final class CsvStore {
     }
 
     public static void saveAll(DataStore ds, Path dir) throws IOException {
+        if (ds == null) throw new IllegalArgumentException("data store must not be null");
+        saveAll(ds.snapshot(), dir);
+    }
+
+    public static void saveAll(DataSnapshot snapshot, Path dir) throws IOException {
+        if (snapshot == null) throw new IllegalArgumentException("snapshot must not be null");
         Files.createDirectories(dir);
         Path staging = dir.resolve(".edutrack-save-" + UUID.randomUUID());
         Files.createDirectories(staging);
         try {
-            writeString(staging.resolve(STUDENTS_FILE), studentsCsv(ds));
-            writeString(staging.resolve(FACULTY_FILE), facultyCsv(ds));
-            writeString(staging.resolve(COURSES_FILE), coursesCsv(ds));
-            writeString(staging.resolve(EXAMS_FILE), examsCsv(ds));
+            writeString(staging.resolve(STUDENTS_FILE), studentsCsv(snapshot));
+            writeString(staging.resolve(FACULTY_FILE), facultyCsv(snapshot));
+            writeString(staging.resolve(COURSES_FILE), coursesCsv(snapshot));
+            writeString(staging.resolve(EXAMS_FILE), examsCsv(snapshot));
 
             String manifest = MANIFEST_FILE + "\n"
                     + STUDENTS_FILE + "=" + sha256(staging.resolve(STUDENTS_FILE)) + "\n"
@@ -132,9 +142,9 @@ public final class CsvStore {
         }
     }
 
-    private static String studentsCsv(DataStore ds) {
+    private static String studentsCsv(DataSnapshot snapshot) {
         StringBuilder sb = new StringBuilder("id,name,program,semester,cgpa,enrolledCourses\n");
-        for (Student s : ds.students()) {
+        for (Student s : snapshot.students()) {
             sb.append(s.id).append(',')
                     .append(escape(s.name)).append(',')
                     .append(escape(s.program)).append(',')
@@ -145,9 +155,9 @@ public final class CsvStore {
         return sb.toString();
     }
 
-    private static String facultyCsv(DataStore ds) {
+    private static String facultyCsv(DataSnapshot snapshot) {
         StringBuilder sb = new StringBuilder("id,name,department,expertise\n");
-        for (Faculty f : ds.faculty()) {
+        for (Faculty f : snapshot.faculty()) {
             sb.append(f.id).append(',')
                     .append(escape(f.name)).append(',')
                     .append(escape(f.department)).append(',')
@@ -156,9 +166,9 @@ public final class CsvStore {
         return sb.toString();
     }
 
-    private static String coursesCsv(DataStore ds) {
+    private static String coursesCsv(DataSnapshot snapshot) {
         StringBuilder sb = new StringBuilder("code,name,department,credits,semester\n");
-        for (Course c : ds.courses()) {
+        for (Course c : snapshot.courses()) {
             sb.append(escape(c.code)).append(',')
                     .append(escape(c.name)).append(',')
                     .append(escape(c.department)).append(',')
@@ -168,9 +178,9 @@ public final class CsvStore {
         return sb.toString();
     }
 
-    private static String examsCsv(DataStore ds) {
+    private static String examsCsv(DataSnapshot snapshot) {
         StringBuilder sb = new StringBuilder("studentId,courseCode,midsem,endsem\n");
-        for (ExamRecord r : ds.examRecords()) {
+        for (ExamRecord r : snapshot.examRecords()) {
             sb.append(r.studentId).append(',')
                     .append(escape(r.courseCode)).append(',')
                     .append(r.midsem).append(',')
@@ -197,9 +207,12 @@ public final class CsvStore {
             if (lines.size() != 5 || !MANIFEST_FILE.equals(lines.get(0))) {
                 return false;
             }
+            String[] expected = { STUDENTS_FILE, FACULTY_FILE, COURSES_FILE, EXAMS_FILE };
             for (int i = 1; i < lines.size(); i++) {
                 String[] parts = lines.get(i).split("=", 2);
-                if (parts.length != 2 || !sha256(dir.resolve(parts[0])).equals(parts[1])) {
+                if (parts.length != 2 || !expected[i - 1].equals(parts[0])
+                        || !Files.isRegularFile(dir.resolve(parts[0]))
+                        || !sha256(dir.resolve(parts[0])).equals(parts[1])) {
                     return false;
                 }
             }

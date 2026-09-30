@@ -186,7 +186,7 @@ public class AcademicSearchPanel extends ModulePanel {
                 searchButton.setEnabled(true);
                 console.appendLine("Error: " + error.getMessage());
                 showError(error);
-            });
+            }, searchButton);
         });
         return tab;
     }
@@ -282,7 +282,7 @@ public class AcademicSearchPanel extends ModulePanel {
                 detectButton.setEnabled(true);
                 console.appendLine("Error: " + error.getMessage());
                 showError(error);
-            });
+            }, detectButton);
         });
         return tab;
     }
@@ -364,7 +364,7 @@ public class AcademicSearchPanel extends ModulePanel {
                 searchButton.setEnabled(true);
                 console.appendLine("Error: " + error.getMessage());
                 showError(error);
-            });
+            }, searchButton);
         });
         return tab;
     }

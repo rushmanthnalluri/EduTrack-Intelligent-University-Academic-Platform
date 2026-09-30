@@ -60,7 +60,7 @@ public class M5NPCompleteness {
         if (g == null || codes == null) throw new IllegalArgumentException("graph and codes must not be null");
         Map<String, Integer> index = new HashMap<>();
         for (int i = 0; i < g.n; i++) {
-            index.put(g.labels[i], i);
+            index.put(g.label(i), i);
         }
         int[] out = new int[codes.length];
         int m = 0;
@@ -108,7 +108,7 @@ public class M5NPCompleteness {
         }
         for (int u = 0; u < sub.n; u++) {
             for (int v = u + 1; v < sub.n; v++) {
-                if (sub.adj[u][v] && slotOf[u] == slotOf[v]) {
+                if (sub.hasEdge(u, v) && slotOf[u] == slotOf[v]) {
                     return false;
                 }
             }
@@ -137,7 +137,7 @@ public class M5NPCompleteness {
         int shown = Math.min(12, g.n);
         System.out.println("Courses by conflict degree (top " + shown + ") :");
         for (int i = 0; i < shown; i++) {
-            System.out.println("  " + g.labels[order[i]] + "  degree=" + g.degree(order[i]));
+            System.out.println("  " + g.label(order[i]) + "  degree=" + g.degree(order[i]));
         }
 
         System.out.println("1. Cross-program mix (default, " + CROSS_PROGRAM_MIX.length
@@ -222,7 +222,7 @@ public class M5NPCompleteness {
             if (bySlot[slotOf[c]].length() > 0) {
                 bySlot[slotOf[c]].append(", ");
             }
-            bySlot[slotOf[c]].append(sub.labels[c]);
+            bySlot[slotOf[c]].append(sub.label(c));
         }
         System.out.println("Derived exam schedule:");
         for (int s = 0; s < slots; s++) {
@@ -237,7 +237,7 @@ public class M5NPCompleteness {
     private static int[] readCourseSubset(Scanner sc, M5Graph g) {
         Map<String, Integer> index = new HashMap<>();
         for (int i = 0; i < g.n; i++) {
-            index.put(g.labels[i], i);
+            index.put(g.label(i), i);
         }
         System.out.print("Enter 3-12 course codes separated by spaces : ");
         String line = sc.nextLine().trim();
@@ -289,7 +289,7 @@ public class M5NPCompleteness {
             varNames = new String[numVars + 1];
             for (int c = 0; c < sub.n; c++) {
                 for (int s = 0; s < slots; s++) {
-                    varNames[c * slots + s + 1] = sub.labels[c] + "@S" + (s + 1);
+                    varNames[c * slots + s + 1] = sub.label(c) + "@S" + (s + 1);
                 }
             }
             formula = M5Reductions.examScheduling3CNF(sub, slots);
@@ -328,7 +328,7 @@ public class M5NPCompleteness {
         if (cs.clique.length == m) {
             System.out.print("Clique nodes        : ");
             for (int i = 0; i < cs.clique.length; i++) {
-                System.out.print((i == 0 ? "" : ", ") + red.graph.labels[cs.clique[i]]);
+                System.out.print((i == 0 ? "" : ", ") + red.graph.label(cs.clique[i]));
             }
             System.out.println();
             boolean[] assignment = M5Reductions.cliqueToAssignment(red, cs.clique);
@@ -486,11 +486,11 @@ public class M5NPCompleteness {
         StringBuilder sb = new StringBuilder();
         if (vertices == null) {
             for (int i = 0; i < g.n; i++) {
-                sb.append(i == 0 ? "" : ", ").append(g.labels[i]);
+                sb.append(i == 0 ? "" : ", ").append(g.label(i));
             }
         } else {
             for (int i = 0; i < vertices.length; i++) {
-                sb.append(i == 0 ? "" : ", ").append(g.labels[vertices[i]]);
+                sb.append(i == 0 ? "" : ", ").append(g.label(vertices[i]));
             }
         }
         return sb.toString();
@@ -501,7 +501,7 @@ public class M5NPCompleteness {
         int count = 0;
         for (int v = 0; v < g.n; v++) {
             if (set[v]) {
-                sb.append(count == 0 ? "" : ", ").append(g.labels[v]);
+                sb.append(count == 0 ? "" : ", ").append(g.label(v));
                 count++;
             }
         }
@@ -671,11 +671,11 @@ public class M5NPCompleteness {
             degreeSum += d;
             minDeg = Math.min(minDeg, d);
             maxDeg = Math.max(maxDeg, d);
-            if (g.adj[v][v]) {
+            if (g.hasEdge(v, v)) {
                 graphOk = false;
             }
             for (int u = 0; u < g.n; u++) {
-                if (g.adj[u][v] != g.adj[v][u]) {
+                if (g.hasEdge(u, v) != g.hasEdge(v, u)) {
                     graphOk = false;
                 }
             }

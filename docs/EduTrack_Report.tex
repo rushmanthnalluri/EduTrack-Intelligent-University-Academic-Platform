@@ -51,7 +51,7 @@ report generation and large-scale analytics) with six carefully integrated algor
 modules covering string matching, suffix structures, advanced dynamic programming,
 network flow, NP-completeness and approximation, and randomized and parallel algorithms.
 Every algorithm is implemented from scratch in Java with no external dependencies and is
-validated by non-interactive self-test suites totalling more than 300 automated checks.
+validated by non-interactive self-test suites totalling 356 automated checks, including 43 repository-wide hardening regressions.
 This report describes the architecture, the data model, each algorithmic module and its
 use within the platform, the integration features, and the verification methodology.
 \end{abstract}
@@ -426,8 +426,9 @@ ManageSupport & 33 \\
 ReportGenerator & 12 \\
 SearchService & 19 \\
 REST API (JsonWriter + ApiServer) & 16 + 41 \\
+Repository hardening regressions & 43 \\
 \midrule
-\textbf{Total} & \textbf{313} \\
+\textbf{Total} & \textbf{356} \\
 \bottomrule
 \end{tabular}
 \end{center}

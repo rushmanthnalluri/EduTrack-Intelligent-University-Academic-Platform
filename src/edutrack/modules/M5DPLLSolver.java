@@ -15,6 +15,7 @@ public class M5DPLLSolver {
     }
 
     private static final long DECISION_CAP = 5_000_000L;
+    private static final int RECURSION_DEPTH_CAP = 4096;
 
     @SuppressWarnings("serial")
     private static class BudgetExceeded extends RuntimeException {
@@ -26,7 +27,7 @@ public class M5DPLLSolver {
         int[] assign = new int[numVars + 1];
         long[] decisions = new long[1];
         try {
-            boolean sat = dpll(clauses.toArray(new int[0][]), assign, decisions);
+            boolean sat = dpll(clauses.toArray(new int[0][]), assign, decisions, 0);
             res.status = sat ? Status.SAT : Status.UNSAT;
             if (sat) {
                 res.assignment = new boolean[numVars + 1];
@@ -57,7 +58,10 @@ public class M5DPLLSolver {
         }
     }
 
-    private static boolean dpll(int[][] clauses, int[] assign, long[] decisions) {
+    private static boolean dpll(int[][] clauses, int[] assign, long[] decisions, int depth) {
+        if (depth > RECURSION_DEPTH_CAP) {
+            throw new BudgetExceeded();
+        }
         boolean changed = true;
         while (changed) {
             changed = false;
@@ -128,7 +132,7 @@ public class M5DPLLSolver {
             if (++decisions[0] > DECISION_CAP) {
                 throw new BudgetExceeded();
             }
-            if (dpll(clauses, next, decisions)) {
+            if (dpll(clauses, next, decisions, depth + 1)) {
                 System.arraycopy(next, 0, assign, 0, next.length);
                 return true;
             }

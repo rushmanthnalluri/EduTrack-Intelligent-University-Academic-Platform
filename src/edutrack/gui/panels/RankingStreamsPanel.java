@@ -374,7 +374,7 @@ public class RankingStreamsPanel extends ModulePanel {
             button.setEnabled(true);
             button.setText(label);
             showError(error);
-        });
+        }, button);
     }
 
     private static DefaultTableModel tableModel(String... columns) {

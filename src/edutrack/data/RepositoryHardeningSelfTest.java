@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +22,7 @@ import edutrack.gui.panels.AcademicSearchPanel;
 import edutrack.gui.panels.DocumentSimilarityPanel;
 import edutrack.model.Course;
 import edutrack.model.ExamRecord;
+import edutrack.features.ReportGenerator;
 import edutrack.model.Faculty;
 import edutrack.model.Student;
 import edutrack.modules.M1AhoCorasick;
@@ -307,6 +309,7 @@ public final class RepositoryHardeningSelfTest {
             Thread.sleep(250);
             assertTrue(panel.done.getCount() == 1, "stale result callback ran");
             assertTrue(panel.button.isEnabled(), "stale result left control disabled");
+            assertTrue(!panel.unrelated.isEnabled(), "stale result re-enabled unrelated disabled control");
         });
 
         check("Academic Search refresh drops deleted assignments", () -> {
@@ -384,6 +387,122 @@ public final class RepositoryHardeningSelfTest {
             expectThrows(IllegalArgumentException.class,
                     () -> M5DPLLSolver.satisfies(java.util.Collections.singletonList((int[]) null), new boolean[2]));
         });
+        check("loaded-data validator enforces exam enrollment referential integrity", () -> {
+            Course c = new Course("C1", "Course", "Dept", 3, 1);
+            Student s = new Student(1, "A", "Program", 1, 8.0, List.of());
+            expectThrows(IllegalArgumentException.class,
+                    () -> DataStore.validateLoadedData(List.of(c), List.of(s), List.of(), List.of(
+                            new ExamRecord(1, "C1", 10, 50))));
+        });
+
+        check("runtime CRUD rejects duplicate enrollments and expertise", () -> {
+            DataStore ds = new DataStore(false);
+            expectThrows(IllegalArgumentException.class, () ->
+                    ds.addStudent(new Student(9991, "Dup", "CSE", 1, 8.0, List.of("CS101", "CS101"))));
+            expectThrows(IllegalArgumentException.class, () ->
+                    ds.addFaculty(new Faculty(9992, "Dup Faculty", "Computer Science",
+                            List.of("CS101", "CS101"))));
+        });
+
+        check("CSV snapshot requires a commit manifest", () -> {
+            Path dir = Files.createTempDirectory("edutrack-manifest-test");
+            try {
+                Files.writeString(dir.resolve(CsvStore.COURSES_FILE),
+                        "code,name,department,credits,semester\nC1,Course,Dept,3,1\n",
+                        StandardCharsets.UTF_8);
+                Files.writeString(dir.resolve(CsvStore.STUDENTS_FILE),
+                        "id,name,program,semester,cgpa,enrolledCourses\n1,A,P,1,8.0,C1\n",
+                        StandardCharsets.UTF_8);
+                assertTrue(!CsvStore.coreFilesExist(dir), "manifest-less partial snapshot was accepted");
+            } finally {
+                deleteRecursively(dir);
+            }
+        });
+
+        check("flow edge cannot be applied to a different network", () -> {
+            M4FlowNetwork a = new M4FlowNetwork(2);
+            M4FlowNetwork b = new M4FlowNetwork(2);
+            a.addEdge(0, 1, 2);
+            b.addEdge(0, 1, 2);
+            M4FlowNetwork.Edge edge = a.edgesFrom(0).get(0);
+            expectThrows(IllegalArgumentException.class, () -> b.augment(edge, 1));
+            assertTrue(edge.flow() == 0, "cross-network mutation changed the source edge");
+        });
+
+        check("M5Graph internals are not publicly mutable", () -> {
+            expectThrows(NoSuchFieldException.class, () -> M5Graph.class.getField("adj"));
+            expectThrows(NoSuchFieldException.class, () -> M5Graph.class.getField("labels"));
+            M5Graph g = new M5Graph(2);
+            g.addEdge(0, 1);
+            assertTrue(g.hasEdge(0, 1) && "v0".equals(g.label(0)), "graph accessors are incorrect");
+        });
+
+        check("department summary counts distinct students", () -> {
+            DataStore ds = new DataStore(false);
+            List<String[]> rows = ReportGenerator.departmentSummary(ds);
+            Map<String, java.util.Set<Integer>> expected = new java.util.HashMap<>();
+            Map<String, String> courseDept = new java.util.HashMap<>();
+            for (Course c : ds.courses()) {
+                courseDept.put(c.code, c.department);
+                expected.computeIfAbsent(c.department, k -> new java.util.HashSet<>());
+            }
+            for (Student student : ds.students()) {
+                for (String code : student.enrolledCourses) {
+                    String dept = courseDept.get(code);
+                    if (dept != null) expected.get(dept).add(student.id);
+                }
+            }
+            boolean ok = true;
+            for (int i = 1; i < rows.size(); i++) {
+                String dept = rows.get(i)[0];
+                ok &= Integer.parseInt(rows.get(i)[2]) == expected.get(dept).size();
+            }
+            assertTrue(ok, "department enrolled-student counts are not distinct-student counts");
+        });
+
+        check("fuzzy suggestions preserve the suggested entity type for details", () -> {
+            DataStore ds = new DataStore(false);
+            final edutrack.gui.panels.SearchPanel[] holder = new edutrack.gui.panels.SearchPanel[1];
+            SwingUtilities.invokeAndWait(() -> holder[0] = new edutrack.gui.panels.SearchPanel(ds));
+            java.lang.reflect.Method method = holder[0].getClass()
+                    .getDeclaredMethod("suggestionDetails", SearchResult.class);
+            method.setAccessible(true);
+            Object body = method.invoke(holder[0],
+                    new SearchResult("Suggestion", "RES-1", "Did you mean: Introduction to Algorithms",
+                            "Resource · CS201", 90));
+            assertTrue(String.valueOf(body).contains("Type"), "resource suggestion opened the wrong detail type");
+        });
+
+        check("selection frequency validates k <= n", () -> {
+            expectThrows(IllegalArgumentException.class,
+                    () -> edutrack.modules.M6RandomizedParallel.selectionFrequencies(3, 4, 10, 1L));
+            assertTrue(edutrack.modules.M6RandomizedParallel.selectionFrequencies(3, 3, 10, 1L).length == 3,
+                    "valid k=n case failed");
+        });
+
+        check("matrix-chain overflow is reported instead of wrapping", () -> {
+            expectThrows(IllegalArgumentException.class,
+                    () -> M3DynamicProgramming.matrixChainOrder(
+                            new int[] { Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE },
+                            new int[2][2]));
+        });
+
+        check("suffix-structure APIs reject malformed suffix arrays", () -> {
+            expectThrows(IllegalArgumentException.class,
+                    () -> edutrack.modules.M2SuffixArray.findOccurrences("banana",
+                            new int[] {0, 1}, "a"));
+            expectThrows(IllegalArgumentException.class,
+                    () -> edutrack.modules.M2KasaiLCP.buildLCP("banana",
+                            new int[] {0, 1}));
+        });
+
+        check("vertex-cover APIs validate boolean-set lengths", () -> {
+            M5Graph g = new M5Graph(3);
+            expectThrows(IllegalArgumentException.class,
+                    () -> edutrack.modules.M5VertexCoverApprox.isVertexCover(g, new boolean[2]));
+            expectThrows(IllegalArgumentException.class,
+                    () -> edutrack.modules.M5VertexCoverApprox.isIndependentSet(g, new boolean[4]));
+        });
 
         System.out.println("----");
         System.out.println("Repository hardening checks: " + (checks - failures) + "/" + checks + " passed.");
@@ -399,10 +518,13 @@ public final class RepositoryHardeningSelfTest {
         final CountDownLatch release = new CountDownLatch(1);
         final CountDownLatch done = new CountDownLatch(1);
         final JButton button = new JButton("work");
+        final JButton unrelated = new JButton("unrelated");
 
         TestPanel(DataStore ds) {
             super(ds);
+            unrelated.setEnabled(false);
             add(button);
+            add(unrelated);
         }
 
         void runOne() {
@@ -414,7 +536,7 @@ public final class RepositoryHardeningSelfTest {
             }, value -> {
                 button.setEnabled(true);
                 done.countDown();
-            }, error -> done.countDown());
+            }, error -> done.countDown(), button);
         }
     }
 

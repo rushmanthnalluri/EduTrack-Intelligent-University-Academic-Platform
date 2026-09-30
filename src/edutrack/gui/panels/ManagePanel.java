@@ -789,7 +789,7 @@ public class ManagePanel extends ModulePanel {
             }, error -> {
                 saveButton.setEnabled(true);
                 showError(error);
-            });
+            }, saveButton);
         });
 
         resetButton.addActionListener(e -> {
@@ -816,7 +816,7 @@ public class ManagePanel extends ModulePanel {
             }, error -> {
                 resetButton.setEnabled(true);
                 showError(error);
-            });
+            }, resetButton);
         });
         return bar;
     }

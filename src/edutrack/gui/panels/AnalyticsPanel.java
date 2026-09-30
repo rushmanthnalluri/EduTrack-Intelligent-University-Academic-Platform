@@ -191,10 +191,11 @@ public class AnalyticsPanel extends ModulePanel {
                     outcome.result.summary.totalEvents, outcome.ms));
         }, error -> {
             computeButton.setEnabled(true);
+            exportButton.setEnabled(true);
             statusLabel.setText("Analytics failed: " + error.getMessage());
             console.appendLine("Error: " + error.getMessage());
             showError(error);
-        });
+        }, computeButton, exportButton);
     }
 
     private void populate(ActivityAnalytics.AnalyticsResult result) {

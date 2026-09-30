@@ -277,9 +277,15 @@ public class M6RandomizedParallel {
     }
 
     public static double[] selectionFrequencies(int n, int k, int trials, long seed) {
-        double[] freqs = new double[Math.max(0, n)];
-        if (n <= 0 || trials <= 0 || k <= 0) {
+        if (n < 0 || k < 0 || trials < 0) {
+            throw new IllegalArgumentException("n, k and trials must be non-negative");
+        }
+        double[] freqs = new double[n];
+        if (n == 0 || trials == 0 || k == 0) {
             return freqs;
+        }
+        if (k > n) {
+            throw new IllegalArgumentException("k must be <= n");
         }
         List<Integer> stream = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
@@ -299,7 +305,12 @@ public class M6RandomizedParallel {
     }
 
     public static double[] buildBenchmarkArray(DataStore ds, int size, long seed) {
+        if (ds == null) throw new IllegalArgumentException("data store must not be null");
+        if (size < 0) throw new IllegalArgumentException("size must be non-negative");
         List<Student> students = ds.students();
+        if (size > 0 && students.isEmpty()) {
+            throw new IllegalArgumentException("cannot build benchmark data from an empty student dataset");
+        }
         Random rnd = new Random(seed);
         double[] arr = new double[size];
         for (int i = 0; i < size; i++) {

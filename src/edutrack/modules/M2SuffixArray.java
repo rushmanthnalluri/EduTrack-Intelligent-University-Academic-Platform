@@ -10,6 +10,7 @@ public class M2SuffixArray {
     private static final int CHAR_ALPHABET = 1 << 16;
 
     public static int[] buildSuffixArray(String text) {
+        if (text == null) throw new IllegalArgumentException("text must not be null");
         int n = text.length();
         if (n == 0) {
             return new int[0];
@@ -54,6 +55,10 @@ public class M2SuffixArray {
     }
 
     public static List<Integer> findOccurrences(String text, int[] sa, String pattern) {
+        if (text == null || sa == null || pattern == null) {
+            throw new IllegalArgumentException("text, suffix array and pattern must not be null");
+        }
+        validateSuffixArray(text.length(), sa);
         List<Integer> occurrences = new ArrayList<>();
         int n = sa.length;
         if (n == 0 || pattern.isEmpty()) {
@@ -99,6 +104,19 @@ public class M2SuffixArray {
         for (int i = n - 1; i >= 0; i--) {
             int key = rank[in[i]];
             out[--count[key]] = in[i];
+        }
+    }
+
+    private static void validateSuffixArray(int textLength, int[] sa) {
+        if (sa.length != textLength) {
+            throw new IllegalArgumentException("suffix array length must equal text length");
+        }
+        boolean[] seen = new boolean[textLength];
+        for (int pos : sa) {
+            if (pos < 0 || pos >= textLength || seen[pos]) {
+                throw new IllegalArgumentException("suffix array is not a permutation of text positions");
+            }
+            seen[pos] = true;
         }
     }
 

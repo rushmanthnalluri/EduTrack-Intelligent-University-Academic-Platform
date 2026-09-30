@@ -3,7 +3,6 @@ package edutrack.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.concurrent.Callable;
@@ -93,8 +92,25 @@ public abstract class ModulePanel extends JPanel {
     }
 
     protected <T> void runAsync(Callable<T> work, Consumer<T> onDone, Consumer<Throwable> onError) {
+        runAsync(work, onDone, onError, new AbstractButton[0]);
+    }
+
+    protected <T> void runAsync(Callable<T> work, Consumer<T> onDone, AbstractButton... busyButtons) {
+        runAsync(work, onDone, this::showError, busyButtons);
+    }
+
+    protected <T> void runAsync(Callable<T> work, Consumer<T> onDone,
+            Consumer<Throwable> onError, AbstractButton... busyButtons) {
         final long submittedRevision = dataStore.revision();
         new SwingWorker<T, Void>() {
+            private void restoreBusyButtons() {
+                for (AbstractButton button : busyButtons) {
+                    if (button != null) {
+                        button.setEnabled(true);
+                    }
+                }
+            }
+
             @Override
             protected T doInBackground() throws Exception {
                 return work.call();
@@ -107,17 +123,17 @@ public abstract class ModulePanel extends JPanel {
                     if (dataStore.revision() == submittedRevision) {
                         onDone.accept(result);
                     } else {
-                        reenableButtons(ModulePanel.this);
+                        restoreBusyButtons();
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    reenableButtons(ModulePanel.this);
+                    restoreBusyButtons();
                     onError.accept(e);
                 } catch (CancellationException e) {
-                    reenableButtons(ModulePanel.this);
+                    restoreBusyButtons();
                     onError.accept(e);
                 } catch (ExecutionException e) {
-                    reenableButtons(ModulePanel.this);
+                    restoreBusyButtons();
                     Throwable cause = e.getCause() == null ? e : e.getCause();
                     onError.accept(cause);
                 }
@@ -125,18 +141,7 @@ public abstract class ModulePanel extends JPanel {
         }.execute();
     }
 
-    /** Re-enables controls when a background result became stale due to a data mutation. */
-    private static void reenableButtons(Container root) {
-        for (Component component : root.getComponents()) {
-            if (component instanceof AbstractButton button) {
-                button.setEnabled(true);
-            }
-            if (component instanceof Container child) {
-                reenableButtons(child);
-            }
-        }
-    }
-
+    /** Shows an error from a background task. */
     protected void showError(Throwable t) {
         t.printStackTrace();
         JOptionPane.showMessageDialog(this,

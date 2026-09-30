@@ -228,7 +228,7 @@ public class SearchPanel extends ModulePanel {
                 body = studentDetails(result.id);
                 break;
             case "Suggestion":
-                body = suggestionDetails(result.id);
+                body = suggestionDetails(result);
                 break;
             case "Faculty":
                 body = facultyDetails(result.id);
@@ -281,11 +281,15 @@ public class SearchPanel extends ModulePanel {
                 + "\nCourses  : " + joinCapped(student.enrolledCourses, 8);
     }
 
-    private String suggestionDetails(String id) {
-        if (dataStore.coursesByCode().containsKey(id)) {
-            return courseDetails(id);
-        }
-        return studentDetails(id);
+    private String suggestionDetails(SearchResult result) {
+        String id = result.id;
+        String subtitle = result.subtitle == null ? "" : result.subtitle;
+        if (subtitle.startsWith("Course ·")) return courseDetails(id);
+        if (subtitle.startsWith("Student ·")) return studentDetails(id);
+        if (subtitle.startsWith("Faculty ·")) return facultyDetails(id);
+        if (subtitle.startsWith("Assignment ·")) return assignmentDetails(id);
+        if (subtitle.startsWith("Resource ·")) return resourceDetails(id);
+        return "No details available for " + id;
     }
 
     private String facultyDetails(String id) {

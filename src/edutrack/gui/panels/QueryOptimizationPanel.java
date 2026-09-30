@@ -214,8 +214,7 @@ public class QueryOptimizationPanel extends ModulePanel {
             queryButton.setEnabled(true);
             queryStatus.setText("Query correction failed.");
             showError(error);
-        });
-    }
+        }, queryButton);   }
 
     // ------------------------------------------------------------------
     // Tab (b): matrix-chain multiplication
@@ -304,8 +303,7 @@ public class QueryOptimizationPanel extends ModulePanel {
             mcmButton.setEnabled(true);
             mcmStatus.setText("Matrix-chain computation failed.");
             showError(error);
-        });
-    }
+        }, mcmButton);   }
 
     // ------------------------------------------------------------------
     // Tab (c): bitmask DP course combination explorer
@@ -430,8 +428,7 @@ public class QueryOptimizationPanel extends ModulePanel {
             bitmaskButton.setEnabled(true);
             bitmaskSummary.setText("Bitmask explorer failed.");
             showError(error);
-        });
-    }
+        }, bitmaskButton);   }
 
     // ------------------------------------------------------------------
     // Tab (d): optimal BST with tree canvas
@@ -519,7 +516,7 @@ public class QueryOptimizationPanel extends ModulePanel {
         }, error -> {
             obstButton.setEnabled(true);
             showError(error);
-        });
+        }, obstButton);
     }
 
     private static String preorderText(String[] keys, int[] freq, int[][] root) {
