@@ -174,7 +174,7 @@ public class M5Reductions {
             for (int lit : clauses.get(ci)) {
                 red.nodeClause[id] = ci;
                 red.nodeLiteral[id] = lit;
-                red.graph.labels[id] = "c" + ci + ":" + (lit > 0 ? "" : "~") + "x" + Math.abs(lit);
+                red.graph.setLabel(id, "c" + ci + ":" + (lit > 0 ? "" : "~") + "x" + Math.abs(lit));
                 id++;
             }
         }
@@ -193,15 +193,21 @@ public class M5Reductions {
         if (red == null || red.nodeLiteral == null || red.nodeClause == null || clique == null) {
             throw new IllegalArgumentException("reduction and clique must not be null");
         }
-        if (red.nodeLiteral.length != red.nodeClause.length || red.numVars < 0) {
+        if (red.graph == null || red.nodeLiteral.length != red.nodeClause.length
+                || red.graph.n != red.nodeLiteral.length || red.clauseCount < 0 || red.numVars < 0) {
             throw new IllegalArgumentException("invalid reduction metadata");
         }
         boolean[] seenClause = new boolean[red.clauseCount];
         boolean[] assignment = new boolean[red.numVars + 1];
+        boolean[] seenNode = new boolean[red.nodeLiteral.length];
         for (int node : clique) {
             if (node < 0 || node >= red.nodeLiteral.length) {
                 throw new IllegalArgumentException("clique vertex out of range: " + node);
             }
+            if (seenNode[node]) {
+                throw new IllegalArgumentException("clique contains duplicate vertex");
+            }
+            seenNode[node] = true;
             int clause = red.nodeClause[node];
             int lit = red.nodeLiteral[node];
             if (clause < 0 || clause >= red.clauseCount || lit == 0
@@ -213,6 +219,13 @@ public class M5Reductions {
             }
             seenClause[clause] = true;
             assignment[Math.abs(lit)] = lit > 0;
+        }
+        for (int i = 0; i < clique.length; i++) {
+            for (int j = i + 1; j < clique.length; j++) {
+                if (!red.graph.hasEdge(clique[i], clique[j])) {
+                    throw new IllegalArgumentException("clique vertices are not pairwise adjacent");
+                }
+            }
         }
         return assignment;
     }
@@ -234,6 +247,10 @@ public class M5Reductions {
     }
 
     private static CliqueSearch cliqueSearch(M5Graph g, int target) {
+        if (g == null) throw new IllegalArgumentException("graph must not be null");
+        if (target < 0 || target > g.n) {
+            throw new IllegalArgumentException("target clique size must be between 0 and " + g.n);
+        }
         CliqueSearch res = new CliqueSearch();
         int[] candidates = new int[g.n];
         for (int i = 0; i < g.n; i++) {
