@@ -109,6 +109,20 @@ public class M5Reductions {
         return clauses;
     }
 
+    private static int[] padToThree(int[] literals) {
+        if (literals.length == 0) {
+            throw new IllegalArgumentException("clause must contain at least one literal");
+        }
+        if (literals.length >= 3) {
+            return Arrays.copyOf(literals, literals.length);
+        }
+        int[] out = new int[3];
+        for (int i = 0; i < 3; i++) {
+            out[i] = literals[Math.min(i, literals.length - 1)];
+        }
+        return out;
+    }
+
     public static class GadgetReduction {
         public M5Graph graph;
         public int[] nodeClause;
