@@ -194,7 +194,7 @@ public class AnalyticsPanel extends ModulePanel {
             statusLabel.setText("Analytics failed: " + error.getMessage());
             console.appendLine("Error: " + error.getMessage());
             showError(error);
-        });
+        }, computeButton, exportButton);
     }
 
     private void populate(ActivityAnalytics.AnalyticsResult result) {
