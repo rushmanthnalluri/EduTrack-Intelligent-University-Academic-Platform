@@ -11,7 +11,7 @@ public final class FeatureParitySelfTest {
 
         M1BittuAlgorithm.SearchResult bittu =
                 M1BittuAlgorithm.searchWithTelemetry("xxacademic algorithmsyyacademic algorithms", "academic algorithms");
-        if (!bittu.matchPositions.equals(Arrays.asList(2, 24))) {
+        if (!bittu.matchPositions.equals(Arrays.asList(2, 23))) {
             System.out.println("FAIL Bittu positions: " + bittu.matchPositions);
             failures++;
         } else {
