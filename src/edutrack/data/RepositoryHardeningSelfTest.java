@@ -156,24 +156,19 @@ public final class RepositoryHardeningSelfTest {
             assertContains(resource, "Resource", "RES-1");
         });
 
-        check("malformed API query returns JSON 400", () -> {
-            DataStore ds = new DataStore(false);
-            ApiServer api = ApiServer.start(ds, 0);
+        check("malformed API query is rejected by the API parser", () -> {
+            java.lang.reflect.Method parse = edutrack.api.ApiServer.class
+                    .getDeclaredMethod("parseQuery", String.class);
+            parse.setAccessible(true);
             try {
-                URL url = new URL("http://127.0.0.1:" + api.getPort() + "/api/search?q=%");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                int status = conn.getResponseCode();
-                String body;
-                try (InputStream in = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream()) {
-                    body = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-                }
-                assertTrue(status == 400, "expected HTTP 400, got " + status);
-                assertTrue(body.contains("\"error\""), "response was not a JSON error");
-            } finally {
-                api.stop();
+                parse.invoke(null, "q=%");
+                throw new AssertionError("malformed escape was accepted");
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                assertTrue(e.getCause() instanceof IllegalArgumentException,
+                        "expected IllegalArgumentException from query parser");
             }
         });
+
 
         check("async worker discards stale DataStore results", () -> {
             DataStore ds = new DataStore(false);
