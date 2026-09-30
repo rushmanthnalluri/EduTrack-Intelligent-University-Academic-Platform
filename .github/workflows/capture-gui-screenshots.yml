@@ -105,6 +105,16 @@ jobs:
             convert "$file" -strip "$file"
           done
 
+      - name: Verify screenshots match the exact source commit
+        run: |
+          git fetch origin main
+          latest="$(git rev-parse origin/main)"
+          if [ "$latest" != "$GITHUB_SHA" ]; then
+            echo "Main advanced from $GITHUB_SHA to $latest while screenshots were being captured."
+            echo "Skipping publication; the newer push will run its own screenshot capture."
+            exit 0
+          fi
+
       - name: Commit refreshed GUI screenshots
         run: |
           git config user.name "Rushmanth Nalluri"
