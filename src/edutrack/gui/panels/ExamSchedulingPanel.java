@@ -387,8 +387,7 @@ public class ExamSchedulingPanel extends ModulePanel {
         }, run -> {
             setBusy(false);
             showSchedule(run, findMinimum);
-        });
-    }
+        }, solveButton, minSlotsButton, reductionButton, vcButton, vcExactButton);   }
 
     private SchedRun solveForSlots(M5Graph sub, int slots) {
         SchedRun run = new SchedRun();
@@ -564,8 +563,7 @@ public class ExamSchedulingPanel extends ModulePanel {
         }, text -> {
             setBusy(false);
             reductionConsole.setText(text);
-        });
-    }
+        }, solveButton, minSlotsButton, reductionButton, vcButton, vcExactButton);   }
 
     private static void appendWrappedLabels(StringBuilder sb, M5Graph g, int[] vertices) {
         StringBuilder line = new StringBuilder("  ");
@@ -610,8 +608,7 @@ public class ExamSchedulingPanel extends ModulePanel {
             setBusy(false);
             vcConsole.setText((String) out[0]);
             canvas.setCover((boolean[]) out[1]);
-        });
-    }
+        }, solveButton, minSlotsButton, reductionButton, vcButton, vcExactButton);   }
 
     private void runVertexCoverExact() {
         setBusy(true);
@@ -648,8 +645,7 @@ public class ExamSchedulingPanel extends ModulePanel {
             setBusy(false);
             vcConsole.setText((String) out[0]);
             canvas.setCover((boolean[]) out[1]);
-        });
-    }
+        }, solveButton, minSlotsButton, reductionButton, vcButton, vcExactButton);   }
 
     private void setBusy(boolean busy) {
         solveButton.setEnabled(!busy);
