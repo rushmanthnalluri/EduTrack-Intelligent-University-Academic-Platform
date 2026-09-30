@@ -32,6 +32,10 @@ public final class CsvStore {
     public static final String COURSES_FILE = "courses.csv";
     public static final String EXAMS_FILE = "exams.csv";
     private static final String MANIFEST_FILE = ".edutrack.manifest";
+    private static final String STUDENTS_HEADER = "id,name,program,semester,cgpa,enrolledCourses";
+    private static final String FACULTY_HEADER = "id,name,department,expertise";
+    private static final String COURSES_HEADER = "code,name,department,credits,semester";
+    private static final String EXAMS_HEADER = "studentId,courseCode,midsem,endsem";
 
     private CsvStore() {
     }
