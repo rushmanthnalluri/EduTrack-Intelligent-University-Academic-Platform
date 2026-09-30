@@ -117,10 +117,10 @@ public abstract class ModulePanel extends JPanel {
                     restoreButtonStates(buttonStates);
                     onError.accept(e);
                 } catch (CancellationException e) {
-                    reenableButtons(ModulePanel.this);
+                    restoreButtonStates(buttonStates);
                     onError.accept(e);
                 } catch (ExecutionException e) {
-                    reenableButtons(ModulePanel.this);
+                    restoreButtonStates(buttonStates);
                     Throwable cause = e.getCause() == null ? e : e.getCause();
                     onError.accept(cause);
                 }
