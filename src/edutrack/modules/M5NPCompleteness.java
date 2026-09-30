@@ -501,7 +501,7 @@ public class M5NPCompleteness {
         int count = 0;
         for (int v = 0; v < g.n; v++) {
             if (set[v]) {
-                sb.append(count == 0 ? "" : ", ").append(g.label(v))
+                sb.append(count == 0 ? "" : ", ").append(g.label(v));
                 count++;
             }
         }
