@@ -39,8 +39,8 @@ public class ReportsPanel extends ModulePanel {
 
     private final JComboBox<String> studentCombo;
     private final JComboBox<String> courseCombo;
-    private final List<Student> students;
-    private final List<Course> courses;
+    private List<Student> students;
+    private List<Course> courses;
 
     private final JButton deptPreviewButton = GuiTheme.primaryButton("Preview");
     private final JButton deptSaveButton = GuiTheme.secondaryButton("Save…");
@@ -124,6 +124,32 @@ public class ReportsPanel extends ModulePanel {
 
         add(header, BorderLayout.NORTH);
         add(center, BorderLayout.CENTER);
+    }
+
+    /** Refreshes report selectors after Manage Records changes the live dataset. */
+    public void refresh() {
+        int oldStudent = studentCombo.getSelectedIndex();
+        int oldCourse = courseCombo.getSelectedIndex();
+        students = dataStore.students();
+        courses = dataStore.courses();
+        studentCombo.removeAllItems();
+        for (Student s : students) {
+            studentCombo.addItem(s.id + " — " + s.name);
+        }
+        courseCombo.removeAllItems();
+        for (Course c : courses) {
+            courseCombo.addItem(c.code + " — " + c.name);
+        }
+        if (!students.isEmpty()) {
+            studentCombo.setSelectedIndex(Math.min(Math.max(oldStudent, 0), students.size() - 1));
+        }
+        if (!courses.isEmpty()) {
+            courseCombo.setSelectedIndex(Math.min(Math.max(oldCourse, 0), courses.size() - 1));
+        }
+        cachedKey = null;
+        cachedText = null;
+        previewArea.setText("Pick a report above and press Preview.");
+        statusLabel.setText("Ready — live dataset refreshed.");
     }
 
     // ------------------------------------------------------------------

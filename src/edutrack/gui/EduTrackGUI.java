@@ -50,6 +50,10 @@ public class EduTrackGUI extends JFrame {
     private String currentCard = "dashboard";
     private DashboardPanel dashboard;
     private RecordsPanel recordsPanel;
+    private ExamsPanel examsPanel;
+    private ReportsPanel reportsPanel;
+    private ResourceAllocationPanel resourceAllocationPanel;
+    private RankingStreamsPanel rankingStreamsPanel;
     private JLabel statusCounts;
     private JLabel statusLeft;
     private JLabel statusMessage;
@@ -84,19 +88,23 @@ public class EduTrackGUI extends JFrame {
         recordsPanel = new RecordsPanel(dataStore);
         cards.add(recordsPanel, "records");
         cards.add(new ManagePanel(dataStore), "manage");
-        cards.add(new ExamsPanel(dataStore), "exams");
+        examsPanel = new ExamsPanel(dataStore);
+        cards.add(examsPanel, "exams");
         cards.add(new AnalyticsPanel(dataStore), "analytics");
         cards.add(new BenchmarkArenaPanel(dataStore), "benchmark-arena");
-        cards.add(new ReportsPanel(dataStore), "reports");
+        reportsPanel = new ReportsPanel(dataStore);
+        cards.add(reportsPanel, "reports");
 
         SearchPanel searchPanel = new SearchPanel(dataStore);
         cards.add(searchPanel, "search");
         cards.add(new AcademicSearchPanel(dataStore), "academic-search");
         cards.add(new DocumentSimilarityPanel(dataStore), "document-similarity");
         cards.add(new QueryOptimizationPanel(dataStore), "query-optimization");
-        cards.add(new ResourceAllocationPanel(dataStore), "resource-allocation");
+        resourceAllocationPanel = new ResourceAllocationPanel(dataStore);
+        cards.add(resourceAllocationPanel, "resource-allocation");
         cards.add(new ExamSchedulingPanel(dataStore), "exam-scheduling");
-        cards.add(new RankingStreamsPanel(dataStore), "ranking-streams");
+        rankingStreamsPanel = new RankingStreamsPanel(dataStore);
+        cards.add(rankingStreamsPanel, "ranking-streams");
 
         getContentPane().setLayout(new BorderLayout());
         getContentPane().setBackground(GuiTheme.BG);
@@ -112,6 +120,14 @@ public class EduTrackGUI extends JFrame {
             dashboard.refresh();
         } else if ("records".equals(key)) {
             recordsPanel.refresh();
+        } else if ("exams".equals(key)) {
+            examsPanel.refresh();
+        } else if ("reports".equals(key)) {
+            reportsPanel.refresh();
+        } else if ("resource-allocation".equals(key)) {
+            resourceAllocationPanel.refresh();
+        } else if ("ranking-streams".equals(key)) {
+            rankingStreamsPanel.refresh();
         }
 
         currentCard = key;
