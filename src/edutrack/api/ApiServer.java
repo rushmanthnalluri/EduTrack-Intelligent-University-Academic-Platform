@@ -215,7 +215,7 @@ public final class ApiServer {
         if (student == null) {
             throw new ApiError(404, "unknown student id: " + id);
         }
-        ExamAnalytics.ReportCard card = ExamAnalytics.reportCard(ds, id);
+        ExamAnalytics.ReportCard card = ExamAnalytics.reportCard(snapshot, id);
         JsonWriter records = JsonWriter.array();
         for (ExamRecord r : card.records) {
             records.value(examJson(r));
@@ -245,7 +245,7 @@ public final class ApiServer {
     private String courses(Map<String, String> query) throws ApiError {
         String codeParam = query.get("code");
         if (codeParam == null || codeParam.isBlank()) {
-            Map<String, Integer> enrollment = enrollmentByCourse();
+            Map<String, Integer> enrollment = enrollmentByCourse(snapshot);
             JsonWriter array = JsonWriter.array();
             for (Course c : ds.courses()) {
                 array.value(JsonWriter.object()
@@ -263,7 +263,7 @@ public final class ApiServer {
             throw new ApiError(404, "unknown course code: " + codeParam);
         }
         ExamAnalytics.CourseStats stats = null;
-        for (ExamAnalytics.CourseStats cs : ExamAnalytics.courseStats(ds)) {
+        for (ExamAnalytics.CourseStats cs : ExamAnalytics.courseStats(snapshot)) {
             if (cs.code.equals(course.code)) {
                 stats = cs;
                 break;
@@ -364,7 +364,7 @@ public final class ApiServer {
     private String search(Map<String, String> query) {
         String q = query.getOrDefault("q", "");
         JsonWriter array = JsonWriter.array();
-        for (SearchResult r : SearchService.search(ds, q)) {
+        for (SearchResult r : SearchService.search(snapshot, q)) {
             array.value(JsonWriter.object()
                     .put("kind", r.kind)
                     .put("id", r.id)
