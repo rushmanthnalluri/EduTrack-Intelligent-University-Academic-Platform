@@ -218,8 +218,13 @@ public class M3DynamicProgramming {
                 int j = i + len - 1;
                 m[i][j] = Long.MAX_VALUE;
                 for (int k = i; k < j; k++) {
-                    long multiply = Math.multiplyExact(
-                            Math.multiplyExact((long) dims[i], dims[k + 1]), dims[j + 1]);
+                    long multiply;
+                    try {
+                        multiply = Math.multiplyExact(
+                                Math.multiplyExact((long) dims[i], dims[k + 1]), dims[j + 1]);
+                    } catch (ArithmeticException e) {
+                        throw new IllegalArgumentException("matrix-chain cost exceeds long range", e);
+                    }
                     long q;
                     try {
                         q = Math.addExact(Math.addExact(m[i][k], m[k + 1][j]), multiply);
