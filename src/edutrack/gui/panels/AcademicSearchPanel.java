@@ -167,7 +167,7 @@ public class AcademicSearchPanel extends ModulePanel {
                         match.recordType, match.idOrCode, match.displayName,
                         match.codePositions.isEmpty() ? "—" : formatPositions(match.codePositions),
                         match.namePositions.isEmpty() ? "—" : formatPositions(match.namePositions)
-                    });
+                    }, searchButton);
                     if (match.recordType.equals("Course")) {
                         courses++;
                         courseOcc += match.occurrenceCount();
@@ -282,7 +282,7 @@ public class AcademicSearchPanel extends ModulePanel {
                 detectButton.setEnabled(true);
                 console.appendLine("Error: " + error.getMessage());
                 showError(error);
-            });
+            }, detectButton);
         });
         return tab;
     }
@@ -349,7 +349,7 @@ public class AcademicSearchPanel extends ModulePanel {
                     model.addRow(new Object[] {
                         record.recordId, record.recordType, record.hashHits,
                         formatPositions(record.verified), record.spurious()
-                    });
+                    }, searchButton);
                 }
                 summary.setText(String.format(
                         "%d records scanned · %d matched · %d hash hits · %d verified · %d spurious · %d ms",
