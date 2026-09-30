@@ -387,7 +387,8 @@ public class ExamSchedulingPanel extends ModulePanel {
         }, run -> {
             setBusy(false);
             showSchedule(run, findMinimum);
-        }, solveButton, minSlotsButton, reductionButton, vcButton, vcExactButton);   }
+        }, solveButton, minSlotsButton, reductionButton, vcButton, vcExactButton);
+    }
 
     private SchedRun solveForSlots(M5Graph sub, int slots) {
         SchedRun run = new SchedRun();
