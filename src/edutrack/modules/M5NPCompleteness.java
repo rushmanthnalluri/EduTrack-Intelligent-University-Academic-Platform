@@ -137,7 +137,7 @@ public class M5NPCompleteness {
         int shown = Math.min(12, g.n);
         System.out.println("Courses by conflict degree (top " + shown + ") :");
         for (int i = 0; i < shown; i++) {
-            System.out.println("  " + g.label(order[i)] + "  degree=" + g.degree(order[i]));
+            System.out.println("  " + g.label(order[i]) + "  degree=" + g.degree(order[i]));
         }
 
         System.out.println("1. Cross-program mix (default, " + CROSS_PROGRAM_MIX.length
@@ -328,7 +328,7 @@ public class M5NPCompleteness {
         if (cs.clique.length == m) {
             System.out.print("Clique nodes        : ");
             for (int i = 0; i < cs.clique.length; i++) {
-                System.out.print((i == 0 ? "" : ", ") + red.graph.label(cs.clique[i)]);
+                System.out.print((i == 0 ? "" : ", ") + red.graph.label(cs.clique[i]));
             }
             System.out.println();
             boolean[] assignment = M5Reductions.cliqueToAssignment(red, cs.clique);
@@ -486,11 +486,11 @@ public class M5NPCompleteness {
         StringBuilder sb = new StringBuilder();
         if (vertices == null) {
             for (int i = 0; i < g.n; i++) {
-                sb.append(i == 0 ? "" : ", ").append(g.label(i);
+                sb.append(i == 0 ? "" : ", ").append(g.label(i));
             }
         } else {
             for (int i = 0; i < vertices.length; i++) {
-                sb.append(i == 0 ? "" : ", ").append(g.label(vertices[i)]);
+                sb.append(i == 0 ? "" : ", ").append(g.label(vertices[i]));
             }
         }
         return sb.toString();
@@ -501,7 +501,7 @@ public class M5NPCompleteness {
         int count = 0;
         for (int v = 0; v < g.n; v++) {
             if (set[v]) {
-                sb.append(count == 0 ? "" : ", ").append(g.label(v);
+                sb.append(count == 0 ? "" : ", ").append(g.label(v))
                 count++;
             }
         }
