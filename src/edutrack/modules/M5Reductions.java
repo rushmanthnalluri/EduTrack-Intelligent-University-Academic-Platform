@@ -41,7 +41,7 @@ public class M5Reductions {
         }
         for (int u = 0; u < g.n; u++) {
             for (int v = u + 1; v < g.n; v++) {
-                if (g.adj[u][v]) {
+                if (g.hasEdge(u, v)) {
                     for (int s = 0; s < slots; s++) {
                         enc.clauses.add(new int[] { -enc.varOf(u, s), -enc.varOf(v, s) });
                     }
@@ -96,7 +96,7 @@ public class M5Reductions {
 
         for (int u = 0; u < g.n; u++) {
             for (int v = u + 1; v < g.n; v++) {
-                if (g.adj[u][v]) {
+                if (g.hasEdge(u, v)) {
                     for (int s = 0; s < slots; s++) {
                         int uVar = u * slots + s + 1;
                         int vVar = v * slots + s + 1;
