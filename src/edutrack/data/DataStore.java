@@ -527,7 +527,7 @@ public class DataStore {
         throw new IllegalArgumentException("Unknown student id: " + id);
     }
 
-    private static void validateLoadedData(List<Course> courses, List<Student> students,
+    static void validateLoadedData(List<Course> courses, List<Student> students,
             List<Faculty> faculty, List<ExamRecord> exams) {
         if (courses == null || students == null || faculty == null || exams == null
                 || courses.isEmpty() || students.isEmpty()) {
