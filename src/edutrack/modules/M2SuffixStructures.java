@@ -3,6 +3,7 @@ package edutrack.modules;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -25,6 +26,7 @@ public class M2SuffixStructures {
             System.out.println("2. SA-IS Linear-Time Construction - verify vs prefix-doubling");
             System.out.println("3. Kasai LCP - repeated phrases & cross-submission similarity");
             System.out.println("4. Suffix Automaton - occurrence counts & distinct substrings");
+            System.out.println("5. Plagiarism Checker - compare 3 submissions with SA + Kasai LCP");
             System.out.println("0. Back to Main Menu");
             System.out.print("Enter your choice : ");
 
@@ -42,6 +44,9 @@ public class M2SuffixStructures {
                     break;
                 case 4:
                     suffixAutomatonMenu(sc, ds);
+                    break;
+                case 5:
+                    plagiarismChecker(sc, ds);
                     break;
                 case 0:
                     System.out.println("Returning to main menu...");
@@ -423,6 +428,247 @@ public class M2SuffixStructures {
 
     public static int crossLcsLength(String t1, String t2) {
         return crossLcs(t1, t2)[0];
+    }
+
+    /**
+     * Compares three or more submissions for plagiarism-style text overlap.
+     *
+     * <p>Each pair is concatenated with a separator, indexed by a suffix array,
+     * and analyzed with Kasai LCP. Shared intervals at least {@code minPhraseLength}
+     * are merged so overlapping matches are counted once per document.</p>
+     */
+    public static PlagiarismReport plagiarismCheck(List<Submission> submissions, int minPhraseLength) {
+        if (submissions == null || submissions.size() < 3) {
+            throw new IllegalArgumentException("at least 3 submissions are required");
+        }
+        if (minPhraseLength < 1) {
+            throw new IllegalArgumentException("minimum phrase length must be at least 1");
+        }
+
+        List<Submission> docs = new ArrayList<>(submissions);
+        HashSet<String> ids = new HashSet<>();
+        for (Submission submission : docs) {
+            if (submission == null) {
+                throw new IllegalArgumentException("submission must not be null");
+            }
+            if (!ids.add(submission.id)) {
+                throw new IllegalArgumentException("duplicate submission id: " + submission.id);
+            }
+        }
+
+        List<PlagiarismPair> pairs = new ArrayList<>();
+        int flagged = 0;
+        for (int i = 0; i < docs.size() - 1; i++) {
+            for (int j = i + 1; j < docs.size(); j++) {
+                PlagiarismPair pair = compareForPlagiarism(docs.get(i), docs.get(j), minPhraseLength);
+                pairs.add(pair);
+                if (pair.isFlagged()) {
+                    flagged++;
+                }
+            }
+        }
+        return new PlagiarismReport(pairs, flagged, minPhraseLength);
+    }
+
+    private static PlagiarismPair compareForPlagiarism(Submission a, Submission b, int minPhraseLength) {
+        String t1 = a.text;
+        String t2 = b.text;
+        int n1 = t1.length();
+        int n2 = t2.length();
+
+        if (n1 == 0 || n2 == 0) {
+            return new PlagiarismPair(a.id, b.id, 0, 0, 0, 0.0, 0.0, "",
+                    "Insufficient text for comparison.", 0L);
+        }
+
+        long start = System.nanoTime();
+        char separator = chooseSeparator(t1, t2);
+        String combined = t1 + separator + t2;
+        int[] sa = M2SuffixArray.buildSuffixArray(combined);
+        int[] lcp = M2KasaiLCP.buildLCP(combined, sa);
+
+        List<int[]> aIntervals = new ArrayList<>();
+        List<int[]> bIntervals = new ArrayList<>();
+        int best = 0;
+        int bestPosA = -1;
+        int bestPosB = -1;
+
+        for (int i = 0; i < lcp.length; i++) {
+            int p = sa[i];
+            int q = sa[i + 1];
+            boolean pInA = p < n1;
+            boolean qInA = q < n1;
+            if (p == n1 || q == n1 || pInA == qInA) {
+                continue;
+            }
+
+            int posA = pInA ? p : q;
+            int posB = pInA ? q - n1 - 1 : p - n1 - 1;
+            int length = Math.min(lcp[i], Math.min(n1 - posA, n2 - posB));
+            if (length < minPhraseLength) {
+                continue;
+            }
+
+            aIntervals.add(new int[] { posA, posA + length });
+            bIntervals.add(new int[] { posB, posB + length });
+            if (length > best) {
+                best = length;
+                bestPosA = posA;
+                bestPosB = posB;
+            }
+        }
+
+        int matchedA = mergedLength(aIntervals);
+        int matchedB = mergedLength(bIntervals);
+        double coverageA = n1 == 0 ? 0.0 : matchedA * 100.0 / n1;
+        double coverageB = n2 == 0 ? 0.0 : matchedB * 100.0 / n2;
+        double similarity = (coverageA + coverageB) / 2.0;
+        String phrase = best > 0 ? t1.substring(bestPosA, bestPosA + best) : "";
+        String assessment = plagiarismAssessment(best, coverageA, coverageB, similarity, minPhraseLength);
+        long nanos = System.nanoTime() - start;
+
+        return new PlagiarismPair(a.id, b.id, best, matchedA, matchedB,
+                coverageA, coverageB, similarity, phrase, assessment, nanos);
+    }
+
+    private static int mergedLength(List<int[]> intervals) {
+        if (intervals.isEmpty()) {
+            return 0;
+        }
+        intervals.sort(Comparator.comparingInt(x -> x[0]));
+        int total = 0;
+        int start = intervals.get(0)[0];
+        int end = intervals.get(0)[1];
+        for (int i = 1; i < intervals.size(); i++) {
+            int nextStart = intervals.get(i)[0];
+            int nextEnd = intervals.get(i)[1];
+            if (nextStart <= end) {
+                end = Math.max(end, nextEnd);
+            } else {
+                total += end - start;
+                start = nextStart;
+                end = nextEnd;
+            }
+        }
+        return total + end - start;
+    }
+
+    private static String plagiarismAssessment(
+            int bestLcs, double coverageA, double coverageB, double similarity, int minPhraseLength) {
+        if (bestLcs < minPhraseLength) {
+            return "Low overlap — no significant shared phrase.";
+        }
+        double maxCoverage = Math.max(coverageA, coverageB);
+        if (maxCoverage >= 60.0 || similarity >= 50.0) {
+            return "Very high overlap — possible copied content; review the submissions.";
+        }
+        if (maxCoverage >= 35.0 || similarity >= 25.0) {
+            return "High overlap — substantial shared text; review the submissions.";
+        }
+        if (maxCoverage >= 15.0 || similarity >= 10.0) {
+            return "Moderate overlap — some shared text detected.";
+        }
+        return "Low overlap — limited shared text detected.";
+    }
+
+    public static final class Submission {
+        public final String id;
+        public final String text;
+
+        public Submission(String id, String text) {
+            if (id == null || id.isBlank()) {
+                throw new IllegalArgumentException("submission id must not be blank");
+            }
+            if (text == null) {
+                throw new IllegalArgumentException("submission text must not be null");
+            }
+            this.id = id;
+            this.text = text;
+        }
+    }
+
+    public static final class PlagiarismPair {
+        public final String idA;
+        public final String idB;
+        public final int longestSharedPhrase;
+        public final int matchedCharsA;
+        public final int matchedCharsB;
+        public final double coverageA;
+        public final double coverageB;
+        public final double similarityPercent;
+        public final String witnessPhrase;
+        public final String assessment;
+        public final long nanos;
+
+        private PlagiarismPair(String idA, String idB, int longestSharedPhrase,
+                int matchedCharsA, int matchedCharsB, double coverageA, double coverageB,
+                double similarityPercent, String witnessPhrase, String assessment, long nanos) {
+            this.idA = idA;
+            this.idB = idB;
+            this.longestSharedPhrase = longestSharedPhrase;
+            this.matchedCharsA = matchedCharsA;
+            this.matchedCharsB = matchedCharsB;
+            this.coverageA = coverageA;
+            this.coverageB = coverageB;
+            this.similarityPercent = similarityPercent;
+            this.witnessPhrase = witnessPhrase;
+            this.assessment = assessment;
+            this.nanos = nanos;
+        }
+
+        public boolean isFlagged() {
+            return assessment.startsWith("Very high") || assessment.startsWith("High");
+        }
+    }
+
+    public static final class PlagiarismReport {
+        public final List<PlagiarismPair> pairs;
+        public final int flaggedPairs;
+        public final int minPhraseLength;
+
+        private PlagiarismReport(List<PlagiarismPair> pairs, int flaggedPairs, int minPhraseLength) {
+            this.pairs = List.copyOf(pairs);
+            this.flaggedPairs = flaggedPairs;
+            this.minPhraseLength = minPhraseLength;
+        }
+    }
+
+    private static void plagiarismChecker(Scanner sc, DataStore ds) {
+        System.out.println("\n--- Plagiarism Checker (SA + Kasai LCP) ---");
+        List<Assignment> assignments = ds.assignments();
+        if (assignments.size() < 3) {
+            System.out.println("At least 3 submissions are required.");
+            return;
+        }
+
+        System.out.println("Select three student submissions:");
+        Submission[] selected = new Submission[3];
+        for (int i = 0; i < 3; i++) {
+            System.out.println("\nSubmission " + (i + 1) + ":");
+            Assignment a = chooseAssignment(sc, ds);
+            if (a == null) {
+                return;
+            }
+            selected[i] = new Submission(a.id, a.text);
+        }
+
+        int minPhraseLength = 40;
+        PlagiarismReport report = plagiarismCheck(Arrays.asList(selected), minPhraseLength);
+        System.out.println("\nMinimum shared phrase length : " + minPhraseLength + " chars");
+        System.out.println("Pairs analyzed                 : " + report.pairs.size());
+        System.out.println("Pairs needing review           : " + report.flaggedPairs);
+
+        for (PlagiarismPair pair : report.pairs) {
+            System.out.printf("%n%s vs %s%n", pair.idA, pair.idB);
+            System.out.printf("  Similarity          : %.1f%%%n", pair.similarityPercent);
+            System.out.printf("  Coverage A / B      : %.1f%% / %.1f%%%n", pair.coverageA, pair.coverageB);
+            System.out.println("  Longest shared text : " + pair.longestSharedPhrase + " chars");
+            if (!pair.witnessPhrase.isEmpty()) {
+                System.out.println("  Shared phrase       : \"" + preview(pair.witnessPhrase, 80) + "\"");
+            }
+            System.out.println("  Assessment          : " + pair.assessment);
+            System.out.println("  SA + Kasai time     : " + fmtMs(pair.nanos) + " ms");
+        }
     }
 
     public static List<int[]> topRepeatedSubstrings(String text, int[] sa, int[] lcp, int k) {
