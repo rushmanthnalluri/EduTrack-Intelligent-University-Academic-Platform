@@ -626,3 +626,4 @@ public final class RepositoryHardeningSelfTest {
         }
     }
 }
+import edutrack.modules.M2SuffixStructures;
