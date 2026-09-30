@@ -18,6 +18,7 @@ public class M5Reductions {
     }
 
     public static SchedEncoding examSchedulingCNF(M5Graph g, int slots) {
+        validateSchedulingInput(g, slots);
         SchedEncoding enc = new SchedEncoding();
         enc.courseCount = g.n;
         enc.slots = slots;
@@ -57,9 +58,7 @@ public class M5Reductions {
      * fresh auxiliary variables converts the long at-least-one clause to 3-CNF.
      */
     public static List<int[]> examScheduling3CNF(M5Graph g, int slots) {
-        if (g == null || slots < 1) {
-            throw new IllegalArgumentException("graph must be non-null and slots must be >= 1");
-        }
+        validateSchedulingInput(g, slots);
         List<int[]> clauses = new ArrayList<>();
         int baseVars = g.n * slots;
         int nextAux = baseVars + 1;
@@ -123,6 +122,32 @@ public class M5Reductions {
         return out;
     }
 
+    private static void validateSchedulingInput(M5Graph g, int slots) {
+        if (g == null) throw new IllegalArgumentException("graph must not be null");
+        if (slots < 1) throw new IllegalArgumentException("slots must be >= 1");
+        try {
+            Math.multiplyExact(g.n, slots);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("graph and slot count are too large", e);
+        }
+    }
+
+    private static void validateThreeSatFormula(List<int[]> clauses, int numVars) {
+        if (clauses == null || numVars < 0) {
+            throw new IllegalArgumentException("clauses must be non-null and numVars must be non-negative");
+        }
+        for (int[] clause : clauses) {
+            if (clause == null || clause.length != 3) {
+                throw new IllegalArgumentException("3-SAT clauses must contain exactly three literals");
+            }
+            for (int lit : clause) {
+                if (lit == 0 || Math.abs((long) lit) > numVars) {
+                    throw new IllegalArgumentException("literal outside 1.." + numVars + ": " + lit);
+                }
+            }
+        }
+    }
+
     public static class GadgetReduction {
         public M5Graph graph;
         public int[] nodeClause;
@@ -132,6 +157,7 @@ public class M5Reductions {
     }
 
     public static GadgetReduction threeSatToClique(List<int[]> clauses, int numVars) {
+        validateThreeSatFormula(clauses, numVars);
         int nodes = 0;
         for (int[] c : clauses) {
             nodes += c.length;
@@ -164,9 +190,28 @@ public class M5Reductions {
     }
 
     public static boolean[] cliqueToAssignment(GadgetReduction red, int[] clique) {
+        if (red == null || red.nodeLiteral == null || red.nodeClause == null || clique == null) {
+            throw new IllegalArgumentException("reduction and clique must not be null");
+        }
+        if (red.nodeLiteral.length != red.nodeClause.length || red.numVars < 0) {
+            throw new IllegalArgumentException("invalid reduction metadata");
+        }
+        boolean[] seenClause = new boolean[red.clauseCount];
         boolean[] assignment = new boolean[red.numVars + 1];
         for (int node : clique) {
+            if (node < 0 || node >= red.nodeLiteral.length) {
+                throw new IllegalArgumentException("clique vertex out of range: " + node);
+            }
+            int clause = red.nodeClause[node];
             int lit = red.nodeLiteral[node];
+            if (clause < 0 || clause >= red.clauseCount || lit == 0
+                    || Math.abs((long) lit) > red.numVars) {
+                throw new IllegalArgumentException("invalid reduction vertex");
+            }
+            if (seenClause[clause]) {
+                throw new IllegalArgumentException("clique contains multiple literals from one clause");
+            }
+            seenClause[clause] = true;
             assignment[Math.abs(lit)] = lit > 0;
         }
         return assignment;
