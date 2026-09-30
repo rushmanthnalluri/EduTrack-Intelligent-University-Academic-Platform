@@ -19,7 +19,7 @@ public class M5VertexCoverApprox {
         boolean[] matched = new boolean[g.n];
         for (int u = 0; u < g.n; u++) {
             for (int v = u + 1; v < g.n; v++) {
-                if (g.adj[u][v] && !matched[u] && !matched[v]) {
+                if (g.hasEdge(u, v) && !matched[u] && !matched[v]) {
                     matched[u] = true;
                     matched[v] = true;
                     r.cover[u] = true;
@@ -42,7 +42,7 @@ public class M5VertexCoverApprox {
     public static boolean isVertexCover(M5Graph g, boolean[] cover) {
         for (int u = 0; u < g.n; u++) {
             for (int v = u + 1; v < g.n; v++) {
-                if (g.adj[u][v] && !cover[u] && !cover[v]) {
+                if (g.hasEdge(u, v) && !cover[u] && !cover[v]) {
                     return false;
                 }
             }
@@ -56,7 +56,7 @@ public class M5VertexCoverApprox {
                 continue;
             }
             for (int v = u + 1; v < g.n; v++) {
-                if (set[v] && g.adj[u][v]) {
+                if (set[v] && g.hasEdge(u, v)) {
                     return false;
                 }
             }
@@ -121,7 +121,7 @@ public class M5VertexCoverApprox {
                 continue;
             }
             for (int v = u + 1; v < g.n; v++) {
-                if ((mask & (1 << v)) == 0 && g.adj[u][v]) {
+                if ((mask & (1 << v)) == 0 && g.hasEdge(u, v)) {
                     return false;
                 }
             }
@@ -135,7 +135,7 @@ public class M5VertexCoverApprox {
                 continue;
             }
             for (int v = u + 1; v < g.n; v++) {
-                if ((mask & (1 << v)) != 0 && g.adj[u][v]) {
+                if ((mask & (1 << v)) != 0 && g.hasEdge(u, v)) {
                     return false;
                 }
             }
