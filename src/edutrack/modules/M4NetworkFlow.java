@@ -434,9 +434,13 @@ public class M4NetworkFlow {
     }
 
     public static int[] sectionsNeeded(int[] enrollment) {
+        if (enrollment == null) throw new IllegalArgumentException("enrollment must not be null");
         int[] sections = new int[enrollment.length];
         for (int i = 0; i < enrollment.length; i++) {
-            sections[i] = (enrollment[i] + ROOM_SEATS - 1) / ROOM_SEATS;
+            if (enrollment[i] < 0) {
+                throw new IllegalArgumentException("enrollment cannot be negative");
+            }
+            sections[i] = (int) (((long) enrollment[i] + ROOM_SEATS - 1L) / ROOM_SEATS);
         }
         return sections;
     }
@@ -504,6 +508,8 @@ public class M4NetworkFlow {
 
     /** Deterministically clones courses/rooms with perturbed demands for scaling tests. */
     public static ScaledNetwork buildScaledNetwork(DataStore ds, int factor, long seed) {
+        if (ds == null) throw new IllegalArgumentException("data store must not be null");
+        if (factor < 1) throw new IllegalArgumentException("scale factor must be >= 1");
         int[] baseSections = sectionsNeeded(computeEnrollment(ds));
         int baseCourses = ds.courses().size();
         Random rnd = new Random(seed);
