@@ -267,7 +267,7 @@ public class ResourceAllocationPanel extends ModulePanel {
                 out.coverMs = (System.nanoTime() - start) / 1_000_000.0;
             }
             return out;
-        }, this::onMatchingDone);
+        }, this::onMatchingDone, this::showError, matchingButton, konigButton);
     }
 
     private void onMatchingDone(MatchingOutcome out) {
@@ -350,7 +350,7 @@ public class ResourceAllocationPanel extends ModulePanel {
             konigButton.setText("Hide König cover");
             console.appendLine("König cover: " + cover.size + " vertices (faculty "
                     + cover.leftSize + " + courses " + cover.rightSize + "); |cover| = |matching|.");
-        });
+        }, this::showError, konigButton);
     }
 
     private String konigLine(M4Konig.Cover c, double ms) {
@@ -398,7 +398,7 @@ public class ResourceAllocationPanel extends ModulePanel {
             out.totalSections = total;
             out.supply = rooms.size() * slots.size();
             return out;
-        }, this::onAllocationDone);
+        }, this::onAllocationDone, this::showError, allocationButton);
     }
 
     private void onAllocationDone(AllocationOutcome out) {
@@ -463,7 +463,7 @@ public class ResourceAllocationPanel extends ModulePanel {
             out.nodes = snDinic.net.nodeCount();
             out.forwardEdges = snDinic.forwardEdges;
             return out;
-        }, this::onBenchmarkDone);
+        }, this::onBenchmarkDone, this::showError, benchmarkButton);
     }
 
     private void onBenchmarkDone(BenchmarkOutcome out) {
