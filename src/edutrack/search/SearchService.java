@@ -204,7 +204,8 @@ public class SearchService {
         for (Faculty faculty : ds.faculty()) {
             list.add(new Candidate("Faculty", String.valueOf(faculty.id), faculty.name,
                     faculty.department + " · Teaches " + joinCapped(faculty.expertise, 6),
-                    List.of(new Field(faculty.name, CAT_NAME),
+                    List.of(new Field(String.valueOf(faculty.id), CAT_ID),
+                            new Field(faculty.name, CAT_NAME),
                             new Field(faculty.department, CAT_OTHER))));
         }
         for (Assignment assignment : ds.assignments()) {
@@ -216,7 +217,8 @@ public class SearchService {
         for (LearningResource resource : ds.resources()) {
             list.add(new Candidate("Resource", resource.id, resource.title,
                     resource.type + " · Course " + resource.courseCode,
-                    List.of(new Field(resource.title, CAT_NAME),
+                    List.of(new Field(resource.id, CAT_ID),
+                            new Field(resource.title, CAT_NAME),
                             new Field(resource.type, CAT_OTHER))));
         }
         return list;
