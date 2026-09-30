@@ -72,7 +72,7 @@ public class M4FlowNetwork {
         }
         Edge reverse = adj.get(e.to).get(e.rev);
         int nextFlow = e.flow + amount;
-        if (nextFlow < 0 || nextFlow > e.capacity) {
+        if (nextFlow > e.capacity || nextFlow < -reverse.capacity) {
             throw new IllegalArgumentException("flow update exceeds edge capacity");
         }
         e.flow = nextFlow;
