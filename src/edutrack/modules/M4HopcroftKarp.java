@@ -13,6 +13,7 @@ import java.util.Queue;
 public final class M4HopcroftKarp {
 
     private static final int INF = Integer.MAX_VALUE / 2;
+    private static final int RECURSION_NODE_CAP = 4096;
 
     private M4HopcroftKarp() {
     }
@@ -96,6 +97,10 @@ public final class M4HopcroftKarp {
     }
 
     private static void checkGraph(int leftCount, int rightCount, List<List<Integer>> adj) {
+        if (leftCount > RECURSION_NODE_CAP) {
+            throw new IllegalArgumentException("recursive matching implementation is limited to "
+                    + RECURSION_NODE_CAP + " left vertices");
+        }
         if (leftCount < 0 || rightCount < 0 || adj == null || adj.size() != leftCount) {
             throw new IllegalArgumentException("adjacency must provide " + leftCount
                     + " left lists, got " + adj.size());
