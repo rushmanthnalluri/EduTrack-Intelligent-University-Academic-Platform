@@ -137,7 +137,27 @@ public final class RepositoryHardeningSelfTest {
             }
         });
 
-        check("Z-function handles '
+        check("Z-function handles dollar signs in pattern and text", () -> {
+            assertTrue(ZFunctionSearch.search("a$$a$", "a$").equals(List.of(0, 3)),
+                    "Z search missed matches containing dollar signs");
+        });
+
+        check("3-CNF scheduling enforces exactly one slot and remains 3-CNF", () -> {
+            M5Graph g = new M5Graph(1);
+            List<int[]> clauses = M5Reductions.examScheduling3CNF(g, 4);
+            for (int[] clause : clauses) {
+                assertTrue(clause.length == 3, "non-3-literal clause produced");
+            }
+            M5DPLLSolver.Result result = M5DPLLSolver.solve(5, clauses);
+            assertTrue(result.status == M5DPLLSolver.Status.SAT, "valid scheduling formula is not SAT");
+            int selected = 0;
+            for (int slot = 0; slot < 4; slot++) {
+                if (result.assignment[slot + 1]) selected++;
+            }
+            assertTrue(selected == 1, "assignment selected " + selected + " slots");
+        });
+
+        check("saved-data validator rejects empty and broken datasets", () -> {
             expectThrows(IllegalArgumentException.class,
                     () -> DataStore.validateLoadedData(List.of(), List.of(), List.of(), List.of()));
 
@@ -149,11 +169,13 @@ public final class RepositoryHardeningSelfTest {
 
             Student badRef = new Student(2, "B", "Program", 1, 8.0, List.of("NOPE"));
             expectThrows(IllegalArgumentException.class,
-                    () -> DataStore.validateLoadedData(List.of(c), List.of(good, badRef), List.of(f), List.of(e)));
+                    () -> DataStore.validateLoadedData(List.of(c), List.of(good, badRef),
+                            List.of(f), List.of(e)));
 
             Student duplicate = new Student(1, "B", "Program", 1, 8.0, List.of("C1"));
             expectThrows(IllegalArgumentException.class,
-                    () -> DataStore.validateLoadedData(List.of(c), List.of(good, duplicate), List.of(f), List.of(e)));
+                    () -> DataStore.validateLoadedData(List.of(c), List.of(good, duplicate),
+                            List.of(f), List.of(e)));
         });
 
         check("CSV save publishes a verifiable complete snapshot", () -> {
