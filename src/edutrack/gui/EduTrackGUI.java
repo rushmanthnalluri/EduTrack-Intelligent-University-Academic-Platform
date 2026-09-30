@@ -54,6 +54,7 @@ public class EduTrackGUI extends JFrame {
     private ReportsPanel reportsPanel;
     private ResourceAllocationPanel resourceAllocationPanel;
     private RankingStreamsPanel rankingStreamsPanel;
+    private ExamSchedulingPanel examSchedulingPanel;
     private AcademicSearchPanel academicSearchPanel;
     private DocumentSimilarityPanel documentSimilarityPanel;
     private JLabel statusCounts;
@@ -106,7 +107,8 @@ public class EduTrackGUI extends JFrame {
         cards.add(new QueryOptimizationPanel(dataStore), "query-optimization");
         resourceAllocationPanel = new ResourceAllocationPanel(dataStore);
         cards.add(resourceAllocationPanel, "resource-allocation");
-        cards.add(new ExamSchedulingPanel(dataStore), "exam-scheduling");
+        examSchedulingPanel = new ExamSchedulingPanel(dataStore);
+        cards.add(examSchedulingPanel, "exam-scheduling");
         rankingStreamsPanel = new RankingStreamsPanel(dataStore);
         cards.add(rankingStreamsPanel, "ranking-streams");
 
@@ -132,6 +134,8 @@ public class EduTrackGUI extends JFrame {
             resourceAllocationPanel.refresh();
         } else if ("ranking-streams".equals(key)) {
             rankingStreamsPanel.refresh();
+        } else if ("exam-scheduling".equals(key)) {
+            examSchedulingPanel.refresh();
         } else if ("academic-search".equals(key)) {
             academicSearchPanel.refresh();
         } else if ("document-similarity".equals(key)) {
