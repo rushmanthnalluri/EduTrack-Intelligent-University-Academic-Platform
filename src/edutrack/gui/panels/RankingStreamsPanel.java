@@ -113,6 +113,19 @@ public class RankingStreamsPanel extends ModulePanel {
         add(card("Log", console), BorderLayout.SOUTH);
     }
 
+    /** Keeps Top-N bounds valid after student CRUD changes. */
+    public void refresh() {
+        int max = Math.max(1, dataStore.students().size());
+        SpinnerNumberModel model = (SpinnerNumberModel) topNSpinner.getModel();
+        model.setMaximum(max);
+        int current = ((Number) model.getNumber()).intValue();
+        if (current > max) model.setValue(max);
+        if (dataStore.students().isEmpty()) {
+            rankingModel.setRowCount(0);
+            rankingStats.setText("No students available.");
+        }
+    }
+
     private JPanel buildRankingTab() {
         JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         controls.setOpaque(false);
