@@ -69,7 +69,7 @@ Every capability has an interactive CLI entry point and a dedicated GUI screen w
 
 ![Manage](docs/screenshots/manage.png)
 
-**Exams & Grades** — course statistics, grade-distribution visualization, pass-rate and average charts, GPA ranking, at-risk analysis and report-card actions.
+**Exams & Grades** — course statistics, grade distribution visualization, pass-rate and average charts, GPA ranking, at-risk analysis and report-card actions.
 
 ![Exams](docs/screenshots/exams.png)
 
